@@ -1,0 +1,7 @@
+FROM park-pytorch:v1
+
+WORKDIR /app
+COPY . .
+
+ENTRYPOINT ["python"]
+CMD ["main.py"]

@@ -1,0 +1,10 @@
+services:
+  trainer:
+    image: park-cifar10:v1
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.cifar10
+    volumes:
+      - ../data:/app/data
+    environment:
+      - HF_HOME=/app/data/.huggingface

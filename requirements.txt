@@ -1,0 +1,6 @@
+torch
+torchvision
+pyarrow
+huggingface_hub
+pillow
+ray[train]

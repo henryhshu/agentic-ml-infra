@@ -2,9 +2,9 @@
 
 This capstone project aims to create a self-reliant infrastructure for distributed model training on the **PARK stack**. This stack leverages PyTorch for model development, Arrow for data interoperability, Ray for distributed execution, and Kubernetes for container orchestration.
 
-Wrapped around the stack is a fleet of Claude-powered agents — built with the [Claude Agent SDK](https://docs.anthropic.com/en/api/agent-sdk/overview) — that launch alongside every training job, watch the cluster end-to-end (logs, metrics, Ray actors, Kubernetes pods, parquet shards), triage anomalies, and apply scoped remediations so minor breakages resolve without paging a human.
+Wrapped around the stack is a fleet of Claude-powered agents — built with the [Claude Agent SDK](https://docs.anthropic.com/en/api/agent-sdk/overview) and served by **Claude on Amazon Bedrock** (the Claude Platform on AWS) — that launch alongside every training job, watch the cluster end-to-end (logs, metrics, Ray actors, Kubernetes pods, parquet shards), triage anomalies, and apply scoped remediations so minor breakages resolve without paging a human.
 
-The same code path runs locally on a MacBook (Docker Desktop + `kind`/`minikube`) for development and on a managed cloud cluster (GKE on GCP) for production training.
+The same code path runs locally on a MacBook (Docker Desktop + `kind`/`minikube`) for development and on a managed cloud cluster (EKS on AWS) for production training.
 
 ## 🚀 Quick Start
 
@@ -48,7 +48,7 @@ agentic-ml-infra/
 │   ├── cluster_health.py      # Watches KubeRay CRDs, pod restarts, OOMs
 │   ├── data_quality.py        # Validates parquet/Arrow schemas + row counts
 │   ├── remediator.py          # Gated write actions (restart, rescale, rerun)
-│   └── tools/                 # Tool wrappers exposed to agents (kubectl, Ray, GCS, parquet)
+│   └── tools/                 # Tool wrappers exposed to agents (kubectl, Ray, S3, parquet)
 ├── main.py                    # Single-node training entry point
 ├── requirements.txt           # Python dependencies
 └── README.md
@@ -68,8 +68,8 @@ Distributed computing framework for scaling ML workloads.
 ### 🔵 Kubernetes
 Container orchestration for cluster management.
 
-### 🟣 Claude Agent SDK
-Defines the monitoring agents — their system prompts, tool surfaces, and decision loops. Agents run as Python processes locally and as Kubernetes `Job`s in production. See [Agentic Monitoring Layer](#-agentic-monitoring-layer) below.
+### 🟣 Claude Agent SDK + Amazon Bedrock
+Defines the monitoring agents — their system prompts, tool surfaces, and decision loops. Model calls are served by **Claude on Amazon Bedrock**, so both the agents and the cluster they oversee live inside the same AWS account, VPC, and IAM boundary. Agents run as Python processes locally and as Kubernetes `Job`s in production. See [Agentic Monitoring Layer](#-agentic-monitoring-layer) below.
 
 ## 🤖 Agentic Monitoring Layer
 
@@ -82,7 +82,7 @@ The PARK stack is observed and partially self-healed by a fleet of Claude agents
 | **Supervisor** | the job manifest, other agents | Orchestrates the fleet for one training job. Routes anomalies to sub-agents, decides between auto-remediation and human escalation, persists the incident log. |
 | **Training Watcher** | Ray Train `report()` stream, trainer stdout | Detects NaN/Inf losses, gradient explosions, accuracy divergence, stalled steps, dataloader starvation. |
 | **Cluster Health** | KubeRay CRDs, `kubectl`, Ray dashboard API | Watches pod restarts, node pressure, Ray actor failures, OOMKilled events, GPU unavailability. |
-| **Data Quality** | parquet shards (local FS or GCS) | Validates Arrow schema, row counts, and image-decoding integrity before training; spot-checks shards during long runs. |
+| **Data Quality** | parquet shards (local FS or S3) | Validates Arrow schema, row counts, and image-decoding integrity before training; spot-checks shards during long runs. |
 | **Remediator** | gated write surface | Executes scoped corrective actions (rolling-restart a worker group, scale replicas, rerun a failed Ray task). Every call requires Supervisor approval and is logged. |
 
 ### How agents launch with training
@@ -113,52 +113,53 @@ Each agent gets a focused tool list, not blanket shell access. Tools live under 
 | `kubectl_read.py` | wraps `kubectl get/describe/logs` for the `ray` namespace | read-only |
 | `ray_api.py` | calls Ray dashboard REST endpoints (`/api/cluster_status`, `/api/jobs`) | read-only |
 | `parquet_validate.py` | opens a shard with `pyarrow`, checks schema + row counts | read-only |
-| `gcs_read.py` *(cloud only)* | reads manifests/logs from a GCS bucket | read-only |
+| `s3_read.py` *(cloud only)* | reads manifests/logs from an S3 bucket | read-only |
 | `remediate.py` | the only write surface: scale, restart, kill, rerun | gated by Supervisor approval, audit-logged |
 
-The Claude Agent SDK's MCP server support lets us expose these tools uniformly across local and cloud — the same Python tool definitions, just pointed at a different cluster context.
+The Claude Agent SDK's MCP server support lets us expose these tools uniformly across local and cloud — the same Python tool definitions, just pointed at a different cluster context. The SDK is configured with `CLAUDE_CODE_USE_BEDROCK=1` so every agent invocation is routed through Amazon Bedrock using the pod's IAM role.
 
 ## ☁️ Local → Cloud Path
 
 The same agents, manifests, and trainer code run in both environments. Only the surrounding cluster and IO backends change.
 
-| Concern | Local (MacBook) | Production (GCP) |
+| Concern | Local (MacBook) | Production (AWS) |
 |---|---|---|
-| Kubernetes | `kind` or `minikube` | GKE (Autopilot or Standard) |
-| KubeRay operator | Helm install on local kube | Helm install on GKE |
-| Container registry | Docker Desktop local images | Artifact Registry (`us-central1-docker.pkg.dev/...`) |
-| Dataset storage | local parquet cache under `data/cifar10/` | GCS bucket, read via `pyarrow.fs.GcsFileSystem` |
-| Secrets (Anthropic API key, HF token) | `.env` file (gitignored) | Secret Manager + Workload Identity |
+| Kubernetes | `kind` or `minikube` | EKS (managed node groups or Fargate) |
+| KubeRay operator | Helm install on local kube | Helm install on EKS |
+| Container registry | Docker Desktop local images | Amazon ECR (`<acct>.dkr.ecr.us-west-2.amazonaws.com/...`) |
+| Dataset storage | local parquet cache under `data/cifar10/` | S3 bucket, read via `pyarrow.fs.S3FileSystem` |
+| Agent model serving | direct Anthropic API (dev key) | **Claude on Amazon Bedrock** via `CLAUDE_CODE_USE_BEDROCK=1` |
+| Secrets (HF token, Slack webhook) | `.env` file (gitignored) | AWS Secrets Manager + IRSA (IAM Roles for Service Accounts) |
 | Agent runtime | Python process beside the trainer | Kubernetes `Job` in the `ray` namespace |
-| Observability backend | stdout, `kubectl logs` | Cloud Logging + Cloud Monitoring; agents query via the GCP client libraries |
-| GPUs | none / MPS for sanity checks | GKE node pool with A100/L4/T4 |
+| Observability backend | stdout, `kubectl logs` | CloudWatch Logs + CloudWatch Metrics; agents query via `boto3` |
+| GPUs | none / MPS for sanity checks | EKS node group with `p4d` (A100), `g5` (A10G), or `g4dn` (T4) instances |
 
 ### Migration stages
 
 1.  **Stage 0 — Local prototype** *(current)*. Single-node training via `main.py`; Supervisor runs as a local process; `kubectl` points at a `kind` cluster.
 2.  **Stage 1 — Local KubeRay**. Apply `kubernetes/park-cluster.yaml` then `ray/ray-cluster.yaml` against `kind`. Trainer becomes `ray/cifar10-train.py --address ray://localhost:10001`. Agents still run locally.
-3.  **Stage 2 — GKE lift**. Push images to Artifact Registry; reapply the same manifests to a GKE cluster. Parquet shards move to GCS. Supervisor becomes a `Job` in the cluster.
-4.  **Stage 3 — GCP-native observability**. Agents swap stdout/log scraping for Cloud Logging queries; the Remediator's actions are scoped by IAM via Workload Identity.
+3.  **Stage 2 — EKS lift**. Push images to ECR; reapply the same manifests to an EKS cluster. Parquet shards move to S3. Supervisor becomes a `Job` in the cluster. Agents flip to Claude on Bedrock by setting `CLAUDE_CODE_USE_BEDROCK=1` and `AWS_REGION` on the pod.
+4.  **Stage 3 — AWS-native observability**. Agents swap stdout/log scraping for CloudWatch Logs Insights queries; the Remediator's actions are scoped by IAM via IRSA, so each agent's tool surface maps to a least-privilege role.
 
 ## 🧰 How It All Fits Together
 
 | Layer | Component | Role in the pipeline |
 |---|---|---|
-| **Data — at rest** | Parquet on HF Hub / GCS | Cold storage of CIFAR-10 shards (or any image dataset). |
+| **Data — at rest** | Parquet on HF Hub / S3 | Cold storage of CIFAR-10 shards (or any image dataset). |
 | **Data — in motion** | Apache Arrow / `pyarrow` | Columnar in-memory format and parquet reader; zero-copy into PyTorch tensors. |
 | **Modeling** | PyTorch + torchvision | ResNet18 definition, training loop, optimizer/scheduler. |
 | **Scaling** | Ray Train (`TorchTrainer`) | Wraps the PyTorch loop, handles process group setup, distributes batches across workers. |
 | **Cluster** | Kubernetes | Schedules pods, manages lifecycle, exposes services. |
 | **Cluster glue** | KubeRay operator | Reconciles the `RayCluster` CRD into head + worker pods and services. |
 | **Packaging** | Docker | Reproducible images for trainer and Ray nodes. |
-| **Agents — brains** | Claude Agent SDK | Defines each agent's system prompt, tools, and message loop. |
-| **Agents — hands** | Tool wrappers under `agents/tools/` | Bridge between Claude and the cluster (`kubectl`, Ray API, parquet, GCS). |
-| **Cloud substrate** | GKE / GCS / Artifact Registry / Secret Manager / Cloud Logging | Production hosting; agents adopt GCP-native APIs without changing their decision logic. |
+| **Agents — brains** | Claude Agent SDK + Claude on Amazon Bedrock | Defines each agent's system prompt, tools, and message loop; Bedrock serves the underlying model calls. |
+| **Agents — hands** | Tool wrappers under `agents/tools/` | Bridge between Claude and the cluster (`kubectl`, Ray API, parquet, S3). |
+| **Cloud substrate** | EKS / S3 / ECR / Secrets Manager / CloudWatch / Bedrock | Production hosting; agents adopt AWS-native APIs without changing their decision logic. |
 
 End-to-end flow of a single training run:
 
 ```
-HF Hub / GCS  ──parquet──►  pyarrow reader  ──tensors──►  PyTorch model
+HF Hub / S3   ──parquet──►  pyarrow reader  ──tensors──►  PyTorch model
                                                               │
                                                               ▼
                                                           Ray Train
@@ -268,4 +269,5 @@ docker rmi park-pytorch:v1
 -   [Docker Compose Documentation](https://docs.docker.com/compose/)
 -   [PyTorch Documentation](https://pytorch.org/docs/)
 -   [Apache Arrow Documentation](https://arrow.apache.org/docs/)
--   [GKE + KubeRay quickstart](https://cloud.google.com/kubernetes-engine/docs/tutorials/distributed-tensorflow-ray)
+-   [EKS + KubeRay on AWS](https://docs.aws.amazon.com/eks/latest/userguide/what-is-eks.html)
+-   [Claude on Amazon Bedrock](https://docs.anthropic.com/en/api/claude-on-amazon-bedrock)

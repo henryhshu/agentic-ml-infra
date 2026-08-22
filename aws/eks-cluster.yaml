@@ -1,0 +1,87 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: park-ml-cluster
+  region: us-west-2
+  version: "1.29"
+  tags:
+    Environment: production
+    Project: agentic-ml-platform
+    ManagedBy: eksctl
+
+iam:
+  withOIDC: true
+
+cloudWatch:
+  clusterLogging:
+    enableTypes:
+      - "api"
+      - "audit"
+      - "authenticator"
+      - "controllerManager"
+      - "scheduler"
+
+addons:
+  - name: vpc-cni
+    version: latest
+    attachPolicyARNs:
+      - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+  - name: coredns
+    version: latest
+  - name: kube-proxy
+    version: latest
+  - name: aws-ebs-csi-driver
+    version: latest
+    wellKnownPolicies:
+      ebsCSIController: true
+
+managedNodeGroups:
+  - name: cpu-workers
+    instanceType: m5.2xlarge
+    minSize: 2
+    maxSize: 8
+    desiredCapacity: 2
+    volumeSize: 100
+    volumeType: gp3
+    volumeEncrypted: true
+    privateNetworking: false
+    iam:
+      withAddonPolicies:
+        autoScaler: true
+        cloudWatch: true
+        ebs: true
+        albIngress: true
+    labels:
+      role: cpu-worker
+      workload: general
+      node.kubernetes.io/role: worker
+    tags:
+      k8s.io/cluster-autoscaler/enabled: "true"
+      k8s.io/cluster-autoscaler/park-ml-cluster: "owned"
+      NodeType: cpu-worker
+
+  - name: gpu-workers
+    instanceType: g4dn.xlarge
+    minSize: 0
+    maxSize: 4
+    desiredCapacity: 0
+    volumeSize: 150
+    volumeType: gp3
+    volumeEncrypted: true
+    privateNetworking: false
+    iam:
+      withAddonPolicies:
+        autoScaler: true
+        cloudWatch: true
+        ebs: true
+    labels:
+      nvidia.com/gpu: "true"
+      role: gpu-worker
+      workload: training
+      node.kubernetes.io/role: gpu-worker
+    tags:
+      k8s.io/cluster-autoscaler/enabled: "true"
+      k8s.io/cluster-autoscaler/park-ml-cluster: "owned"
+      k8s.amazonaws.com/accelerator: nvidia-t4
+      NodeType: gpu-worker

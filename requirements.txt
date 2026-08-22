@@ -3,4 +3,6 @@ torchvision
 pyarrow
 huggingface_hub
 pillow
-ray[train]
+ray[train,tune]
+claude-agent-sdk
+boto3

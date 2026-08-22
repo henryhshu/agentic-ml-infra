@@ -45,6 +45,7 @@ data/.huggingface/
 outputs/
 runs/
 ray_results/
+experiments/
 mlruns/
 wandb/
 lightning_logs/

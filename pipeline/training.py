@@ -26,6 +26,7 @@ class TrainingStage:
         test_loader: DataLoader,
         train_set_size: int,
         checkpoint_emitter=None,
+        supervisor=None,
     ):
         self.config = config
         self.tracker = tracker
@@ -33,6 +34,7 @@ class TrainingStage:
         self.test_loader = test_loader
         self.train_set_size = train_set_size
         self.checkpoint_emitter = checkpoint_emitter
+        self.supervisor = supervisor  # SupervisorAgent or None
         # Populated after run()
         self.model: nn.Module | None = None
         self.best_accuracy: float = 0.0
@@ -163,19 +165,11 @@ class TrainingStage:
                 total_grad_norm += total_norm
                 grad_samples += 1
 
-                # ── Gradient explosion detection ──
-                if total_norm > 1000:
-                    self.tracker.log_event(
-                        self.STAGE_NAME,
-                        "warning",
-                        f"Large gradient norm={total_norm:.1f} at epoch {epoch_num} step {step}",
+                # Apply gradient clipping if enabled (set by remediator)
+                if self.config.max_grad_norm is not None:
+                    torch.nn.utils.clip_grad_norm_(
+                        model.parameters(), self.config.max_grad_norm
                     )
-                    self._emit_checkpoint("anomaly_detected", {
-                        "anomaly_type": "gradient_explosion",
-                        "grad_norm": total_norm,
-                        "epoch": epoch_num,
-                        "step": step,
-                    })
 
                 optimizer.step()
                 running_loss += loss.item() * images.size(0)
@@ -246,19 +240,21 @@ class TrainingStage:
                 f"lr={current_lr:.6f}  ({epoch_time:.1f}s)"
             )
 
-            # ── Accuracy regression detection ──
-            if epoch_num > 3 and test_acc < best_acc * 0.90:
-                self.tracker.log_event(
-                    self.STAGE_NAME,
-                    "warning",
-                    f"Accuracy regression: current={test_acc:.4f} vs best={best_acc:.4f}",
-                )
-                self._emit_checkpoint("anomaly_detected", {
-                    "anomaly_type": "accuracy_regression",
-                    "current_accuracy": test_acc,
-                    "best_accuracy": best_acc,
-                    "epoch": epoch_num,
+            # ── Route epoch metrics to agent fleet (if agentic) ──
+            if self.supervisor is not None:
+                agent_result = self.supervisor.route_event({
+                    "type": "training_metrics",
+                    "stage": self.STAGE_NAME,
+                    "metrics": {
+                        "loss": train_loss,
+                        "accuracy": test_acc,
+                        "grad_norm": avg_grad_norm,
+                        "epoch": epoch_num,
+                        "learning_rate": current_lr,
+                    },
                 })
+                if agent_result and agent_result.get("anomalies"):
+                    self._log_agent_anomalies(agent_result["anomalies"], epoch_num)
 
         self.model = model
         self.best_accuracy = best_acc
@@ -290,6 +286,20 @@ class TrainingStage:
                 action_taken=None,
             )
             self.checkpoint_emitter.emit(checkpoint)
+
+    def _log_agent_anomalies(self, anomalies: list[str], epoch: int) -> None:
+        """Log anomalies detected by the agent fleet."""
+        for anomaly in anomalies:
+            self.tracker.log_event(
+                self.STAGE_NAME, "agent_anomaly",
+                f"Agent detected: {anomaly} at epoch {epoch}",
+            )
+            self._emit_checkpoint("anomaly_detected", {
+                "anomaly_type": anomaly,
+                "epoch": epoch,
+                "source": "agent_fleet",
+            })
+            print(f"  ⚠️  Agent anomaly: {anomaly} (epoch {epoch})")
 
 
 class _TrainingAnomalyError(Exception):

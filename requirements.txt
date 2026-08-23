@@ -4,5 +4,6 @@ pyarrow
 huggingface_hub
 pillow
 ray[train,tune]
-claude-agent-sdk
+anthropic[aws]
+python-dotenv
 boto3

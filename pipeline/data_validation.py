@@ -25,10 +25,12 @@ class DataValidationStage:
         config,  # PipelineConfig
         tracker: ExperimentTracker,
         checkpoint_emitter=None,
+        supervisor=None,
     ):
         self.config = config
         self.tracker = tracker
         self.checkpoint_emitter = checkpoint_emitter
+        self.supervisor = supervisor
 
     @property
     def name(self) -> str:
@@ -59,6 +61,20 @@ class DataValidationStage:
 
             self.tracker.save_stage(self.STAGE_NAME)
             self._emit_checkpoint("stage_end", result)
+
+            if self.supervisor is not None:
+                self.supervisor.route_event({
+                    "type": "data_event",
+                    "stage": self.STAGE_NAME,
+                    "data_quality": {
+                        "schema_mismatch": not result["schema_valid"],
+                        "corrupt_images": 0 if result["sample_decode_ok"] else 1,
+                        "label_imbalance": False,
+                        "missing_columns": not result["schema_valid"],
+                    },
+                    "result": result,
+                })
+
             print(f"  ✅ Data validation: {result['data_quality_score']:.1%} quality score")
             return metrics
 

@@ -29,12 +29,14 @@ class EvaluationStage:
         model: nn.Module,
         test_loader: DataLoader,
         checkpoint_emitter=None,
+        supervisor=None,
     ):
         self.config = config
         self.tracker = tracker
         self.model = model
         self.test_loader = test_loader
         self.checkpoint_emitter = checkpoint_emitter
+        self.supervisor = supervisor
 
     @property
     def name(self) -> str:
@@ -59,6 +61,18 @@ class EvaluationStage:
                 "test_accuracy": result["test_accuracy"],
                 "throughput": result["inference_throughput_sps"],
             })
+
+            if self.supervisor is not None:
+                self.supervisor.route_event({
+                    "type": "evaluation_metrics",
+                    "stage": self.STAGE_NAME,
+                    "metrics": {
+                        "test_accuracy": result["test_accuracy"],
+                        "test_loss": result["test_loss"],
+                        "inference_throughput_sps": result["inference_throughput_sps"],
+                    },
+                })
+
             print(
                 f"  ✅ Evaluation: accuracy={result['test_accuracy']:.4f}, "
                 f"throughput={result['inference_throughput_sps']:.0f} samples/sec"

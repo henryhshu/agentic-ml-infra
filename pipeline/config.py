@@ -22,6 +22,7 @@ class PipelineConfig:
     cache_dir: str = 'data/cifar10'
     log_every: int = 50
     run_id: str | None = None
+    max_grad_norm: float | None = None  # Set by remediator to enable gradient clipping
 
     @classmethod
     def from_args(cls, args: argparse.Namespace) -> PipelineConfig:

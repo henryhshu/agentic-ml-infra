@@ -312,7 +312,7 @@ class PipelineRunner:
     def _run_data_validation(self):
         from pipeline.data_validation import DataValidationStage
         stage = DataValidationStage(
-            self.config, self.tracker, self.checkpoint_emitter
+            self.config, self.tracker, self.checkpoint_emitter, supervisor=self.supervisor
         )
         return stage.run()
 
@@ -339,6 +339,7 @@ class PipelineRunner:
             self._test_loader,
             train_set_size,
             self.checkpoint_emitter,
+            supervisor=self.supervisor,
         )
         result = stage.run()
         self._trained_model = stage.model
@@ -363,5 +364,6 @@ class PipelineRunner:
             self._trained_model,
             self._test_loader,
             self.checkpoint_emitter,
+            supervisor=self.supervisor,
         )
         return stage.run()

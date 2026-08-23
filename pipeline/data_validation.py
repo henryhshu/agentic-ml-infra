@@ -56,6 +56,24 @@ class DataValidationStage:
             if not result["schema_valid"] or not result["sample_decode_ok"]:
                 self.tracker.end_stage(self.STAGE_NAME, status="failed")
                 metrics.error_message = "; ".join(result.get("issues", []))
+                self.tracker.save_stage(self.STAGE_NAME)
+                self._emit_checkpoint("anomaly_detected", {"issues": result.get("issues", [])})
+
+                if self.supervisor is not None:
+                    self.supervisor.route_event({
+                        "type": "data_event",
+                        "stage": self.STAGE_NAME,
+                        "data_quality": {
+                            "schema_mismatch": not result["schema_valid"],
+                            "corrupt_images": 0 if result["sample_decode_ok"] else 1,
+                            "label_imbalance": False,
+                            "missing_columns": not result["schema_valid"],
+                        },
+                        "result": result,
+                    })
+
+                print(f"  ❌ Data validation checks failed: {metrics.error_message}")
+                raise ValueError(f"Data validation failed: {metrics.error_message}")
             else:
                 self.tracker.end_stage(self.STAGE_NAME, status="success")
 
@@ -104,6 +122,13 @@ class DataValidationStage:
 
         # Validate schema
         schema_valid = True
+
+        # ── Fault injection: Corrupted schema / parquet partition ──
+        if self.config.fault_injection in ("corrupt_data", "schema_error"):
+            schema_valid = False
+            issues.append("train: missing columns {'img'} (simulated schema error)")
+            issues.append("train: corrupt parquet bytes in shard partition 0")
+
         for split_name, path in [("train", train_path), ("test", test_path)]:
             table = pq.read_table(str(path))
             columns = set(table.column_names)

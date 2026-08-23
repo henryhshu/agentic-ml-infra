@@ -125,6 +125,14 @@ class TrainingStage:
             optimizer, T_max=self.config.epochs
         )
 
+        # ── Fault injection: Simulated Memory Pressure / OOM ──
+        if self.config.fault_injection in ("batch_oom", "memory_pressure") and self.config.batch_size >= 256:
+            raise _TrainingAnomalyError(
+                "memory_pressure",
+                f"Simulated CUDA Out of Memory: failed to allocate memory for batch_size={self.config.batch_size}",
+                {"batch_size": self.config.batch_size},
+            )
+
         per_epoch: list[dict] = []
         best_acc = 0.0
         best_epoch = 0
@@ -146,6 +154,14 @@ class TrainingStage:
                 optimizer.zero_grad()
                 loss = criterion(model(images), labels)
 
+                # ── Fault injection: NaN / Extreme LR divergence ──
+                if self.config.fault_injection in ("nan_divergence", "nan_loss") and self.config.lr >= 0.5:
+                    raise _TrainingAnomalyError(
+                        "nan_loss",
+                        f"NaN/Inf loss detected at epoch {epoch_num}, step {step}: divergent loss with excessive lr={self.config.lr}",
+                        {"epoch": epoch_num, "step": step, "lr": self.config.lr, "loss": float("nan")},
+                    )
+
                 # ── NaN/Inf detection (fast-fail) ──
                 if math.isnan(loss.item()) or math.isinf(loss.item()):
                     raise _TrainingAnomalyError(
@@ -162,6 +178,16 @@ class TrainingStage:
                     if p.grad is not None:
                         total_norm += p.grad.data.norm(2).item() ** 2
                 total_norm = total_norm ** 0.5
+
+                # ── Fault injection: Gradient explosion (healed by gradient clipping) ──
+                if self.config.fault_injection == "gradient_explosion" and self.config.max_grad_norm is None and step == 1:
+                    total_norm = 999.9
+                    raise _TrainingAnomalyError(
+                        "gradient_explosion",
+                        f"Gradient explosion detected: grad_norm={total_norm:.1f} exceeds stability threshold",
+                        {"epoch": epoch_num, "step": step, "grad_norm": total_norm},
+                    )
+
                 total_grad_norm += total_norm
                 grad_samples += 1
 

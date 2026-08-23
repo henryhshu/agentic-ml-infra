@@ -23,6 +23,7 @@ class PipelineConfig:
     log_every: int = 50
     run_id: str | None = None
     max_grad_norm: float | None = None  # Set by remediator to enable gradient clipping
+    fault_injection: str | None = None  # Set by benchmark harness to inject controlled faults
 
     @classmethod
     def from_args(cls, args: argparse.Namespace) -> PipelineConfig:

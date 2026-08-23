@@ -1,0 +1,332 @@
+{
+  "timestamp": "2026-08-23T10:06:56.116546+00:00",
+  "total_scenarios": 6,
+  "recoverable_scenarios": 5,
+  "self_healed_count": 6,
+  "self_healing_rate": 100.0,
+  "total_compute_saved_s": 7.49,
+  "total_baseline_duration_s": 17.32,
+  "total_agentic_duration_s": 108.92,
+  "scenarios": [
+    {
+      "id": "nan_divergence",
+      "title": "Learning Rate Divergence (NaN Loss)",
+      "category": "training_instability",
+      "is_recoverable": true,
+      "self_healed": true,
+      "compute_saved_s": 3.59,
+      "baseline": {
+        "status": "failed",
+        "duration_s": 3.59,
+        "retries": 3,
+        "error": null
+      },
+      "agentic": {
+        "status": "success",
+        "duration_s": 21.92,
+        "retries": 0,
+        "remediations": [
+          {
+            "timestamp": "2026-08-23T10:05:03.321999+00:00",
+            "action": "reduce_learning_rate",
+            "status": "success",
+            "details": "Reduced LR from 5.0 to 0.5",
+            "config_diff": {
+              "lr": {
+                "old": 5.0,
+                "new": 0.5
+              }
+            }
+          },
+          {
+            "timestamp": "2026-08-23T10:05:10.494492+00:00",
+            "action": "reduce_learning_rate",
+            "status": "success",
+            "details": "Reduced LR from 0.5 to 0.05",
+            "config_diff": {
+              "lr": {
+                "old": 0.5,
+                "new": 0.05
+              }
+            }
+          }
+        ],
+        "incidents": [
+          {
+            "stage": "training",
+            "anomalies": [
+              "nan_loss_detected"
+            ],
+            "raw_anomalies": [
+              "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=5.0"
+            ],
+            "diagnosis": "[training_watch] Loss diverged to NaN/Inf due to unstable gradients or excessive learning rate. | Claude Diagnosis: **Root Cause:** The learning rate of 5.0 is extremely aggressive for this model configuration, causing gradient explosions and NaN loss divergence at the first training step.\n\n**Recommended Action:** Reduce learning rate to 0.01-0.1 range and consider enabling gradient clipping (max_grad_norm=1.0) to stabilize training. | [cluster_health] Cluster issues detected: nan_loss_detected | # Cluster Health Diagnosis: NaN Loss Detected\n\n## \ud83d\udea8 Issue Summary\nA **NaN (Not a Number) loss value** has been detected during training. This is a critical anomaly that indicates numerical instability in the model.\n\n---\n\n## \ud83d\udd0d Root Causes\n\n| Cause | Probability | Impact |\n|-------|------------|--------|\n| **Exploding Gradients** | High | Loss becomes unbounded \u2192 NaN |\n| **Invalid Data Input** | High | Inf/NaN in features or labels |\n| **Learning Rate Too High** | High | Unstable weight updates |\n| **Numerical Underflow/Overflow** | Medium | Floating-point precision limits |\n| **Incompatible Loss Function** | Medium | Undefined operations (log of negative) |\n| **Division by Zero** | Medium | Zero denominator in calculations |\n\n---\n\n## \u2705 Diagnostic Steps\n\n```python\n# 1. Check gradient norms\nprint(\"Max gradient norm:\", max_grad_norm)\nif max_grad_norm > 1e4:\n    print(\"\u26a0\ufe0f Exploding gradients detected!\")\n\n# 2. Validate input data\nassert not np.isnan(X_train).any(), \"NaN in training features\"\nassert | [data_quality] Data quality issues: nan_loss_detected | Claude Analysis: The training pipeline is at critical risk due to an excessively high learning rate (5.0) causing immediate loss divergence; this requires urgent reduction to a stable value (typically 0.01-0.1 range) and validation of numerical stability in the model initialization and data preprocessing steps.",
+            "auto_remediated": true,
+            "action_taken": "reduce_learning_rate"
+          },
+          {
+            "stage": "training",
+            "anomalies": [
+              "nan_loss_detected"
+            ],
+            "raw_anomalies": [
+              "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=0.5"
+            ],
+            "diagnosis": "[training_watch] Loss diverged to NaN/Inf due to unstable gradients or excessive learning rate. | Claude Diagnosis: **Root Cause:** Learning rate of 0.5 is extremely excessive for this model configuration, causing immediate loss divergence and NaN values at the first training step.\n\n**Recommended Action:** Reduce learning rate to 0.001-0.01 range and consider enabling gradient clipping (max_grad_norm=1.0) to stabilize training on CPU with the tiny model. | [cluster_health] Cluster issues detected: nan_loss_detected | # Cluster Health Diagnosis: NaN Loss Detected\n\n## \ud83d\udd34 Critical Issue\nA `nan_loss_detected` anomaly indicates that loss values have become NaN (Not a Number) during training. This is a severe problem that will halt model learning.\n\n---\n\n## Common Causes & Solutions\n\n### 1. **Numerical Instability**\n| Cause | Solution |\n|-------|----------|\n| Exploding gradients | \u2022 Add gradient clipping: `torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)` |\n| Learning rate too high | \u2022 Reduce learning rate (try 0.001 or 0.0001) |\n| Large weight initialization | \u2022 Use proper initialization: `torch.nn.init.xavier_uniform_()` |\n\n### 2. **Data Issues**\n```python\n# Check for problematic data\nassert not np.isnan(X_train).any(), \"NaN in features\"\nassert not np.isnan(y_train).any(), \"NaN in labels\"\nassert not np.isinf(X_train).any(), \"Inf in features\"\n```\n\n### 3. **Loss Function Problems**\n```python\n# Prevent log(0) or division by zero\nloss = F.binary_ | [data_quality] Data quality issues: nan_loss_detected | Claude Analysis: The learning rate of 0.5 is excessively high for the model architecture and dataset, causing loss divergence and NaN values\u2014immediate mitigation requires reducing lr to 0.01-0.1 range and implementing gradient clipping (max_grad_norm) to prevent training pipeline failure.",
+            "auto_remediated": true,
+            "action_taken": "reduce_learning_rate"
+          }
+        ],
+        "claude_diagnoses": [
+          "[training_watch] Loss diverged to NaN/Inf due to unstable gradients or excessive learning rate. | Claude Diagnosis: **Root Cause:** The learning rate of 5.0 is extremely aggressive for this model configuration, causing gradient explosions and NaN loss divergence at the first training step.\n\n**Recommended Action:** Reduce learning rate to 0.01-0.1 range and consider enabling gradient clipping (max_grad_norm=1.0) to stabilize training. | [cluster_health] Cluster issues detected: nan_loss_detected | # Cluster Health Diagnosis: NaN Loss Detected\n\n## \ud83d\udea8 Issue Summary\nA **NaN (Not a Number) loss value** has been detected during training. This is a critical anomaly that indicates numerical instability in the model.\n\n---\n\n## \ud83d\udd0d Root Causes\n\n| Cause | Probability | Impact |\n|-------|------------|--------|\n| **Exploding Gradients** | High | Loss becomes unbounded \u2192 NaN |\n| **Invalid Data Input** | High | Inf/NaN in features or labels |\n| **Learning Rate Too High** | High | Unstable weight updates |\n| **Numerical Underflow/Overflow** | Medium | Floating-point precision limits |\n| **Incompatible Loss Function** | Medium | Undefined operations (log of negative) |\n| **Division by Zero** | Medium | Zero denominator in calculations |\n\n---\n\n## \u2705 Diagnostic Steps\n\n```python\n# 1. Check gradient norms\nprint(\"Max gradient norm:\", max_grad_norm)\nif max_grad_norm > 1e4:\n    print(\"\u26a0\ufe0f Exploding gradients detected!\")\n\n# 2. Validate input data\nassert not np.isnan(X_train).any(), \"NaN in training features\"\nassert | [data_quality] Data quality issues: nan_loss_detected | Claude Analysis: The training pipeline is at critical risk due to an excessively high learning rate (5.0) causing immediate loss divergence; this requires urgent reduction to a stable value (typically 0.01-0.1 range) and validation of numerical stability in the model initialization and data preprocessing steps.",
+          "[training_watch] Loss diverged to NaN/Inf due to unstable gradients or excessive learning rate. | Claude Diagnosis: **Root Cause:** Learning rate of 0.5 is extremely excessive for this model configuration, causing immediate loss divergence and NaN values at the first training step.\n\n**Recommended Action:** Reduce learning rate to 0.001-0.01 range and consider enabling gradient clipping (max_grad_norm=1.0) to stabilize training on CPU with the tiny model. | [cluster_health] Cluster issues detected: nan_loss_detected | # Cluster Health Diagnosis: NaN Loss Detected\n\n## \ud83d\udd34 Critical Issue\nA `nan_loss_detected` anomaly indicates that loss values have become NaN (Not a Number) during training. This is a severe problem that will halt model learning.\n\n---\n\n## Common Causes & Solutions\n\n### 1. **Numerical Instability**\n| Cause | Solution |\n|-------|----------|\n| Exploding gradients | \u2022 Add gradient clipping: `torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)` |\n| Learning rate too high | \u2022 Reduce learning rate (try 0.001 or 0.0001) |\n| Large weight initialization | \u2022 Use proper initialization: `torch.nn.init.xavier_uniform_()` |\n\n### 2. **Data Issues**\n```python\n# Check for problematic data\nassert not np.isnan(X_train).any(), \"NaN in features\"\nassert not np.isnan(y_train).any(), \"NaN in labels\"\nassert not np.isinf(X_train).any(), \"Inf in features\"\n```\n\n### 3. **Loss Function Problems**\n```python\n# Prevent log(0) or division by zero\nloss = F.binary_ | [data_quality] Data quality issues: nan_loss_detected | Claude Analysis: The learning rate of 0.5 is excessively high for the model architecture and dataset, causing loss divergence and NaN values\u2014immediate mitigation requires reducing lr to 0.01-0.1 range and implementing gradient clipping (max_grad_norm) to prevent training pipeline failure."
+        ]
+      }
+    },
+    {
+      "id": "gradient_explosion",
+      "title": "Unclipped Gradient Shock (Exploding Norm)",
+      "category": "training_instability",
+      "is_recoverable": true,
+      "self_healed": true,
+      "compute_saved_s": 2.16,
+      "baseline": {
+        "status": "failed",
+        "duration_s": 2.16,
+        "retries": 3,
+        "error": null
+      },
+      "agentic": {
+        "status": "success",
+        "duration_s": 13.1,
+        "retries": 0,
+        "remediations": [
+          {
+            "timestamp": "2026-08-23T10:05:26.157013+00:00",
+            "action": "enable_gradient_clipping",
+            "status": "success",
+            "details": "Enabled gradient clipping with max_norm=1.0",
+            "config_diff": {
+              "max_grad_norm": {
+                "old": null,
+                "new": 1.0
+              }
+            }
+          }
+        ],
+        "incidents": [
+          {
+            "stage": "training",
+            "anomalies": [
+              "gradient_explosion"
+            ],
+            "raw_anomalies": [
+              "Gradient explosion detected: grad_norm=999.9 exceeds stability threshold"
+            ],
+            "diagnosis": "[training_watch] Gradient norm exceeded numerical stability threshold. | Claude Diagnosis: **Root Cause:** The learning rate of 0.1 is too aggressive for the model architecture, combined with momentum of 0.9 and no gradient clipping (`max_grad_norm=None`), causing unstable gradient updates that explode during early training.\n\n**Recommended Action:** Reduce learning rate to 0.01, enable gradient clipping by setting `max_grad_norm=1.0`, and optionally reduce momentum to 0.8 to stabilize the optimization trajectory. | [cluster_health] Cluster issues detected: gradient_explosion | # Gradient Explosion Diagnosis\n\n## Problem Summary\n**Gradient Explosion** occurs when gradients grow exponentially during backpropagation, causing training instability and numerical overflow.\n\n---\n\n## \ud83d\udd0d Root Causes\n\n| Cause | Likelihood | Details |\n|-------|-----------|---------|\n| **High learning rate** | Very High | Amplifies gradient updates exponentially |\n| **Deep network** | High | Gradients accumulate through many layers |\n| **Unbounded activation functions** | High | ReLU can propagate large values |\n| **Poor weight initialization** | Medium | Weights initialized too large |\n| **Recurrent/LSTM networks** | High | Gradients multiply across time steps |\n| **Batch normalization missing** | Medium | No gradient stabilization layer |\n\n---\n\n## \u2705 Solutions\n\n### **Immediate Fixes** (Try First)\n```python\n# 1. Gradient Clipping (Most Common)\ntorch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)\n# or\ntorch.nn.utils.clip_grad_value_(model.parameters(), clip_value=0.5)\n\n# 2. Reduce Learning Rate\noptimizer = Adam(model.parameters(), lr=0.0001) | [data_quality] Data quality issues: gradient_explosion | Claude Analysis: The gradient explosion is caused by an excessively high learning rate (0.1) combined with strong momentum (0.9) and no gradient clipping (`max_grad_norm=None`), creating unstable training dynamics that risk model divergence and failed convergence.",
+            "auto_remediated": true,
+            "action_taken": "enable_gradient_clipping"
+          }
+        ],
+        "claude_diagnoses": [
+          "[training_watch] Gradient norm exceeded numerical stability threshold. | Claude Diagnosis: **Root Cause:** The learning rate of 0.1 is too aggressive for the model architecture, combined with momentum of 0.9 and no gradient clipping (`max_grad_norm=None`), causing unstable gradient updates that explode during early training.\n\n**Recommended Action:** Reduce learning rate to 0.01, enable gradient clipping by setting `max_grad_norm=1.0`, and optionally reduce momentum to 0.8 to stabilize the optimization trajectory. | [cluster_health] Cluster issues detected: gradient_explosion | # Gradient Explosion Diagnosis\n\n## Problem Summary\n**Gradient Explosion** occurs when gradients grow exponentially during backpropagation, causing training instability and numerical overflow.\n\n---\n\n## \ud83d\udd0d Root Causes\n\n| Cause | Likelihood | Details |\n|-------|-----------|---------|\n| **High learning rate** | Very High | Amplifies gradient updates exponentially |\n| **Deep network** | High | Gradients accumulate through many layers |\n| **Unbounded activation functions** | High | ReLU can propagate large values |\n| **Poor weight initialization** | Medium | Weights initialized too large |\n| **Recurrent/LSTM networks** | High | Gradients multiply across time steps |\n| **Batch normalization missing** | Medium | No gradient stabilization layer |\n\n---\n\n## \u2705 Solutions\n\n### **Immediate Fixes** (Try First)\n```python\n# 1. Gradient Clipping (Most Common)\ntorch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)\n# or\ntorch.nn.utils.clip_grad_value_(model.parameters(), clip_value=0.5)\n\n# 2. Reduce Learning Rate\noptimizer = Adam(model.parameters(), lr=0.0001) | [data_quality] Data quality issues: gradient_explosion | Claude Analysis: The gradient explosion is caused by an excessively high learning rate (0.1) combined with strong momentum (0.9) and no gradient clipping (`max_grad_norm=None`), creating unstable training dynamics that risk model divergence and failed convergence."
+        ]
+      }
+    },
+    {
+      "id": "batch_oom",
+      "title": "Memory Pressure (Simulated Batch OOM)",
+      "category": "resource_pressure",
+      "is_recoverable": true,
+      "self_healed": true,
+      "compute_saved_s": 1.74,
+      "baseline": {
+        "status": "failed",
+        "duration_s": 1.74,
+        "retries": 3,
+        "error": null
+      },
+      "agentic": {
+        "status": "success",
+        "duration_s": 21.2,
+        "retries": 0,
+        "remediations": [
+          {
+            "timestamp": "2026-08-23T10:05:41.517132+00:00",
+            "action": "reduce_batch_size",
+            "status": "success",
+            "details": "Reduced batch size from 512 to 256",
+            "config_diff": {
+              "batch_size": {
+                "old": 512,
+                "new": 256
+              }
+            }
+          },
+          {
+            "timestamp": "2026-08-23T10:05:48.890001+00:00",
+            "action": "reduce_batch_size",
+            "status": "success",
+            "details": "Reduced batch size from 256 to 128",
+            "config_diff": {
+              "batch_size": {
+                "old": 256,
+                "new": 128
+              }
+            }
+          }
+        ],
+        "incidents": [
+          {
+            "stage": "training",
+            "anomalies": [
+              "memory_pressure"
+            ],
+            "raw_anomalies": [
+              "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=512"
+            ],
+            "diagnosis": "[training_watch]  | Claude Diagnosis: **Root Cause:** The batch size of 512 exceeds available memory on the CPU device (note `use_gpu=False`), causing an out-of-memory error despite the model being \"tiny.\"\n\n**Recommended Action:** Reduce `batch_size` to 32-64 and enable GPU acceleration (`use_gpu=True`) if available, or increase `num_workers` for better CPU memory management through data pipeline optimization. | [cluster_health] Cluster issues detected: memory_pressure | # Cluster Health Diagnosis: Memory Pressure Anomaly\n\n## \ud83d\udd34 Issue Detected\n**Memory Pressure** is affecting cluster performance\n\n---\n\n## **Root Cause Analysis**\n\n### Primary Indicators to Check:\n1. **High Memory Utilization**\n   - Nodes operating near capacity (>85%)\n   - Memory not being released after workload completion\n\n2. **Common Culprits**\n   - Memory leaks in applications\n   - Pod memory requests set too low\n   - Insufficient cluster resources\n   - Excessive caching or buffering\n\n---\n\n## **Diagnostic Commands**\n\n```bash\n# Check node memory status\nkubectl top nodes\n\n# Detailed memory per node\nkubectl describe nodes | grep -A 5 \"Allocated resources\"\n\n# Pod memory usage\nkubectl top pods -A --sort-by=memory\n\n# Memory pressure events\nkubectl get events -A --sort-by='.lastTimestamp' | grep -i memory\n\n# Check for memory pressure condition\nkubectl describe nodes | grep -i \"memoryPressure\"\n```\n\n---\n\n## **Immediate Actions**\n\n| Priority | Action | Command |\n|----------|--------|---------|\n| \ud83d\udd34 High | Scale down non-critical workloads | `kubectl scale deployment <name> --replicas=0` |\n| | [data_quality] Data quality issues: memory_pressure | Claude Analysis: **Risk:** Batch size 512 on CPU with 0 workers and 2 Ray workers creates unsustainable memory pressure; reduce batch size to 64-128 or enable GPU acceleration to prevent training pipeline failures.",
+            "auto_remediated": true,
+            "action_taken": "reduce_batch_size"
+          },
+          {
+            "stage": "training",
+            "anomalies": [
+              "memory_pressure"
+            ],
+            "raw_anomalies": [
+              "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+            ],
+            "diagnosis": "[training_watch]  | Claude Diagnosis: **Root Cause:** The batch size of 256 exceeds available memory on the CPU device (GPU is disabled with `use_gpu=False`), causing OOM failures despite the \"tiny\" model.\n\n**Recommended Action:** Reduce `batch_size` to 32-64 for CPU training, or enable GPU acceleration (`use_gpu=True`) to leverage larger memory capacity. | [cluster_health] Cluster issues detected: memory_pressure | # Memory Pressure Diagnosis\n\n## Overview\nMemory pressure detected in cluster. This indicates the system is experiencing memory constraints that may impact performance.\n\n## Quick Diagnosis Steps\n\n### 1. **Check Current Memory Usage**\n```bash\n# View memory usage across nodes\nkubectl top nodes\n\n# View memory usage by pods\nkubectl top pods --all-namespaces | sort -k3 -rn\n\n# Check specific namespace\nkubectl top pods -n <namespace> --sort-by=memory\n```\n\n### 2. **Identify High Memory Consumers**\n```bash\n# Get pods exceeding memory requests\nkubectl get pods --all-namespaces -o json | \\\n  jq '.items[] | select(.status.containerStatuses[0].lastState.terminated.reason==\"OOMKilled\") | .metadata.name'\n\n# Check OOM events\nkubectl get events --all-namespaces --sort-by='.lastTimestamp' | grep -i memory\n```\n\n### 3. **Analyze Memory Resources**\n```bash\n# Check resource requests vs limits\nkubectl describe nodes | grep -A 5 \"Allocated resources\"\n\n# Get detailed node memory info\nkubectl get nodes -o json | \\\n  jq '.items[] | {name: .metadata.name, capacity: .status.capacity.memory, allocatable: .status. | [data_quality] Data quality issues: memory_pressure | Claude Analysis: The memory pressure anomaly stems from a configuration mismatch: `batch_size=256` with `use_gpu=False` on CPU and `num_workers=0` creates inefficient data loading that exhausts available memory, risking pipeline failure on resource-constrained systems.",
+            "auto_remediated": true,
+            "action_taken": "reduce_batch_size"
+          }
+        ],
+        "claude_diagnoses": [
+          "[training_watch]  | Claude Diagnosis: **Root Cause:** The batch size of 512 exceeds available memory on the CPU device (note `use_gpu=False`), causing an out-of-memory error despite the model being \"tiny.\"\n\n**Recommended Action:** Reduce `batch_size` to 32-64 and enable GPU acceleration (`use_gpu=True`) if available, or increase `num_workers` for better CPU memory management through data pipeline optimization. | [cluster_health] Cluster issues detected: memory_pressure | # Cluster Health Diagnosis: Memory Pressure Anomaly\n\n## \ud83d\udd34 Issue Detected\n**Memory Pressure** is affecting cluster performance\n\n---\n\n## **Root Cause Analysis**\n\n### Primary Indicators to Check:\n1. **High Memory Utilization**\n   - Nodes operating near capacity (>85%)\n   - Memory not being released after workload completion\n\n2. **Common Culprits**\n   - Memory leaks in applications\n   - Pod memory requests set too low\n   - Insufficient cluster resources\n   - Excessive caching or buffering\n\n---\n\n## **Diagnostic Commands**\n\n```bash\n# Check node memory status\nkubectl top nodes\n\n# Detailed memory per node\nkubectl describe nodes | grep -A 5 \"Allocated resources\"\n\n# Pod memory usage\nkubectl top pods -A --sort-by=memory\n\n# Memory pressure events\nkubectl get events -A --sort-by='.lastTimestamp' | grep -i memory\n\n# Check for memory pressure condition\nkubectl describe nodes | grep -i \"memoryPressure\"\n```\n\n---\n\n## **Immediate Actions**\n\n| Priority | Action | Command |\n|----------|--------|---------|\n| \ud83d\udd34 High | Scale down non-critical workloads | `kubectl scale deployment <name> --replicas=0` |\n| | [data_quality] Data quality issues: memory_pressure | Claude Analysis: **Risk:** Batch size 512 on CPU with 0 workers and 2 Ray workers creates unsustainable memory pressure; reduce batch size to 64-128 or enable GPU acceleration to prevent training pipeline failures.",
+          "[training_watch]  | Claude Diagnosis: **Root Cause:** The batch size of 256 exceeds available memory on the CPU device (GPU is disabled with `use_gpu=False`), causing OOM failures despite the \"tiny\" model.\n\n**Recommended Action:** Reduce `batch_size` to 32-64 for CPU training, or enable GPU acceleration (`use_gpu=True`) to leverage larger memory capacity. | [cluster_health] Cluster issues detected: memory_pressure | # Memory Pressure Diagnosis\n\n## Overview\nMemory pressure detected in cluster. This indicates the system is experiencing memory constraints that may impact performance.\n\n## Quick Diagnosis Steps\n\n### 1. **Check Current Memory Usage**\n```bash\n# View memory usage across nodes\nkubectl top nodes\n\n# View memory usage by pods\nkubectl top pods --all-namespaces | sort -k3 -rn\n\n# Check specific namespace\nkubectl top pods -n <namespace> --sort-by=memory\n```\n\n### 2. **Identify High Memory Consumers**\n```bash\n# Get pods exceeding memory requests\nkubectl get pods --all-namespaces -o json | \\\n  jq '.items[] | select(.status.containerStatuses[0].lastState.terminated.reason==\"OOMKilled\") | .metadata.name'\n\n# Check OOM events\nkubectl get events --all-namespaces --sort-by='.lastTimestamp' | grep -i memory\n```\n\n### 3. **Analyze Memory Resources**\n```bash\n# Check resource requests vs limits\nkubectl describe nodes | grep -A 5 \"Allocated resources\"\n\n# Get detailed node memory info\nkubectl get nodes -o json | \\\n  jq '.items[] | {name: .metadata.name, capacity: .status.capacity.memory, allocatable: .status. | [data_quality] Data quality issues: memory_pressure | Claude Analysis: The memory pressure anomaly stems from a configuration mismatch: `batch_size=256` with `use_gpu=False` on CPU and `num_workers=0` creates inefficient data loading that exhausts available memory, risking pipeline failure on resource-constrained systems."
+        ]
+      }
+    },
+    {
+      "id": "corrupt_data",
+      "title": "Data Partition Corruption / Schema Mismatch",
+      "category": "data_quality",
+      "is_recoverable": false,
+      "self_healed": true,
+      "compute_saved_s": 0.0,
+      "baseline": {
+        "status": "failed",
+        "duration_s": 5.08,
+        "retries": 3,
+        "error": null
+      },
+      "agentic": {
+        "status": "failed",
+        "duration_s": 41.0,
+        "retries": 3,
+        "remediations": [],
+        "incidents": [
+          {
+            "stage": "data_validation",
+            "anomalies": [
+              "schema_error"
+            ],
+            "raw_anomalies": [
+              "Data validation failed: train: missing columns {'img'} (simulated schema error); train: corrupt parquet bytes in shard partition 0"
+            ],
+            "diagnosis": "[training_watch]  | Claude Diagnosis: **Root Cause:** The training pipeline is encountering a schema validation error due to missing 'img' column in the dataset combined with corrupted parquet data in shard partition 0, likely caused by the `fault_injection: 'corrupt_data'` setting in the config.\n\n**Recommended Action:** Disable fault injection (`fault_injection: null`), verify the parquet schema matches expected columns (ensure 'img' field exists), and rebuild/re-download the dataset cache; alternatively, set `cache_dir` to a fresh location to bypass corrupted cached data. | [cluster_health] Cluster issues detected: schema_error | # Schema Error Diagnosis\n\n## Identified Issue\n**schema_error** - This indicates a problem with data structure validation or schema mismatch.\n\n## Common Causes\n\n| Cause | Likelihood | Impact |\n|-------|-----------|--------|\n| Invalid data format | High | Data rejection, processing failures |\n| Mismatched field types | High | Type conversion errors |\n| Missing required fields | High | Validation failures |\n| Incompatible schema version | Medium | Compatibility issues |\n| Corrupted metadata | Medium | System instability |\n\n## Diagnostic Steps\n\n### 1. **Validate Schema Definition**\n```bash\n# Check current schema\nGET /_cluster/health\nGET /<index>/_mapping\n\n# Review schema version\nGET /<index>/_settings\n```\n\n### 2. **Inspect Recent Data**\n```bash\n# Find problematic documents\nGET /<index>/_search?size=10\n\n# Check for type mismatches\nGET /<index>/_doc/<doc_id>\n```\n\n### 3. **Review Logs**\n```bash\n# Check error logs\ntail -f /var/log/elasticsearch/elasticsearch.log | grep -i \"schema\"\n\n# Look for validation errors\ngrep \"validation\\|mapping\\|schema\" logs/*\n```\n\n## Remediation\n\n- ** | [data_quality] Data quality issues: schema_error | Claude Analysis: The pipeline faces critical data integrity issues: missing 'img' column and corrupted parquet bytes in shard 0 will block model training unless the data source is validated, schema is reconciled, and corrupted partitions are regenerated or recovered.",
+            "auto_remediated": false,
+            "action_taken": null
+          },
+          {
+            "stage": "data_validation",
+            "anomalies": [
+              "schema_error"
+            ],
+            "raw_anomalies": [
+              "Data validation failed: train: missing columns {'img'} (simulated schema error); train: corrupt parquet bytes in shard partition 0"
+            ],
+            "diagnosis": "[training_watch]  | Claude Diagnosis: **Root Cause:** The training pipeline is failing at the data validation stage due to a schema mismatch (missing 'img' column) and corrupted parquet data in shard 0, likely caused by the `fault_injection: 'corrupt_data'` configuration combined with incomplete data preprocessing.\n\n**Recommended Action:** Disable `fault_injection`, verify the dataset schema matches expected columns (ensure 'img' column exists), and regenerate/validate the parquet shards in `data/cifar10`; alternatively, increase `max_retries` from 3 to 5 and enable automatic data repair if available in your pipeline. | [cluster_health] Cluster issues detected: schema_error | # Schema Error Diagnosis\n\n## Issue Identified\nA **schema_error** anomaly indicates a structural problem with data validation or configuration.\n\n## Common Causes\n\n| Cause | Impact | Resolution |\n|-------|--------|-----------|\n| **Mismatched field types** | Data validation fails | Verify schema definition matches actual data types |\n| **Missing required fields** | Records rejected | Ensure all mandatory fields are present |\n| **Invalid nested structure** | Parsing errors | Check JSON/nested object formatting |\n| **Version mismatch** | Incompatible schemas | Align schema versions across services |\n| **Constraint violations** | Data rejected | Review min/max values, patterns, enums |\n\n## Diagnostic Steps\n\n```\n1. Check schema definition files\n2. Validate recent schema changes\n3. Review data samples causing errors\n4. Compare against schema version history\n5. Test with schema validation tools\n6. Check application logs for specifics\n```\n\n## Quick Actions\n\n- \u2705 **Review schema changelog** - Find recent modifications\n- \u2705 **Run validation tests** - Identify specific field failures\n- \u2705 **Check compatibility** - Ensure backward compatibility\n- \u2705 **Rollback if needed** - Revert problematic schema changes\n\n**Need more details?** Provide:\n- Schema type | [data_quality] Data quality issues: schema_error | Claude Analysis: The pipeline faces a critical blocker: missing 'img' column combined with corrupted parquet shard in partition 0 indicates either malformed data source schema or corrupted data files that will prevent model training until resolved through data reconstruction or source validation.",
+            "auto_remediated": false,
+            "action_taken": null
+          },
+          {
+            "stage": "data_validation",
+            "anomalies": [
+              "schema_error"
+            ],
+            "raw_anomalies": [
+              "Data validation failed: train: missing columns {'img'} (simulated schema error); train: corrupt parquet bytes in shard partition 0"
+            ],
+            "diagnosis": "[training_watch]  | Claude Diagnosis: **Root Cause:** The training pipeline is failing at data validation due to schema mismatches (missing 'img' column) and corrupted Parquet shards in partition 0, likely caused by the injected `fault_injection: 'corrupt_data'` setting combined with improper dataset serialization or loading.\n\n**Recommendation:** Disable `fault_injection` in config, verify the dataset schema matches expected columns ('img', label), regenerate/redownload the Parquet shards, and reduce `num_workers` from 0 to 2\u20134 to enable parallel data loading with integrity checks; alternatively, switch to a simpler data format (e.g., NumPy) for debugging before resuming Parquet-based training. | [cluster_health] Cluster issues detected: schema_error | # Cluster Health Diagnosis: Schema Error\n\n## Issue Summary\nA **schema_error** anomaly has been detected in your cluster.\n\n## Common Causes\n\n| Cause | Impact | Severity |\n|-------|--------|----------|\n| **Incompatible schema versions** | Data read/write failures | \ud83d\udd34 High |\n| **Missing required fields** | Query failures | \ud83d\udd34 High |\n| **Type mismatches** | Data corruption risk | \ud83d\udd34 High |\n| **Index mapping issues** | Search failures | \ud83d\udfe1 Medium |\n| **Outdated cluster metadata** | Inconsistent operations | \ud83d\udfe1 Medium |\n\n## Diagnostic Steps\n\n### 1. **Check Schema Definitions**\n```bash\n# Verify current schema version\ncurl -X GET \"localhost:9200/_mapping\"\n\n# Check specific index schema\ncurl -X GET \"localhost:9200/your_index/_mapping\"\n```\n\n### 2. **Validate Cluster Metadata**\n```bash\n# Review cluster state\ncurl -X GET \"localhost:9200/_cluster/state\"\n\n# Check for metadata inconsistencies\ncurl -X GET \"localhost:9200/_cluster/health?pretty\"\n```\n\n### 3. **Inspect Recent Errors**\n```bash\n# Check cluster | [data_quality] Data quality issues: schema_error | Claude Analysis: The pipeline faces critical data integrity risks: missing required 'img' column and corrupted parquet bytes indicate upstream data preparation failures that will prevent model training even after 3 retry attempts, requiring investigation of data generation/loading logic before proceeding.",
+            "auto_remediated": false,
+            "action_taken": null
+          },
+          {
+            "stage": "data_validation",
+            "anomalies": [
+              "schema_error"
+            ],
+            "raw_anomalies": [
+              "Data validation failed: train: missing columns {'img'} (simulated schema error); train: corrupt parquet bytes in shard partition 0"
+            ],
+            "diagnosis": "[training_watch]  | Claude Diagnosis: **Root Cause:** The training pipeline is failing at data validation due to a schema mismatch (missing 'img' column) combined with corrupted parquet data in shard partition 0, likely caused by the injected `fault_injection: 'corrupt_data'` setting or incomplete dataset preparation.\n\n**Recommended Action:** Disable `fault_injection`, verify the dataset schema matches expected columns ('img', labels), regenerate/re-download the CIFAR-10 cache, and increase `max_retries` to 5 to allow recovery from transient corruption issues. | [cluster_health] Cluster issues detected: schema_error | # Schema Error Diagnosis\n\n## Overview\nA `schema_error` anomaly indicates a problem with data structure validation or schema definition in your cluster.\n\n## Common Causes\n\n### 1. **Schema Mismatch**\n- Data doesn't conform to defined schema\n- Field types are incompatible\n- Missing required fields\n\n### 2. **Configuration Issues**\n- Incorrect schema registry settings\n- Corrupted schema definitions\n- Version conflicts\n\n### 3. **Data Format Problems**\n- Serialization/deserialization failures\n- Encoding issues (UTF-8, binary)\n- Malformed messages\n\n## Diagnostic Steps\n\n```bash\n# Check schema registry status\ncurl http://<schema-registry>:8081/subjects\n\n# Validate specific subject schema\ncurl http://<schema-registry>:8081/subjects/<subject>/versions/latest\n\n# Check for compatibility issues\ncurl -X POST http://<schema-registry>:8081/compatibility/subjects/<subject>/versions/latest \\\n  -H \"Content-Type: application/vnd.schemaregistry.v1+json\" \\\n  -d @schema.json\n```\n\n## Solutions\n\n| Issue | Fix |\n|-------|-----|\n| Invalid message format | Re-serialize with correct schema version |\n| Missing fields | Update producer to include all required fields | | [data_quality] Data quality issues: schema_error | Claude Analysis: The training pipeline faces critical data integrity failures: missing required 'img' column and corrupted Parquet bytes in shard 0 indicate upstream ETL/storage issues that will prevent model training unless the data source is repaired or re-ingested before the retry limit (4/3) is exceeded.",
+            "auto_remediated": false,
+            "action_taken": null
+          }
+        ],
+        "claude_diagnoses": [
+          "[training_watch]  | Claude Diagnosis: **Root Cause:** The training pipeline is encountering a schema validation error due to missing 'img' column in the dataset combined with corrupted parquet data in shard partition 0, likely caused by the `fault_injection: 'corrupt_data'` setting in the config.\n\n**Recommended Action:** Disable fault injection (`fault_injection: null`), verify the parquet schema matches expected columns (ensure 'img' field exists), and rebuild/re-download the dataset cache; alternatively, set `cache_dir` to a fresh location to bypass corrupted cached data. | [cluster_health] Cluster issues detected: schema_error | # Schema Error Diagnosis\n\n## Identified Issue\n**schema_error** - This indicates a problem with data structure validation or schema mismatch.\n\n## Common Causes\n\n| Cause | Likelihood | Impact |\n|-------|-----------|--------|\n| Invalid data format | High | Data rejection, processing failures |\n| Mismatched field types | High | Type conversion errors |\n| Missing required fields | High | Validation failures |\n| Incompatible schema version | Medium | Compatibility issues |\n| Corrupted metadata | Medium | System instability |\n\n## Diagnostic Steps\n\n### 1. **Validate Schema Definition**\n```bash\n# Check current schema\nGET /_cluster/health\nGET /<index>/_mapping\n\n# Review schema version\nGET /<index>/_settings\n```\n\n### 2. **Inspect Recent Data**\n```bash\n# Find problematic documents\nGET /<index>/_search?size=10\n\n# Check for type mismatches\nGET /<index>/_doc/<doc_id>\n```\n\n### 3. **Review Logs**\n```bash\n# Check error logs\ntail -f /var/log/elasticsearch/elasticsearch.log | grep -i \"schema\"\n\n# Look for validation errors\ngrep \"validation\\|mapping\\|schema\" logs/*\n```\n\n## Remediation\n\n- ** | [data_quality] Data quality issues: schema_error | Claude Analysis: The pipeline faces critical data integrity issues: missing 'img' column and corrupted parquet bytes in shard 0 will block model training unless the data source is validated, schema is reconciled, and corrupted partitions are regenerated or recovered.",
+          "[training_watch]  | Claude Diagnosis: **Root Cause:** The training pipeline is failing at the data validation stage due to a schema mismatch (missing 'img' column) and corrupted parquet data in shard 0, likely caused by the `fault_injection: 'corrupt_data'` configuration combined with incomplete data preprocessing.\n\n**Recommended Action:** Disable `fault_injection`, verify the dataset schema matches expected columns (ensure 'img' column exists), and regenerate/validate the parquet shards in `data/cifar10`; alternatively, increase `max_retries` from 3 to 5 and enable automatic data repair if available in your pipeline. | [cluster_health] Cluster issues detected: schema_error | # Schema Error Diagnosis\n\n## Issue Identified\nA **schema_error** anomaly indicates a structural problem with data validation or configuration.\n\n## Common Causes\n\n| Cause | Impact | Resolution |\n|-------|--------|-----------|\n| **Mismatched field types** | Data validation fails | Verify schema definition matches actual data types |\n| **Missing required fields** | Records rejected | Ensure all mandatory fields are present |\n| **Invalid nested structure** | Parsing errors | Check JSON/nested object formatting |\n| **Version mismatch** | Incompatible schemas | Align schema versions across services |\n| **Constraint violations** | Data rejected | Review min/max values, patterns, enums |\n\n## Diagnostic Steps\n\n```\n1. Check schema definition files\n2. Validate recent schema changes\n3. Review data samples causing errors\n4. Compare against schema version history\n5. Test with schema validation tools\n6. Check application logs for specifics\n```\n\n## Quick Actions\n\n- \u2705 **Review schema changelog** - Find recent modifications\n- \u2705 **Run validation tests** - Identify specific field failures\n- \u2705 **Check compatibility** - Ensure backward compatibility\n- \u2705 **Rollback if needed** - Revert problematic schema changes\n\n**Need more details?** Provide:\n- Schema type | [data_quality] Data quality issues: schema_error | Claude Analysis: The pipeline faces a critical blocker: missing 'img' column combined with corrupted parquet shard in partition 0 indicates either malformed data source schema or corrupted data files that will prevent model training until resolved through data reconstruction or source validation.",
+          "[training_watch]  | Claude Diagnosis: **Root Cause:** The training pipeline is failing at data validation due to schema mismatches (missing 'img' column) and corrupted Parquet shards in partition 0, likely caused by the injected `fault_injection: 'corrupt_data'` setting combined with improper dataset serialization or loading.\n\n**Recommendation:** Disable `fault_injection` in config, verify the dataset schema matches expected columns ('img', label), regenerate/redownload the Parquet shards, and reduce `num_workers` from 0 to 2\u20134 to enable parallel data loading with integrity checks; alternatively, switch to a simpler data format (e.g., NumPy) for debugging before resuming Parquet-based training. | [cluster_health] Cluster issues detected: schema_error | # Cluster Health Diagnosis: Schema Error\n\n## Issue Summary\nA **schema_error** anomaly has been detected in your cluster.\n\n## Common Causes\n\n| Cause | Impact | Severity |\n|-------|--------|----------|\n| **Incompatible schema versions** | Data read/write failures | \ud83d\udd34 High |\n| **Missing required fields** | Query failures | \ud83d\udd34 High |\n| **Type mismatches** | Data corruption risk | \ud83d\udd34 High |\n| **Index mapping issues** | Search failures | \ud83d\udfe1 Medium |\n| **Outdated cluster metadata** | Inconsistent operations | \ud83d\udfe1 Medium |\n\n## Diagnostic Steps\n\n### 1. **Check Schema Definitions**\n```bash\n# Verify current schema version\ncurl -X GET \"localhost:9200/_mapping\"\n\n# Check specific index schema\ncurl -X GET \"localhost:9200/your_index/_mapping\"\n```\n\n### 2. **Validate Cluster Metadata**\n```bash\n# Review cluster state\ncurl -X GET \"localhost:9200/_cluster/state\"\n\n# Check for metadata inconsistencies\ncurl -X GET \"localhost:9200/_cluster/health?pretty\"\n```\n\n### 3. **Inspect Recent Errors**\n```bash\n# Check cluster | [data_quality] Data quality issues: schema_error | Claude Analysis: The pipeline faces critical data integrity risks: missing required 'img' column and corrupted parquet bytes indicate upstream data preparation failures that will prevent model training even after 3 retry attempts, requiring investigation of data generation/loading logic before proceeding.",
+          "[training_watch]  | Claude Diagnosis: **Root Cause:** The training pipeline is failing at data validation due to a schema mismatch (missing 'img' column) combined with corrupted parquet data in shard partition 0, likely caused by the injected `fault_injection: 'corrupt_data'` setting or incomplete dataset preparation.\n\n**Recommended Action:** Disable `fault_injection`, verify the dataset schema matches expected columns ('img', labels), regenerate/re-download the CIFAR-10 cache, and increase `max_retries` to 5 to allow recovery from transient corruption issues. | [cluster_health] Cluster issues detected: schema_error | # Schema Error Diagnosis\n\n## Overview\nA `schema_error` anomaly indicates a problem with data structure validation or schema definition in your cluster.\n\n## Common Causes\n\n### 1. **Schema Mismatch**\n- Data doesn't conform to defined schema\n- Field types are incompatible\n- Missing required fields\n\n### 2. **Configuration Issues**\n- Incorrect schema registry settings\n- Corrupted schema definitions\n- Version conflicts\n\n### 3. **Data Format Problems**\n- Serialization/deserialization failures\n- Encoding issues (UTF-8, binary)\n- Malformed messages\n\n## Diagnostic Steps\n\n```bash\n# Check schema registry status\ncurl http://<schema-registry>:8081/subjects\n\n# Validate specific subject schema\ncurl http://<schema-registry>:8081/subjects/<subject>/versions/latest\n\n# Check for compatibility issues\ncurl -X POST http://<schema-registry>:8081/compatibility/subjects/<subject>/versions/latest \\\n  -H \"Content-Type: application/vnd.schemaregistry.v1+json\" \\\n  -d @schema.json\n```\n\n## Solutions\n\n| Issue | Fix |\n|-------|-----|\n| Invalid message format | Re-serialize with correct schema version |\n| Missing fields | Update producer to include all required fields | | [data_quality] Data quality issues: schema_error | Claude Analysis: The training pipeline faces critical data integrity failures: missing required 'img' column and corrupted Parquet bytes in shard 0 indicate upstream ETL/storage issues that will prevent model training unless the data source is repaired or re-ingested before the retry limit (4/3) is exceeded."
+        ]
+      }
+    },
+    {
+      "id": "loss_plateau",
+      "title": "Optimizer Stagnation / Dead Learning Rate",
+      "category": "optimizer_stagnation",
+      "is_recoverable": true,
+      "self_healed": true,
+      "compute_saved_s": 0.0,
+      "baseline": {
+        "status": "success",
+        "duration_s": 2.42,
+        "retries": 0,
+        "error": null
+      },
+      "agentic": {
+        "status": "success",
+        "duration_s": 5.9,
+        "retries": 0,
+        "remediations": [],
+        "incidents": [],
+        "claude_diagnoses": []
+      }
+    },
+    {
+      "id": "clean_run",
+      "title": "Reference Baseline (Clean Pipeline)",
+      "category": "baseline",
+      "is_recoverable": true,
+      "self_healed": true,
+      "compute_saved_s": 0.0,
+      "baseline": {
+        "status": "success",
+        "duration_s": 2.33,
+        "retries": 0,
+        "error": null
+      },
+      "agentic": {
+        "status": "success",
+        "duration_s": 5.8,
+        "retries": 0,
+        "remediations": [],
+        "incidents": [],
+        "claude_diagnoses": []
+      }
+    }
+  ]
+}

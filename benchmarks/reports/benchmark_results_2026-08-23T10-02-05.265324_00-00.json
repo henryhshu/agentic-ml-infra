@@ -1,0 +1,87 @@
+{
+  "timestamp": "2026-08-23T10:02:05.265324+00:00",
+  "total_scenarios": 1,
+  "recoverable_scenarios": 1,
+  "self_healed_count": 1,
+  "self_healing_rate": 100.0,
+  "total_compute_saved_s": 3.66,
+  "total_baseline_duration_s": 3.66,
+  "total_agentic_duration_s": 20.7,
+  "scenarios": [
+    {
+      "id": "nan_divergence",
+      "title": "Learning Rate Divergence (NaN Loss)",
+      "category": "training_instability",
+      "is_recoverable": true,
+      "self_healed": true,
+      "compute_saved_s": 3.66,
+      "baseline": {
+        "status": "failed",
+        "duration_s": 3.66,
+        "retries": 3,
+        "error": null
+      },
+      "agentic": {
+        "status": "success",
+        "duration_s": 20.7,
+        "retries": 0,
+        "remediations": [
+          {
+            "timestamp": "2026-08-23T10:01:54.069096+00:00",
+            "action": "reduce_learning_rate",
+            "status": "success",
+            "details": "Reduced LR from 5.0 to 0.5",
+            "config_diff": {
+              "lr": {
+                "old": 5.0,
+                "new": 0.5
+              }
+            }
+          },
+          {
+            "timestamp": "2026-08-23T10:02:00.797258+00:00",
+            "action": "reduce_learning_rate",
+            "status": "success",
+            "details": "Reduced LR from 0.5 to 0.05",
+            "config_diff": {
+              "lr": {
+                "old": 0.5,
+                "new": 0.05
+              }
+            }
+          }
+        ],
+        "incidents": [
+          {
+            "stage": "training",
+            "anomalies": [
+              "nan_loss_detected"
+            ],
+            "raw_anomalies": [
+              "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=5.0"
+            ],
+            "diagnosis": "[training_watch] Loss diverged to NaN/Inf due to unstable gradients or excessive learning rate. | Claude Diagnosis: **Root Cause:** The learning rate of 5.0 is extremely high, causing gradient explosions and loss divergence to NaN on the first step. This is a classic unstable optimization scenario compounded by the absence of gradient clipping (`max_grad_norm: None`).\n\n**Recommended Action:** Reduce learning rate to 0.01-0.1 and enable gradient clipping with `max_grad_norm=1.0` to stabilize training and prevent divergence. | [cluster_health] Cluster issues detected: nan_loss_detected | # Cluster Health Diagnosis: NaN Loss Detected\n\n## \ud83d\udea8 Critical Issue\nYour model is experiencing **NaN (Not a Number) loss values**, which indicates a severe training instability.\n\n## Root Causes & Solutions\n\n### 1. **Learning Rate Too High** \u26a0\ufe0f\n```python\n# \u274c Too aggressive\noptimizer = Adam(learning_rate=0.01)\n\n# \u2705 More conservative\noptimizer = Adam(learning_rate=0.001)  # or 0.0001\n```\n\n### 2. **Gradient Explosion**\n```python\n# Add gradient clipping\nmodel.compile(\n    optimizer=Adam(learning_rate=0.001),\n    loss='mse',\n    metrics=['mae']\n)\n\n# During training callback\nclass GradientClipping(Callback):\n    def on_train_batch_end(self, batch, logs=None):\n        for layer in model.layers:\n            weights = layer.get_weights()\n            weights = [tf.clip_by_norm(w, 1.0) for w in weights]\n            layer.set_weights(weights)\n```\n\n### 3. **Data Issues**\n```python\n# Check for problematic values\nimport numpy as np\n\nprint(\"NaN in data:\", | [data_quality] Data quality issues: nan_loss_detected | Claude Analysis: The training diverged immediately due to an excessively high learning rate (5.0) causing NaN loss\u2014reduce lr to 0.001-0.1 range and verify data normalization to prevent numerical instability in the pipeline.",
+            "auto_remediated": true,
+            "action_taken": "reduce_learning_rate"
+          },
+          {
+            "stage": "training",
+            "anomalies": [
+              "nan_loss_detected"
+            ],
+            "raw_anomalies": [
+              "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=0.5"
+            ],
+            "diagnosis": "[training_watch] Loss diverged to NaN/Inf due to unstable gradients or excessive learning rate. | Claude Diagnosis: **Root Cause:** The learning rate of 0.5 is excessively high, causing loss divergence and NaN values at the first training step\u2014a classic gradient explosion scenario.\n\n**Recommended Action:** Reduce learning rate to 0.001-0.01 and enable gradient clipping (max_grad_norm=1.0) to stabilize training. | [cluster_health] Cluster issues detected: nan_loss_detected | # Cluster Health Diagnosis: NaN Loss Detected\n\n## Issue Summary\nA `nan_loss_detected` anomaly indicates that your model's loss function is producing NaN (Not a Number) values during training, which will halt or corrupt the learning process.\n\n## Root Causes & Solutions\n\n### 1. **Numerical Instability**\n| Cause | Solution |\n|-------|----------|\n| Extreme learning rate | Reduce learning rate (try 0.001, 0.0001) |\n| Unbounded gradients | Add gradient clipping: `torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)` |\n| Poor weight initialization | Use proper initialization (Xavier/Kaiming) |\n\n### 2. **Data Issues**\n```python\n# Check for problematic data\nimport numpy as np\nif np.any(np.isnan(X_train)) or np.any(np.isinf(X_train)):\n    print(\"Data contains NaN or Inf values!\")\n    \n# Normalize/standardize data\nfrom sklearn.preprocessing import StandardScaler\nscaler = StandardScaler()\nX_train = scaler.fit_transform(X_train)\n```\n\n### 3. **Loss Function Problems**\n- **Log of zero/negative | [data_quality] Data quality issues: nan_loss_detected | Claude Analysis: The training pipeline is critically at risk due to an excessively high learning rate (0.5) causing loss divergence; this requires immediate reduction of the learning rate and implementation of gradient clipping or validation checks before training progression.",
+            "auto_remediated": true,
+            "action_taken": "reduce_learning_rate"
+          }
+        ],
+        "claude_diagnoses": [
+          "[training_watch] Loss diverged to NaN/Inf due to unstable gradients or excessive learning rate. | Claude Diagnosis: **Root Cause:** The learning rate of 5.0 is extremely high, causing gradient explosions and loss divergence to NaN on the first step. This is a classic unstable optimization scenario compounded by the absence of gradient clipping (`max_grad_norm: None`).\n\n**Recommended Action:** Reduce learning rate to 0.01-0.1 and enable gradient clipping with `max_grad_norm=1.0` to stabilize training and prevent divergence. | [cluster_health] Cluster issues detected: nan_loss_detected | # Cluster Health Diagnosis: NaN Loss Detected\n\n## \ud83d\udea8 Critical Issue\nYour model is experiencing **NaN (Not a Number) loss values**, which indicates a severe training instability.\n\n## Root Causes & Solutions\n\n### 1. **Learning Rate Too High** \u26a0\ufe0f\n```python\n# \u274c Too aggressive\noptimizer = Adam(learning_rate=0.01)\n\n# \u2705 More conservative\noptimizer = Adam(learning_rate=0.001)  # or 0.0001\n```\n\n### 2. **Gradient Explosion**\n```python\n# Add gradient clipping\nmodel.compile(\n    optimizer=Adam(learning_rate=0.001),\n    loss='mse',\n    metrics=['mae']\n)\n\n# During training callback\nclass GradientClipping(Callback):\n    def on_train_batch_end(self, batch, logs=None):\n        for layer in model.layers:\n            weights = layer.get_weights()\n            weights = [tf.clip_by_norm(w, 1.0) for w in weights]\n            layer.set_weights(weights)\n```\n\n### 3. **Data Issues**\n```python\n# Check for problematic values\nimport numpy as np\n\nprint(\"NaN in data:\", | [data_quality] Data quality issues: nan_loss_detected | Claude Analysis: The training diverged immediately due to an excessively high learning rate (5.0) causing NaN loss\u2014reduce lr to 0.001-0.1 range and verify data normalization to prevent numerical instability in the pipeline.",
+          "[training_watch] Loss diverged to NaN/Inf due to unstable gradients or excessive learning rate. | Claude Diagnosis: **Root Cause:** The learning rate of 0.5 is excessively high, causing loss divergence and NaN values at the first training step\u2014a classic gradient explosion scenario.\n\n**Recommended Action:** Reduce learning rate to 0.001-0.01 and enable gradient clipping (max_grad_norm=1.0) to stabilize training. | [cluster_health] Cluster issues detected: nan_loss_detected | # Cluster Health Diagnosis: NaN Loss Detected\n\n## Issue Summary\nA `nan_loss_detected` anomaly indicates that your model's loss function is producing NaN (Not a Number) values during training, which will halt or corrupt the learning process.\n\n## Root Causes & Solutions\n\n### 1. **Numerical Instability**\n| Cause | Solution |\n|-------|----------|\n| Extreme learning rate | Reduce learning rate (try 0.001, 0.0001) |\n| Unbounded gradients | Add gradient clipping: `torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)` |\n| Poor weight initialization | Use proper initialization (Xavier/Kaiming) |\n\n### 2. **Data Issues**\n```python\n# Check for problematic data\nimport numpy as np\nif np.any(np.isnan(X_train)) or np.any(np.isinf(X_train)):\n    print(\"Data contains NaN or Inf values!\")\n    \n# Normalize/standardize data\nfrom sklearn.preprocessing import StandardScaler\nscaler = StandardScaler()\nX_train = scaler.fit_transform(X_train)\n```\n\n### 3. **Loss Function Problems**\n- **Log of zero/negative | [data_quality] Data quality issues: nan_loss_detected | Claude Analysis: The training pipeline is critically at risk due to an excessively high learning rate (0.5) causing loss divergence; this requires immediate reduction of the learning rate and implementation of gradient clipping or validation checks before training progression."
+        ]
+      }
+    }
+  ]
+}

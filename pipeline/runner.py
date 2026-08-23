@@ -331,6 +331,24 @@ class PipelineRunner:
 
     def _run_training(self):
         from pipeline.training import TrainingStage
+        from torch.utils.data import DataLoader
+
+        # If batch_size was modified during remediation, rebuild loaders
+        if hasattr(self, "_train_loader") and self._train_loader.batch_size != self.config.batch_size:
+            print(f"  🔄 Rebuilding DataLoader with updated batch_size={self.config.batch_size}")
+            self._train_loader = DataLoader(
+                self._train_set,
+                batch_size=self.config.batch_size,
+                shuffle=True,
+                num_workers=self.config.num_workers,
+            )
+            self._test_loader = DataLoader(
+                self._test_set,
+                batch_size=self.config.batch_size,
+                shuffle=False,
+                num_workers=self.config.num_workers,
+            )
+
         train_set_size = len(self._train_set)
         stage = TrainingStage(
             self.config,

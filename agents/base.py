@@ -45,24 +45,26 @@ class AgentBase(ABC):
         self._client = self._init_anthropic_client()
 
     def _init_anthropic_client(self):
-        """Initialize the appropriate Anthropic / AWS client based on environment variables."""
+        """Initialize the Anthropic AWS client based on environment variables."""
         try:
-            import anthropic
+            from anthropic import AnthropicAWS
 
             if self._aws_api_key:
-                return anthropic.AnthropicAWS(
+                return AnthropicAWS(
                     api_key=self._aws_api_key,
                     workspace_id=self._workspace_id,
                     aws_region=self._aws_region,
                 )
-            elif self._api_key:
-                return anthropic.Anthropic(api_key=self._api_key)
-            elif self._use_bedrock:
-                return anthropic.AnthropicBedrock(
+            elif os.environ.get("AWS_ACCESS_KEY_ID") or self._use_bedrock:
+                return AnthropicAWS(
                     aws_region=self._aws_region,
+                    workspace_id=self._workspace_id,
                 )
+            elif self._api_key:
+                import anthropic
+                return anthropic.Anthropic(api_key=self._api_key)
         except Exception as e:
-            self._log(f"Failed to initialize Anthropic client: {e}", level="warning")
+            self._log(f"Failed to initialize AnthropicAWS client: {e}", level="warning")
         return None
 
     @property

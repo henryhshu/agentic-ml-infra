@@ -208,7 +208,7 @@ def _tune_train_fn(config: dict) -> None:
     lr = config["lr"]
     batch_size = config["batch_size"]
     weight_decay = config["weight_decay"]
-    device = torch.device(config.get("device", "cpu"))
+    device = torch.device(config.get("device", "mps"))
     cache_dir = config.get("cache_dir", "data/cifar10")
     subset = config.get("subset")
     num_workers = config.get("num_workers", 0)

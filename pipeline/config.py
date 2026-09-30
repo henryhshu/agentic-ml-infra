@@ -12,8 +12,8 @@ class PipelineConfig:
     weight_decay: float = 5e-4
     num_workers: int = 0
     ray_workers: int = 2
-    use_gpu: bool = False
-    device: str = 'cpu'
+    use_gpu: bool = True
+    device: str = 'mps'
     enable_agentic: bool = False
     max_retries: int = 3
     enable_tuning: bool = False

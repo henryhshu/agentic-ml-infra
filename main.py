@@ -38,8 +38,8 @@ def build_transforms():
 def parse_args():
     p = argparse.ArgumentParser()
     p.add_argument("--model", choices=["resnet18", "tiny"], default="resnet18")
-    p.add_argument("--device", choices=["cpu", "mps", "cuda"], default="cpu",
-                   help="explicit device; auto-probing MPS can deadlock on Python 3.14")
+    p.add_argument("--device", choices=["cpu", "mps", "cuda"], default="mps",
+                   help="explicit device (default: mps for Mac GPU)")
     p.add_argument("--epochs", type=int, default=20)
     p.add_argument("--batch-size", type=int, default=128)
     p.add_argument("--lr", type=float, default=0.1)

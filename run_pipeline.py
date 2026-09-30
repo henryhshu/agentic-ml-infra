@@ -49,8 +49,8 @@ def parse_args() -> argparse.Namespace:
                     help="Weight decay (default: 5e-4)")
 
     # Device & workers
-    p.add_argument("--device", choices=["cpu", "mps", "cuda"], default="cpu",
-                    help="Compute device (default: cpu)")
+    p.add_argument("--device", choices=["cpu", "mps", "cuda"], default="mps",
+                    help="Compute device (default: mps for Mac GPU)")
     p.add_argument("--num-workers", type=int, default=0,
                     help="DataLoader workers (default: 0)")
 
@@ -101,6 +101,7 @@ def main():
         weight_decay=args.weight_decay,
         num_workers=args.num_workers,
         device=args.device,
+        use_gpu=args.device in ("mps", "cuda"),
         enable_agentic=enable_agentic,
         max_retries=args.max_retries,
         enable_tuning=enable_tuning,

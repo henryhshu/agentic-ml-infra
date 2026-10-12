@@ -54,3 +54,13 @@ lightning_logs/
 kubeconfig
 kube-config
 *.kubeconfig
+
+# Research paper & LaTeX artifacts (local only)
+paper/
+*.pdf
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.synctex.gz

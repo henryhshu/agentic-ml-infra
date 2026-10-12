@@ -1,9 +1,9 @@
 # Agentic ML Infrastructure — Benchmark & Efficacy Report
 
-> **Generated at**: `2026-10-11T04:52:20.563416+00:00`  
+> **Generated at**: `2026-10-12T10:43:04.107403+00:00`  
 > **Platform Stack**: PyTorch + Apache Arrow + Ray + Claude on AWS (`anthropic[aws]`)  
-> **Self-Healing Success Rate**: **`100.0%`** (1/1 scenarios addressed)  
-> **Compute Saved**: `2.2s`  
+> **Self-Healing Success Rate**: **`0.0%`** (0/1 scenarios addressed)  
+> **Compute Saved**: `0.0s`  
 
 ---
 
@@ -11,8 +11,8 @@
 
 | Metric | Standard Baseline | Agentic Pipeline (Claude on AWS) | Delta / Efficacy |
 |---|---|---|---|
-| **Autonomous Resolution** | 0 / 1 (0%) | **1 / 1 (100.0%)** | **+100.0%** |
-| **Cumulative Execution Time** | `2.2s` | `17.0s` | `+2.2s` compute saved |
+| **Autonomous Resolution** | 0 / 1 (0%) | **0 / 1 (0.0%)** | **+0.0%** |
+| **Cumulative Execution Time** | `3.9s` | `38.6s` | `+0.0s` compute saved |
 | **In-the-loop Diagnostics** | 0 (Manual triage needed) | **100% telemetry coverage** | Full root-cause insight |
 | **Wasted Retries** | Static retry loops | **Dynamic config mutation** | Zero blind retries |
 
@@ -22,60 +22,88 @@
 
 | Scenario ID | Category | Baseline Status | Agentic Status | Autonomous Action | Verdict |
 |---|---|---|---|---|---|
-| `spot_worker_churn` | cluster_fault | `failed` (3 retries) | `success` | `retry_stage`, `restart_workers` | ✅ **Self-Healed** |
+| `compound_oom_and_explosion` | multi_fault_cascade | `failed` (3 retries) | `failed` | `reduce_batch_size`, `reduce_batch_size`, `enable_gradient_clipping` | ❌ Failed |
 
 ---
 
 ## Detailed Scenario Analysis
 
-### 1. Complex Infrastructure Fault: Spot Node Task Preemption (`spot_worker_churn`)
-- **Category**: `cluster_fault`
-- **Description**: Simulates an AWS Spot instance worker preemption during distributed training, throwing transient task failure.
-- **Expected Baseline**: Fails: Unhandled task interruption terminates pipeline.
-- **Expected Agentic**: Self-heals: ClusterHealthAgent catches task failure, Claude diagnoses worker churn, Remediator triggers retry_stage, subsequent attempt completes.
+### 1. Cascaded Multi-Fault: Memory OOM + Gradient Shock (`compound_oom_and_explosion`)
+- **Category**: `multi_fault_cascade`
+- **Description**: Simulates concurrent faults: oversized batch_size=512 triggers memory exhaustion; once resolved (batch_size halved to 128), unclipped gradient explosion hits on backward pass.
+- **Expected Baseline**: Fails: Crashes continuously across retries without adapting batch size or clipping.
+- **Expected Agentic**: Self-heals: Agent resolves memory pressure first (halving batch_size 512->256->128), then detects gradient explosion and enables clipping (max_grad_norm=1.0), succeeding on attempt 3.
 
 **Execution Comparison**:
-- **Standard Baseline**: Status = `FAILED`, Duration = `2.25s`, Error = `None`
-- **Agentic Pipeline**: Status = `SUCCESS`, Duration = `16.96s`, Remediations = `2`
+- **Standard Baseline**: Status = `FAILED`, Duration = `3.88s`, Error = `None`
+- **Agentic Pipeline**: Status = `FAILED`, Duration = `38.56s`, Remediations = `3`
 
 **Remediation Audit Log**:
-- Action: `retry_stage` &rarr; Status: `retry_requested` (Stage will be retried with current config.)
-- Action: `restart_workers` &rarr; Status: `success` (Ray worker nodes successfully restarted and health-checked.)
+- Action: `reduce_batch_size` &rarr; Status: `success` (Reduced batch size from 512 to 256)
+- Action: `reduce_batch_size` &rarr; Status: `success` (Reduced batch size from 256 to 128)
+- Action: `enable_gradient_clipping` &rarr; Status: `success` (Enabled gradient clipping with max_norm=1.0)
 
 **Claude In-The-Loop Diagnoses**:
-> 🤖 *# ML Training Diagnosis Summary
+> 🤖 *# Unified Diagnosis Report
 
-## Primary Issue
-**Worker Shortage Due to EC2 Spot Instance Interruption**
+## **Critical Issue: Memory Exhaustion During Training**
 
-A Ray worker node was terminated by EC2 Spot preemption during distributed training, reducing the active cluster below the required 2-worker minimum capacity and causing training job failure.
+### Root Cause
+Batch size of **512 is incompatible with CPU-only training** on available system memory. The model configuration lacks GPU acceleration, forcing all computation onto CPU RAM, which cannot accommodate the large batch footprint.
+
+### Contributing Factors
+1. **GPU disabled** – all processing forced to CPU memory
+2. **Batch size (512)** – excessive for CPU-only execution
+3. **No gradient accumulation** – full batch loaded into memory each iteration
+4. **Data pipeline (num_workers=0)** – no distributed data loading to mitigate pressure
 
 ---
 
-## Recommended Actions (Priority Order)
-
-| Priority | Action | Rationale |
-|----------|--------|-----------|
-| **1** | Increase `ray_workers` to 3-4 | Provides fault tolerance buffer; tolerates 1-2 Spot preemptions without training failure |
-| **2** | Implement checkpoint/recovery logic | Enable resumption from last saved state when workers are lost; minimizes data loss |
-| **3** | Migrate to on-demand instances | Eliminates Spot interruption risk; higher cost but guaranteed stability for critical training jobs |*
-> 🤖 *# Unified ML Training Diagnosis
-
-## Primary Issue
-**Worker Shortage** caused by EC2 Spot instance preemption during distributed training, dropping the Ray cluster below the 2-worker minimum threshold and stalling the training pipeline.
-
-## Root Cause Chain
-1. **Immediate Trigger:** EC2 Spot instance interruption terminated a Ray worker node
-2. **Cascading Failure:** Cluster capacity fell below required 2-worker threshold
-3. **Systemic Gap:** Lack of fault tolerance mechanisms for Spot instance volatility
-
-## Recommended Actions (Priority Order)
+## **Recommended Actions (Priority Order)**
 
 | Action | Impact | Effort |
 |--------|--------|--------|
-| **Increase ray_workers to 3-4** | Absorb single node failures | Low |
-| **Enable Ray fault tolerance** | Auto-recovery of failed workers | Medium |
-| **Implement checkpointing** | Resume*
+| **Reduce batch_size to 32-64** | Immediate relief | Low |
+|*
+> 🤖 *# Unified Diagnosis: Memory Pressure During Training
+
+## Root Cause
+**Batch size (256) exceeds available CPU memory capacity** in the current training configuration, causing Out of Memory errors despite CPU-mode operation.
+
+## Critical Findings
+- **Primary Issue**: Batch size 256 is incompatible with available CPU RAM and Ray worker memory allocation
+- **Configuration Problem**: `use_gpu=False` with 2 Ray workers and high batch size creates memory contention
+- **Secondary Factor**: Possible worker memory isolation misconfiguration compounding the pressure
+
+## Recommended Actions (Priority Order)
+
+1. **Immediate**: Reduce `batch_size` to **32-64** (test 64 first, drop to 32 if issues persist)
+2. **Verify**: Ensure `num_workers=0` for CPU training to eliminate data loader overhead
+3. **Validate**: Check*
+> 🤖 *# Unified ML Training Diagnosis
+
+## **Primary Issue: Corrupt Data + Fault Injection**
+
+**Severity:** Critical  
+**Stage:** Training (Attempt 4 Failed)
+
+---
+
+## **Root Cause Analysis**
+
+The training failure is caused by a **confluence of three factors**:
+
+1. **Artificial Fault Injection** (`compound_oom_and_explosion` enabled)
+   - Simulating corrupted gradients and data corruption
+   - Directly preventing meaningful model convergence
+
+2. **Insufficient Training Data & Depth**
+   - Only 200 samples (severely undersized for CIFAR-10)
+   - Single epoch insufficient for any convergence
+   - Label corruption suspected in this tiny subset
+
+3. **Aggressive Hyperparameters**
+   - Learning rate (0.1) and momentum (0.9) too high for corrupted gradients*
 
 ---
 

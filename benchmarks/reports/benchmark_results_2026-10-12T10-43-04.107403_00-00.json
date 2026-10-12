@@ -1,0 +1,124 @@
+{
+  "timestamp": "2026-10-12T10:43:04.107403+00:00",
+  "total_scenarios": 1,
+  "recoverable_scenarios": 1,
+  "self_healed_count": 0,
+  "self_healing_rate": 0.0,
+  "total_compute_saved_s": 0.0,
+  "total_baseline_duration_s": 3.88,
+  "total_agentic_duration_s": 38.56,
+  "scenarios": [
+    {
+      "id": "compound_oom_and_explosion",
+      "title": "Cascaded Multi-Fault: Memory OOM + Gradient Shock",
+      "category": "multi_fault_cascade",
+      "is_recoverable": true,
+      "self_healed": false,
+      "compute_saved_s": 0.0,
+      "baseline": {
+        "status": "failed",
+        "duration_s": 3.88,
+        "retries": 3,
+        "error": null
+      },
+      "agentic": {
+        "status": "failed",
+        "duration_s": 38.56,
+        "retries": 3,
+        "remediations": [
+          {
+            "timestamp": "2026-10-12T10:42:37.676367+00:00",
+            "action": "reduce_batch_size",
+            "status": "success",
+            "details": "Reduced batch size from 512 to 256",
+            "config_diff": {
+              "batch_size": {
+                "old": 512,
+                "new": 256
+              }
+            }
+          },
+          {
+            "timestamp": "2026-10-12T10:42:45.849882+00:00",
+            "action": "reduce_batch_size",
+            "status": "success",
+            "details": "Reduced batch size from 256 to 128",
+            "config_diff": {
+              "batch_size": {
+                "old": 256,
+                "new": 128
+              }
+            }
+          },
+          {
+            "timestamp": "2026-10-12T10:42:54.316928+00:00",
+            "action": "enable_gradient_clipping",
+            "status": "success",
+            "details": "Enabled gradient clipping with max_norm=1.0",
+            "config_diff": {
+              "max_grad_norm": {
+                "old": null,
+                "new": 1.0
+              }
+            }
+          }
+        ],
+        "incidents": [
+          {
+            "stage": "training",
+            "anomalies": [
+              "memory_pressure"
+            ],
+            "raw_anomalies": [
+              "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=512"
+            ],
+            "diagnosis": "# Unified Diagnosis Report\n\n## **Critical Issue: Memory Exhaustion During Training**\n\n### Root Cause\nBatch size of **512 is incompatible with CPU-only training** on available system memory. The model configuration lacks GPU acceleration, forcing all computation onto CPU RAM, which cannot accommodate the large batch footprint.\n\n### Contributing Factors\n1. **GPU disabled** \u2013 all processing forced to CPU memory\n2. **Batch size (512)** \u2013 excessive for CPU-only execution\n3. **No gradient accumulation** \u2013 full batch loaded into memory each iteration\n4. **Data pipeline (num_workers=0)** \u2013 no distributed data loading to mitigate pressure\n\n---\n\n## **Recommended Actions (Priority Order)**\n\n| Action | Impact | Effort |\n|--------|--------|--------|\n| **Reduce batch_size to 32-64** | Immediate relief | Low |\n|",
+            "auto_remediated": true,
+            "action_taken": "reduce_batch_size"
+          },
+          {
+            "stage": "training",
+            "anomalies": [
+              "memory_pressure"
+            ],
+            "raw_anomalies": [
+              "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+            ],
+            "diagnosis": "# Unified Diagnosis: Memory Pressure During Training\n\n## Root Cause\n**Batch size (256) exceeds available CPU memory capacity** in the current training configuration, causing Out of Memory errors despite CPU-mode operation.\n\n## Critical Findings\n- **Primary Issue**: Batch size 256 is incompatible with available CPU RAM and Ray worker memory allocation\n- **Configuration Problem**: `use_gpu=False` with 2 Ray workers and high batch size creates memory contention\n- **Secondary Factor**: Possible worker memory isolation misconfiguration compounding the pressure\n\n## Recommended Actions (Priority Order)\n\n1. **Immediate**: Reduce `batch_size` to **32-64** (test 64 first, drop to 32 if issues persist)\n2. **Verify**: Ensure `num_workers=0` for CPU training to eliminate data loader overhead\n3. **Validate**: Check",
+            "auto_remediated": true,
+            "action_taken": "reduce_batch_size"
+          },
+          {
+            "stage": "training",
+            "anomalies": [
+              "gradient_explosion"
+            ],
+            "raw_anomalies": [
+              "Gradient explosion detected: grad_norm=999.9 exceeds stability threshold"
+            ],
+            "diagnosis": "# \ud83d\udea8 UNIFIED DIAGNOSIS: Gradient Explosion\n\n## **Primary Issue**\nTraining is experiencing severe gradient explosion (**grad_norm=999.9**) due to **aggressive hyperparameter configuration** combined with **missing gradient clipping**.\n\n---\n\n## **Root Cause Analysis**\n\n| Factor | Current | Impact |\n|--------|---------|--------|\n| **Learning Rate** | 0.1 | Too aggressive for model architecture |\n| **Gradient Clipping** | Disabled (None) | Unbounded gradient propagation |\n| **Momentum** | 0.9 | Amplifies learning rate effect |\n| **Environment** | CPU-based | Limits numerical stability margin |\n\n**Consensus Finding:** All subagents agree this is a **hyperparameter misconfiguration** causing training instability and imminent divergence risk.\n\n---\n\n## **Immediate",
+            "auto_remediated": true,
+            "action_taken": "enable_gradient_clipping"
+          },
+          {
+            "stage": "training",
+            "anomalies": [
+              "corrupt_data"
+            ],
+            "raw_anomalies": [
+              "Model failed to converge: test accuracy 0.0950 is at or below random guessing threshold (0.15). Suspected label corruption or representational collapse."
+            ],
+            "diagnosis": "# Unified ML Training Diagnosis\n\n## **Primary Issue: Corrupt Data + Fault Injection**\n\n**Severity:** Critical  \n**Stage:** Training (Attempt 4 Failed)\n\n---\n\n## **Root Cause Analysis**\n\nThe training failure is caused by a **confluence of three factors**:\n\n1. **Artificial Fault Injection** (`compound_oom_and_explosion` enabled)\n   - Simulating corrupted gradients and data corruption\n   - Directly preventing meaningful model convergence\n\n2. **Insufficient Training Data & Depth**\n   - Only 200 samples (severely undersized for CIFAR-10)\n   - Single epoch insufficient for any convergence\n   - Label corruption suspected in this tiny subset\n\n3. **Aggressive Hyperparameters**\n   - Learning rate (0.1) and momentum (0.9) too high for corrupted gradients",
+            "auto_remediated": false,
+            "action_taken": null
+          }
+        ],
+        "claude_diagnoses": [
+          "# Unified Diagnosis Report\n\n## **Critical Issue: Memory Exhaustion During Training**\n\n### Root Cause\nBatch size of **512 is incompatible with CPU-only training** on available system memory. The model configuration lacks GPU acceleration, forcing all computation onto CPU RAM, which cannot accommodate the large batch footprint.\n\n### Contributing Factors\n1. **GPU disabled** \u2013 all processing forced to CPU memory\n2. **Batch size (512)** \u2013 excessive for CPU-only execution\n3. **No gradient accumulation** \u2013 full batch loaded into memory each iteration\n4. **Data pipeline (num_workers=0)** \u2013 no distributed data loading to mitigate pressure\n\n---\n\n## **Recommended Actions (Priority Order)**\n\n| Action | Impact | Effort |\n|--------|--------|--------|\n| **Reduce batch_size to 32-64** | Immediate relief | Low |\n|",
+          "# Unified Diagnosis: Memory Pressure During Training\n\n## Root Cause\n**Batch size (256) exceeds available CPU memory capacity** in the current training configuration, causing Out of Memory errors despite CPU-mode operation.\n\n## Critical Findings\n- **Primary Issue**: Batch size 256 is incompatible with available CPU RAM and Ray worker memory allocation\n- **Configuration Problem**: `use_gpu=False` with 2 Ray workers and high batch size creates memory contention\n- **Secondary Factor**: Possible worker memory isolation misconfiguration compounding the pressure\n\n## Recommended Actions (Priority Order)\n\n1. **Immediate**: Reduce `batch_size` to **32-64** (test 64 first, drop to 32 if issues persist)\n2. **Verify**: Ensure `num_workers=0` for CPU training to eliminate data loader overhead\n3. **Validate**: Check",
+          "# Unified ML Training Diagnosis\n\n## **Primary Issue: Corrupt Data + Fault Injection**\n\n**Severity:** Critical  \n**Stage:** Training (Attempt 4 Failed)\n\n---\n\n## **Root Cause Analysis**\n\nThe training failure is caused by a **confluence of three factors**:\n\n1. **Artificial Fault Injection** (`compound_oom_and_explosion` enabled)\n   - Simulating corrupted gradients and data corruption\n   - Directly preventing meaningful model convergence\n\n2. **Insufficient Training Data & Depth**\n   - Only 200 samples (severely undersized for CIFAR-10)\n   - Single epoch insufficient for any convergence\n   - Label corruption suspected in this tiny subset\n\n3. **Aggressive Hyperparameters**\n   - Learning rate (0.1) and momentum (0.9) too high for corrupted gradients"
+        ]
+      }
+    }
+  ]
+}

@@ -1,3 +1,8 @@
+"""Data quality agent module for AutoPARK.
+
+Monitors dataset partitions, schema conformance, sample decodability,
+and label distributions across Apache Arrow / Parquet data pipelines.
+"""
 from __future__ import annotations
 
 from pathlib import Path
@@ -6,7 +11,12 @@ from agents.base import AgentBase
 
 
 class DataQualityAgent(AgentBase):
-    """Monitors dataset partitions, schema conformance, and sample decodability."""
+    """AutoPARK Data Quality & Integrity Agent.
+
+    Inspects streaming dataset validation telemetry, detecting schema mismatches,
+    corrupted parquet partitions or images, severe class imbalance, and missing columns.
+    Enables Claude to triage data-layer defects prior to expensive GPU/CPU training stages.
+    """
 
     def observe(self, event: dict[str, Any]) -> list[str]:
         anomalies: list[str] = []
@@ -50,20 +60,16 @@ class DataQualityAgent(AgentBase):
             return False, [f"read_error: {e}"]
 
     def diagnose(self, anomalies: list[str], context: dict[str, Any]) -> str:
+        """Diagnose dataset anomalies directly using Claude Platform on AWS."""
         if not anomalies:
             return ""
 
-        rule_diag = "Data quality issues: " + ", ".join(anomalies)
-        if self.is_llm_available:
-            system_prompt = (
-                "You are an ML Data Quality Diagnostic Agent. Analyze the dataset anomalies "
-                "and explain data pipeline risks in 1 concise sentence."
-            )
-            user_prompt = f"Anomalies: {anomalies}. Context: {context}."
-            llm_diag = self._call_llm(system_prompt, user_prompt, max_tokens=150)
-            return f"{rule_diag} | Claude Analysis: {llm_diag}"
-
-        return rule_diag
+        system_prompt = (
+            "You are an ML Data Quality Diagnostic Agent on Claude Platform on AWS. Analyze the dataset anomalies "
+            "and explain data pipeline risks in 1 concise sentence."
+        )
+        user_prompt = f"Anomalies: {anomalies}. Context: {context}."
+        return self._call_llm(system_prompt, user_prompt, max_tokens=150)
 
     def recommend_action(self, diagnosis: str, context: dict[str, Any]) -> str | None:
         if "schema_error" in diagnosis or "missing_columns" in diagnosis:

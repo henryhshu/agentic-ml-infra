@@ -1,3 +1,9 @@
+"""Supervisor agent module for the AutoPARK autonomous self-healing platform.
+
+Coordinates multi-agent telemetry observation, anomaly normalization,
+LLM-powered cognitive diagnosis via Claude on AWS, and safe closed-loop
+remediation routing across modular plugins.
+"""
 from __future__ import annotations
 
 import json
@@ -31,6 +37,7 @@ SAFE_REMEDIATIONS = {
     "worker_shortage",
     "memory_pressure",
     "loss_plateau",
+    "task_failure",
 }
 
 
@@ -69,10 +76,16 @@ def normalize_anomalies(raw_anomalies: list[str]) -> list[str]:
 
 
 class SupervisorAgent(AgentBase):
-    """Orchestrates the agent fleet, routes pipeline telemetry, and synthesizes in-the-loop decisions."""
+    """AutoPARK Lead Supervisor Agent.
+    
+    Orchestrates the specialized sub-agent fleet (TrainingWatch, ClusterHealth,
+    DataQuality, Remediator), routes live pipeline telemetry, requests
+    cognitive root-cause synthesis from Claude on AWS, enforces safety
+    boundaries (`SAFE_REMEDIATIONS`), and persists complete incident audit trails.
+    """
 
     SYSTEM_PROMPT = (
-        "You are the Lead ML Training Supervisor Agent running in-the-loop on AWS. "
+        "You are the Lead ML Training Supervisor Agent running in-the-loop on Claude Platform on AWS. "
         "Your mission is to monitor training metrics, data partitions, and cluster health. "
         "Coordinate autonomous recovery actions when anomalies arise and provide concise diagnostic assessments."
     )
@@ -162,7 +175,17 @@ class SupervisorAgent(AgentBase):
             if diagnosis:
                 diagnoses.append(f"[{agent_name}] {diagnosis}")
 
-        overall_diagnosis = " | ".join(diagnoses) or "Unclassified pipeline failure."
+        if len(diagnoses) > 1:
+            system_prompt = (
+                "You are the Lead ML Training Supervisor Agent on Claude Platform on AWS. "
+                "Synthesize the diagnostic reports from individual subagents into a unified, concise diagnosis."
+            )
+            user_prompt = f"Stage: {stage}\nAnomalies: {canonical}\nSubagent Diagnoses:\n" + "\n".join(diagnoses)
+            overall_diagnosis = self._call_llm(system_prompt, user_prompt, max_tokens=200)
+        elif len(diagnoses) == 1:
+            overall_diagnosis = diagnoses[0]
+        else:
+            overall_diagnosis = "Unclassified pipeline failure."
 
         # Remediate or Escalate
         remediator = self.sub_agents.get("remediator")

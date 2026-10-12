@@ -1,0 +1,57 @@
+{
+  "timestamp": "2026-10-11T04:50:25.607754+00:00",
+  "total_scenarios": 1,
+  "recoverable_scenarios": 1,
+  "self_healed_count": 0,
+  "self_healing_rate": 0.0,
+  "total_compute_saved_s": 0.0,
+  "total_baseline_duration_s": 2.58,
+  "total_agentic_duration_s": 9.96,
+  "scenarios": [
+    {
+      "id": "spot_worker_churn",
+      "title": "Complex Infrastructure Fault: Spot Node Task Preemption",
+      "category": "cluster_fault",
+      "is_recoverable": true,
+      "self_healed": false,
+      "compute_saved_s": 0.0,
+      "baseline": {
+        "status": "success",
+        "duration_s": 2.58,
+        "retries": 0,
+        "error": null
+      },
+      "agentic": {
+        "status": "success",
+        "duration_s": 9.96,
+        "retries": 0,
+        "remediations": [
+          {
+            "timestamp": "2026-10-11T04:50:24.072987+00:00",
+            "action": "retry_stage",
+            "status": "retry_requested",
+            "details": "Stage will be retried with current config.",
+            "config_diff": {}
+          }
+        ],
+        "incidents": [
+          {
+            "stage": "training",
+            "anomalies": [
+              "worker_shortage"
+            ],
+            "raw_anomalies": [
+              "Ray task failure: worker node preempted by EC2 Spot interruption during distributed training step"
+            ],
+            "diagnosis": "# Unified Diagnosis: Worker Shortage During Training\n\n## Root Cause\n**EC2 Spot instance interruption terminated a Ray worker node**, reducing the cluster below minimum required capacity for distributed training to proceed.\n\n## Critical Issue\n- **Current State:** 2 Ray workers insufficient to tolerate node failure\n- **Failure Mode:** Single Spot interruption \u2192 immediate task failure (no redundancy)\n- **Systemic Risk:** Repeatable until fault tolerance is established\n\n## Recommended Actions (Priority Order)\n\n| Action | Impact | Effort |\n|--------|--------|--------|\n| **Increase `ray_workers` to 4-6** | Adds redundancy; one interruption no longer halts training | Low |\n| **Enable checkpointing** (`max_retries` configured) | Allows auto-recovery from transient failures | Medium |\n| **Switch to On-Demand",
+            "auto_remediated": true,
+            "action_taken": "retry_stage"
+          }
+        ],
+        "claude_diagnoses": [
+          "# Unified Diagnosis: Worker Shortage During Training\n\n## Root Cause\n**EC2 Spot instance interruption terminated a Ray worker node**, reducing the cluster below minimum required capacity for distributed training to proceed.\n\n## Critical Issue\n- **Current State:** 2 Ray workers insufficient to tolerate node failure\n- **Failure Mode:** Single Spot interruption \u2192 immediate task failure (no redundancy)\n- **Systemic Risk:** Repeatable until fault tolerance is established\n\n## Recommended Actions (Priority Order)\n\n| Action | Impact | Effort |\n|--------|--------|--------|\n| **Increase `ray_workers` to 4-6** | Adds redundancy; one interruption no longer halts training | Low |\n| **Enable checkpointing** (`max_retries` configured) | Allows auto-recovery from transient failures | Medium |\n| **Switch to On-Demand"
+        ]
+      }
+    }
+  ]
+}

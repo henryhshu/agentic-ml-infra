@@ -1,0 +1,144 @@
+{
+  "timestamp": "2026-10-02T22:07:45.087884+00:00",
+  "total_scenarios": 6,
+  "recoverable_scenarios": 5,
+  "self_healed_count": 0,
+  "self_healing_rate": 0.0,
+  "total_compute_saved_s": 7.07,
+  "total_baseline_duration_s": 21.47,
+  "total_agentic_duration_s": 14.87,
+  "scenarios": [
+    {
+      "id": "nan_divergence",
+      "title": "Learning Rate Divergence (NaN Loss)",
+      "category": "training_instability",
+      "is_recoverable": true,
+      "self_healed": false,
+      "compute_saved_s": 2.61,
+      "baseline": {
+        "status": "failed",
+        "duration_s": 5.64,
+        "retries": 3,
+        "error": null
+      },
+      "agentic": {
+        "status": "failed",
+        "duration_s": 3.03,
+        "retries": 3,
+        "remediations": [],
+        "incidents": [],
+        "claude_diagnoses": []
+      }
+    },
+    {
+      "id": "gradient_explosion",
+      "title": "Unclipped Gradient Shock (Exploding Norm)",
+      "category": "training_instability",
+      "is_recoverable": true,
+      "self_healed": false,
+      "compute_saved_s": 0.09,
+      "baseline": {
+        "status": "failed",
+        "duration_s": 2.37,
+        "retries": 3,
+        "error": null
+      },
+      "agentic": {
+        "status": "failed",
+        "duration_s": 2.28,
+        "retries": 3,
+        "remediations": [],
+        "incidents": [],
+        "claude_diagnoses": []
+      }
+    },
+    {
+      "id": "batch_oom",
+      "title": "Memory Pressure (Simulated Batch OOM)",
+      "category": "resource_pressure",
+      "is_recoverable": true,
+      "self_healed": false,
+      "compute_saved_s": 0.0,
+      "baseline": {
+        "status": "failed",
+        "duration_s": 2.17,
+        "retries": 3,
+        "error": null
+      },
+      "agentic": {
+        "status": "failed",
+        "duration_s": 2.43,
+        "retries": 3,
+        "remediations": [],
+        "incidents": [],
+        "claude_diagnoses": []
+      }
+    },
+    {
+      "id": "corrupt_data",
+      "title": "Data Partition Corruption / Schema Mismatch",
+      "category": "data_quality",
+      "is_recoverable": false,
+      "self_healed": false,
+      "compute_saved_s": 4.33,
+      "baseline": {
+        "status": "failed",
+        "duration_s": 6.27,
+        "retries": 3,
+        "error": null
+      },
+      "agentic": {
+        "status": "failed",
+        "duration_s": 1.94,
+        "retries": 3,
+        "remediations": [],
+        "incidents": [],
+        "claude_diagnoses": []
+      }
+    },
+    {
+      "id": "loss_plateau",
+      "title": "Optimizer Stagnation / Dead Learning Rate",
+      "category": "optimizer_stagnation",
+      "is_recoverable": true,
+      "self_healed": false,
+      "compute_saved_s": 0.04,
+      "baseline": {
+        "status": "success",
+        "duration_s": 2.59,
+        "retries": 0,
+        "error": null
+      },
+      "agentic": {
+        "status": "failed",
+        "duration_s": 2.55,
+        "retries": 3,
+        "remediations": [],
+        "incidents": [],
+        "claude_diagnoses": []
+      }
+    },
+    {
+      "id": "clean_run",
+      "title": "Reference Baseline (Clean Pipeline)",
+      "category": "baseline",
+      "is_recoverable": true,
+      "self_healed": false,
+      "compute_saved_s": 0.0,
+      "baseline": {
+        "status": "success",
+        "duration_s": 2.43,
+        "retries": 0,
+        "error": null
+      },
+      "agentic": {
+        "status": "failed",
+        "duration_s": 2.64,
+        "retries": 3,
+        "remediations": [],
+        "incidents": [],
+        "claude_diagnoses": []
+      }
+    }
+  ]
+}

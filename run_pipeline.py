@@ -1,11 +1,15 @@
 #!/usr/bin/env python
-"""Unified pipeline CLI for the agentic ML training platform.
+"""AutoPARK Unified Pipeline CLI.
+
+Runs the end-to-end AutoPARK ML training pipeline (Data Validation -> Data Loading
+-> Training -> [Tuning] -> Evaluation) with optional in-the-loop agentic self-healing
+powered by Claude on AWS.
 
 Usage examples:
     # Quick smoke test (non-agentic, tiny model, small subset)
     python run_pipeline.py --model tiny --epochs 2 --subset 500 --no-tune
 
-    # Full pipeline with agentic monitoring
+    # Full pipeline with AutoPARK agentic self-healing
     python run_pipeline.py --model tiny --epochs 5 --agentic --no-tune
 
     # Pipeline with hyperparameter tuning
@@ -14,7 +18,7 @@ Usage examples:
     # ResNet18 full training
     python run_pipeline.py --model resnet18 --epochs 20
 
-    # Compare agentic vs non-agentic
+    # Comparative evaluation: standard vs. AutoPARK agentic mode
     python run_pipeline.py --model tiny --epochs 3 --subset 1000 --no-agentic --no-tune
     python run_pipeline.py --model tiny --epochs 3 --subset 1000 --agentic --no-tune
 """
@@ -22,6 +26,10 @@ from __future__ import annotations
 
 import argparse
 import sys
+from dotenv import load_dotenv
+
+# Always reload latest credentials and configuration from .env
+load_dotenv(override=True)
 
 from pipeline.config import PipelineConfig
 from pipeline.runner import PipelineRunner
@@ -49,8 +57,8 @@ def parse_args() -> argparse.Namespace:
                     help="Weight decay (default: 5e-4)")
 
     # Device & workers
-    p.add_argument("--device", choices=["cpu", "mps", "cuda"], default="mps",
-                    help="Compute device (default: mps for Mac GPU)")
+    p.add_argument("--device", choices=["cpu", "mps", "cuda"], default=None,
+                    help="Compute device (default: auto-detected cuda/mps/cpu)")
     p.add_argument("--num-workers", type=int, default=0,
                     help="DataLoader workers (default: 0)")
 
@@ -92,6 +100,9 @@ def main():
     enable_agentic = args.agentic and not args.no_agentic
     enable_tuning = args.tune and not args.no_tune
 
+    from pipeline.config import get_default_device
+    device = args.device or get_default_device()
+
     config = PipelineConfig(
         model=args.model,
         epochs=args.epochs,
@@ -100,8 +111,8 @@ def main():
         momentum=args.momentum,
         weight_decay=args.weight_decay,
         num_workers=args.num_workers,
-        device=args.device,
-        use_gpu=args.device in ("mps", "cuda"),
+        device=device,
+        use_gpu=device in ("mps", "cuda"),
         enable_agentic=enable_agentic,
         max_retries=args.max_retries,
         enable_tuning=enable_tuning,

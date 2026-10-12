@@ -21,8 +21,15 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
+# Source .env if present
+if [[ -f "${PROJECT_ROOT}/.env" ]]; then
+    set -a
+    source "${PROJECT_ROOT}/.env"
+    set +a
+fi
+
 # Default configurations
-AWS_REGION="${AWS_REGION:-us-west-2}"
+AWS_REGION="${AWS_REGION:-us-east-1}"
 AWS_ACCOUNT_ID="${AWS_ACCOUNT_ID:-}"
 IMAGE_TAG="${IMAGE_TAG:-v1}"
 REPO_PYTORCH="park-pytorch"
@@ -162,8 +169,8 @@ if [[ "${NO_CACHE}" == "true" ]]; then
     BUILD_ARGS="--no-cache"
 fi
 
-echo -e "${BLUE}==>${NC} Building base PyTorch image: ${BOLD}${REPO_PYTORCH}${NC}..."
-docker build ${BUILD_ARGS} \
+echo -e "${BLUE}==>${NC} Building base PyTorch image: ${BOLD}${REPO_PYTORCH}${NC} (linux/amd64)..."
+docker build --platform linux/amd64 ${BUILD_ARGS} \
     -f "${PROJECT_ROOT}/docker/Dockerfile.pytorch" \
     -t "${REPO_PYTORCH}:v1" \
     -t "${REPO_PYTORCH}:latest" \
@@ -174,8 +181,8 @@ echo -e "${GREEN}✓ Built ${REPO_PYTORCH}.${NC}"
 echo ""
 
 # Step 4: Build CIFAR-10 Application Image
-echo -e "${BLUE}==>${NC} Building CIFAR-10 training image: ${BOLD}${REPO_CIFAR10}${NC}..."
-docker build ${BUILD_ARGS} \
+echo -e "${BLUE}==>${NC} Building CIFAR-10 training image: ${BOLD}${REPO_CIFAR10}${NC} (linux/amd64)..."
+docker build --platform linux/amd64 ${BUILD_ARGS} \
     -f "${PROJECT_ROOT}/docker/Dockerfile.cifar10" \
     -t "${REPO_CIFAR10}:v1" \
     -t "${REPO_CIFAR10}:latest" \

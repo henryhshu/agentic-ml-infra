@@ -1,9 +1,23 @@
+"""Cluster health agent module for AutoPARK.
+
+Monitors distributed Ray and Kubernetes infrastructure state, detecting
+worker node shortages, AWS Spot instance preemptions, cluster memory pressure,
+and unexpected distributed task failures.
+"""
 from __future__ import annotations
 
 from typing import Any
 from agents.base import AgentBase
 
+
 class ClusterHealthAgent(AgentBase):
+    """AutoPARK Distributed Cluster Health Agent.
+
+    Monitors distributed runtime infrastructure health across KubeRay and AWS EKS.
+    Flags worker node shortages, transient EC2 Spot interruptions, cluster memory
+    saturation (>90%), and task execution interruptions.
+    """
+
     def observe(self, event: dict[str, Any]) -> list[str]:
         anomalies = []
         cluster_info = self._check_ray_status()
@@ -24,15 +38,16 @@ class ClusterHealthAgent(AgentBase):
         return anomalies
 
     def diagnose(self, anomalies: list[str], context: dict[str, Any]) -> str:
+        """Diagnose cluster health issues directly using Claude Platform on AWS."""
         if not anomalies:
             return ""
-        
-        diag = "Cluster issues detected: " + ", ".join(anomalies)
-        if self.is_llm_available:
-            llm_diag = self._call_llm("Diagnose cluster health", f"Anomalies: {anomalies}")
-            diag += f" | {llm_diag}"
-            
-        return diag
+
+        system_prompt = (
+            "You are an ML Cluster Infrastructure Agent running on Claude Platform on AWS. "
+            "Analyze cluster telemetry and provide a concise, one-sentence diagnosis of the operational failure."
+        )
+        user_prompt = f"Anomalies detected: {anomalies}. Cluster context: {context}."
+        return self._call_llm(system_prompt, user_prompt, max_tokens=150)
 
     def recommend_action(self, diagnosis: str, context: dict[str, Any]) -> str | None:
         if 'worker_shortage' in diagnosis:

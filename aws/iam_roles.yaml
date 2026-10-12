@@ -46,21 +46,29 @@ Resources:
       RoleName: !Sub "${EKSClusterName}-RayWorkerRole"
       Description: "IAM role for Ray worker pods with S3 dataset access and CloudWatch logging"
       AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Federated: !Ref OIDCProviderArn
-            Action: "sts:AssumeRoleWithWebIdentity"
-            Condition:
-              StringEquals:
-                !Sub
-                  - "${OidcUrl}:aud": "sts.amazonaws.com"
-                  - OidcUrl: !Select [1, !Split ["oidc-provider/", !Ref OIDCProviderArn]]
-              StringLike:
-                !Sub
-                  - "${OidcUrl}:sub": "system:serviceaccount:${Namespace}:${RayWorkerServiceAccount}"
-                  - OidcUrl: !Select [1, !Split ["oidc-provider/", !Ref OIDCProviderArn]]
+        Fn::Sub:
+          - |
+            {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Federated": "${OIDCProviderArn}"
+                  },
+                  "Action": "sts:AssumeRoleWithWebIdentity",
+                  "Condition": {
+                    "StringEquals": {
+                      "${OidcUrl}:aud": "sts.amazonaws.com"
+                    },
+                    "StringLike": {
+                      "${OidcUrl}:sub": "system:serviceaccount:${Namespace}:${RayWorkerServiceAccount}"
+                    }
+                  }
+                }
+              ]
+            }
+          - OidcUrl: !Select [1, !Split ["oidc-provider/", !Ref OIDCProviderArn]]
       Policies:
         - PolicyName: RayWorkerS3DataReadPolicy
           PolicyDocument:
@@ -117,29 +125,37 @@ Resources:
   # ============================================================================
   # 2. Agent Role
   # Allows ML agents to monitor runs, read/write experiment summaries to S3,
-  # inspect CloudWatch logs, and invoke Claude models via Amazon Bedrock
+  # and inspect CloudWatch logs while utilizing Claude Platform on AWS
   # ============================================================================
   AgentRole:
     Type: AWS::IAM::Role
     Properties:
       RoleName: !Sub "${EKSClusterName}-AgentRole"
-      Description: "IAM role for ML agent pods with S3 experiments access, CloudWatch read, and Bedrock invocation"
+      Description: "IAM role for ML agent pods with S3 experiments access and CloudWatch read"
       AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Federated: !Ref OIDCProviderArn
-            Action: "sts:AssumeRoleWithWebIdentity"
-            Condition:
-              StringEquals:
-                !Sub
-                  - "${OidcUrl}:aud": "sts.amazonaws.com"
-                  - OidcUrl: !Select [1, !Split ["oidc-provider/", !Ref OIDCProviderArn]]
-              StringLike:
-                !Sub
-                  - "${OidcUrl}:sub": "system:serviceaccount:${Namespace}:${AgentServiceAccount}"
-                  - OidcUrl: !Select [1, !Split ["oidc-provider/", !Ref OIDCProviderArn]]
+        Fn::Sub:
+          - |
+            {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Federated": "${OIDCProviderArn}"
+                  },
+                  "Action": "sts:AssumeRoleWithWebIdentity",
+                  "Condition": {
+                    "StringEquals": {
+                      "${OidcUrl}:aud": "sts.amazonaws.com"
+                    },
+                    "StringLike": {
+                      "${OidcUrl}:sub": "system:serviceaccount:${Namespace}:${AgentServiceAccount}"
+                    }
+                  }
+                }
+              ]
+            }
+          - OidcUrl: !Select [1, !Split ["oidc-provider/", !Ref OIDCProviderArn]]
       Policies:
         - PolicyName: AgentS3StoragePolicy
           PolicyDocument:
@@ -201,21 +217,29 @@ Resources:
       RoleName: !Sub "${EKSClusterName}-RemediatorRole"
       Description: "IAM role for ML remediator agent extending AgentRole with limited EKS & EC2 diagnostic actions"
       AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Federated: !Ref OIDCProviderArn
-            Action: "sts:AssumeRoleWithWebIdentity"
-            Condition:
-              StringEquals:
-                !Sub
-                  - "${OidcUrl}:aud": "sts.amazonaws.com"
-                  - OidcUrl: !Select [1, !Split ["oidc-provider/", !Ref OIDCProviderArn]]
-              StringLike:
-                !Sub
-                  - "${OidcUrl}:sub": "system:serviceaccount:${Namespace}:${RemediatorServiceAccount}"
-                  - OidcUrl: !Select [1, !Split ["oidc-provider/", !Ref OIDCProviderArn]]
+        Fn::Sub:
+          - |
+            {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Federated": "${OIDCProviderArn}"
+                  },
+                  "Action": "sts:AssumeRoleWithWebIdentity",
+                  "Condition": {
+                    "StringEquals": {
+                      "${OidcUrl}:aud": "sts.amazonaws.com"
+                    },
+                    "StringLike": {
+                      "${OidcUrl}:sub": "system:serviceaccount:${Namespace}:${RemediatorServiceAccount}"
+                    }
+                  }
+                }
+              ]
+            }
+          - OidcUrl: !Select [1, !Split ["oidc-provider/", !Ref OIDCProviderArn]]
       Policies:
         - PolicyName: RemediatorS3StoragePolicy
           PolicyDocument:

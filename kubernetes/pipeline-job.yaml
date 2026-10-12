@@ -1,0 +1,57 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: park-ml-pipeline
+  namespace: ray
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app: park-ml-pipeline
+    spec:
+      serviceAccountName: agent-runner-sa
+      restartPolicy: Never
+      containers:
+        - name: pipeline-runner
+          image: 515966515749.dkr.ecr.us-east-1.amazonaws.com/park-cifar10:v1
+          imagePullPolicy: Always
+          command: ["python", "run_pipeline.py"]
+          args: ["--agentic", "--epochs", "5", "--subset", "1000", "--device", "cpu"]
+          env:
+            - name: AWS_REGION
+              value: "us-east-1"
+            - name: S3_BUCKET_NAME
+              value: "park-ml-experiments-515966515749-us-east-1"
+            - name: ANTHROPIC_AWS_WORKSPACE_ID
+              valueFrom:
+                secretKeyRef:
+                  name: claude-aws-credentials
+                  key: workspace-id
+            - name: ANTHROPIC_AWS_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: claude-aws-credentials
+                  key: api-key
+                  optional: true
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: claude-aws-credentials
+                  key: aws-access-key-id
+                  optional: true
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: claude-aws-credentials
+                  key: aws-secret-access-key
+                  optional: true
+          resources:
+            requests:
+              cpu: "2"
+              memory: "4Gi"
+            limits:
+              cpu: "4"
+              memory: "8Gi"
+      nodeSelector:
+        role: cpu-worker

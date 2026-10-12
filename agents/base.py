@@ -5,8 +5,8 @@ from abc import ABC, abstractmethod
 from typing import Any, TYPE_CHECKING
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
+# Load environment variables from .env file (always override existing shell env vars)
+load_dotenv(override=True)
 
 if TYPE_CHECKING:
     from metrics.experiment import ExperimentTracker
@@ -29,14 +29,15 @@ class AgentBase(ABC):
         self.config = config
         self.checkpoint_emitter = checkpoint_emitter
 
-        # Configuration for Anthropic / AWS Bedrock
+        # Configuration for Claude Platform on AWS
         self._api_key = os.environ.get("ANTHROPIC_API_KEY")
         self._aws_api_key = os.environ.get("ANTHROPIC_AWS_API_KEY")
+        self._aws_access_key = os.environ.get("AWS_ACCESS_KEY_ID")
+        self._aws_secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
         self._workspace_id = os.environ.get("ANTHROPIC_AWS_WORKSPACE_ID")
         self._aws_region = os.environ.get("AWS_REGION", "us-east-1")
-        self._use_bedrock = os.environ.get("CLAUDE_CODE_USE_BEDROCK", "") == "1"
 
-        # Default to very cheap, fast Claude Haiku model for in-the-loop analysis
+        # Default to fast Claude Haiku model for in-the-loop analysis
         self._model = (
             os.environ.get("ANTHROPIC_MODEL")
             or os.environ.get("CLAUDE_MODEL")
@@ -45,31 +46,39 @@ class AgentBase(ABC):
         self._client = self._init_anthropic_client()
 
     def _init_anthropic_client(self):
-        """Initialize the Anthropic AWS client based on environment variables."""
+        """Initialize the Anthropic client for Claude Platform on AWS."""
         try:
             from anthropic import AnthropicAWS
 
-            if self._aws_api_key:
+            if self._aws_access_key and self._aws_secret_key:
+                return AnthropicAWS(
+                    aws_access_key=self._aws_access_key,
+                    aws_secret_key=self._aws_secret_key,
+                    workspace_id=self._workspace_id,
+                    aws_region=self._aws_region,
+                )
+            elif self._aws_api_key:
                 return AnthropicAWS(
                     api_key=self._aws_api_key,
                     workspace_id=self._workspace_id,
                     aws_region=self._aws_region,
                 )
-            elif os.environ.get("AWS_ACCESS_KEY_ID") or self._use_bedrock:
-                return AnthropicAWS(
-                    aws_region=self._aws_region,
-                    workspace_id=self._workspace_id,
-                )
             elif self._api_key:
                 import anthropic
                 return anthropic.Anthropic(api_key=self._api_key)
+            else:
+                self._log(
+                    "No Claude Platform on AWS credentials configured (AWS_ACCESS_KEY_ID or ANTHROPIC_AWS_API_KEY missing).",
+                    level="warning",
+                )
+                return None
         except Exception as e:
-            self._log(f"Failed to initialize AnthropicAWS client: {e}", level="warning")
-        return None
+            self._log(f"Failed to initialize Anthropic client: {e}", level="error")
+            raise RuntimeError(f"Failed to initialize Claude Platform on AWS client: {e}") from e
 
     @property
     def is_llm_available(self) -> bool:
-        """Returns True if a live Anthropic / Bedrock client is configured."""
+        """Returns True if a live Claude Platform on AWS client is configured."""
         return self._client is not None
 
     def _call_llm(
@@ -78,7 +87,17 @@ class AgentBase(ABC):
         user_message: str,
         max_tokens: int = 300,
     ) -> str:
-        """Execute an LLM call using Claude on AWS or fallback to rule-based analysis."""
+        """Execute an LLM call using Claude Platform on AWS.
+
+        Rule-based fallbacks are strictly disabled; any failure or missing client
+        will raise an exception to validate LLM agent capabilities.
+        """
+        if not self.is_llm_available or self._client is None:
+            raise RuntimeError(
+                f"[{self.name}] LLM client is not configured. Rule-based fallback is disabled; "
+                "an active Claude Platform on AWS configuration (ANTHROPIC_AWS_API_KEY) is required."
+            )
+
         event_msg = f"LLM Call ({self._model}) - {user_message[:60]}..."
         self.tracker.log_event(
             self.name,
@@ -87,23 +106,22 @@ class AgentBase(ABC):
             {"system_prompt": system_prompt, "user_message": user_message, "model": self._model},
         )
 
-        if self.is_llm_available and self._client is not None:
-            try:
-                response = self._client.messages.create(
-                    model=self._model,
-                    max_tokens=max_tokens,
-                    system=system_prompt,
-                    messages=[{"role": "user", "content": user_message}],
-                )
-                text = response.content[0].text.strip()
-                self._log(f"Claude analysis ({self._model}): {text}", level="info")
-                return text
-            except Exception as e:
-                self._log(f"Anthropic LLM call failed: {e}. Using rule-based fallback.", level="warning")
-
-        fallback_msg = "[Rule-Based Fallback] LLM client inactive. Automated rule-based analysis applied."
-        self._log(f"Fallback triggered for: {user_message[:50]}...", level="info")
-        return fallback_msg
+        try:
+            response = self._client.messages.create(
+                model=self._model,
+                max_tokens=max_tokens,
+                system=system_prompt,
+                messages=[{"role": "user", "content": user_message}],
+            )
+            text = response.content[0].text.strip()
+            self._log(f"Claude analysis ({self._model}): {text}", level="info")
+            return text
+        except Exception as e:
+            self._log(f"Claude Platform on AWS LLM call failed: {e}", level="error")
+            raise RuntimeError(
+                f"[{self.name}] Claude Platform on AWS LLM call failed: {e}. "
+                "Rule-based fallback is disabled."
+            ) from e
 
     @abstractmethod
     def observe(self, event: dict[str, Any]) -> list[str]:

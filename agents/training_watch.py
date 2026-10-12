@@ -1,3 +1,9 @@
+"""Training watchdog agent module for AutoPARK.
+
+Continuously monitors streaming training metrics (cross-entropy loss, gradient norms,
+learning rates, and test accuracy), enforces statistical floor gates to intercept
+silent failures, and provides real-time Claude in-the-loop diagnostic feedback.
+"""
 from __future__ import annotations
 
 import math
@@ -6,7 +12,16 @@ from agents.base import AgentBase
 
 
 class TrainingWatchAgent(AgentBase):
-    """Monitors live training metrics (loss, accuracy, gradients) and detects anomalies in real-time."""
+    """AutoPARK Training Watchdog Agent.
+
+    Inspects streaming training telemetry in real-time, detecting:
+      - Numerical instabilities: NaN/Inf loss, runaway loss divergence.
+      - Optimization anomalies: Loss plateaus, vanishing gradients (< 1e-7),
+        gradient explosions (> 100.0).
+      - Statistical failure traps: Accuracy regressions (> 5% drop) and
+        catastrophic underperformance (accuracy <= 15% random chance floor).
+    Also performs live Claude in-the-loop epoch convergence synthesis via `analyze_epoch()`.
+    """
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -40,6 +55,10 @@ class TrainingWatchAgent(AgentBase):
                     anomalies.append("accuracy_regression")
             self.accuracy_history.append(accuracy)
 
+            # Statistical trap detection: if test accuracy is at or below random guessing floor (<= 0.15 for 10 classes)
+            if accuracy <= 0.15:
+                anomalies.append("catastrophic_underperformance")
+
         if grad_norm is not None:
             self.grad_norm_history.append(grad_norm)
             if grad_norm > 100.0:
@@ -47,11 +66,8 @@ class TrainingWatchAgent(AgentBase):
 
         return anomalies
 
-    def analyze_epoch(self, metrics: dict[str, Any]) -> str | None:
+    def analyze_epoch(self, metrics: dict[str, Any]) -> str:
         """Provide real-time Claude in-the-loop analysis for an epoch during training."""
-        if not self.is_llm_available:
-            return None
-
         epoch = metrics.get("epoch", len(self.loss_history))
         train_loss = metrics.get("loss", metrics.get("train_loss"))
         test_acc = metrics.get("accuracy", metrics.get("test_accuracy"))
@@ -59,7 +75,7 @@ class TrainingWatchAgent(AgentBase):
         grad_norm = metrics.get("grad_norm", metrics.get("avg_grad_norm"))
 
         system_prompt = (
-            "You are a real-time ML Training Diagnostic Agent watching an active training loop on AWS. "
+            "You are a real-time ML Training Diagnostic Agent watching an active training loop on Claude Platform on AWS. "
             "Give a concise, single-sentence analytical feedback on the convergence, loss progress, "
             "and learning rate behavior."
         )
@@ -72,45 +88,28 @@ class TrainingWatchAgent(AgentBase):
         return self._call_llm(system_prompt, user_prompt, max_tokens=150)
 
     def diagnose(self, anomalies: list[str], context: dict[str, Any]) -> str:
-        """Diagnose root cause using Claude with recent training history context."""
+        """Diagnose root cause using Claude on AWS with recent training history context."""
         if not anomalies:
             return ""
 
-        rule_diagnoses = []
-        for anomaly in anomalies:
-            if anomaly == "nan_loss_detected":
-                rule_diagnoses.append("Loss diverged to NaN/Inf due to unstable gradients or excessive learning rate.")
-            elif anomaly == "loss_plateau":
-                rule_diagnoses.append("Loss plateaued across recent epochs, indicating stagnant optimization.")
-            elif anomaly == "accuracy_regression":
-                rule_diagnoses.append("Test accuracy dropped significantly from peak performance.")
-            elif anomaly == "gradient_explosion":
-                rule_diagnoses.append("Gradient norm exceeded numerical stability threshold.")
-
-        rule_summary = " | ".join(rule_diagnoses)
-
-        if self.is_llm_available:
-            system_prompt = (
-                "You are an expert ML Training Diagnostic Agent on AWS. Analyze the observed training anomalies "
-                "and recent metric trajectory. In 1-2 concise sentences, provide the probable root cause "
-                "and recommended parameter adjustment."
-            )
-            history_summary = {
-                "recent_losses": self.loss_history[-5:],
-                "recent_accuracies": self.accuracy_history[-5:],
-                "recent_grad_norms": self.grad_norm_history[-5:],
-                "current_lr": self.config.lr,
-                "batch_size": self.config.batch_size,
-            }
-            user_prompt = (
-                f"Anomalies detected: {anomalies}.\n"
-                f"Context: {context}.\n"
-                f"Training telemetry: {history_summary}."
-            )
-            llm_insight = self._call_llm(system_prompt, user_prompt, max_tokens=200)
-            return f"{rule_summary} | Claude Diagnosis: {llm_insight}"
-
-        return rule_summary
+        system_prompt = (
+            "You are an expert ML Training Diagnostic Agent on Claude Platform on AWS. Analyze the observed training anomalies "
+            "and recent metric trajectory. In 1-2 concise sentences, provide the probable root cause "
+            "and recommended parameter adjustment."
+        )
+        history_summary = {
+            "recent_losses": self.loss_history[-5:],
+            "recent_accuracies": self.accuracy_history[-5:],
+            "recent_grad_norms": self.grad_norm_history[-5:],
+            "current_lr": self.config.lr,
+            "batch_size": self.config.batch_size,
+        }
+        user_prompt = (
+            f"Anomalies detected: {anomalies}.\n"
+            f"Context: {context}.\n"
+            f"Training telemetry: {history_summary}."
+        )
+        return self._call_llm(system_prompt, user_prompt, max_tokens=200)
 
     def recommend_action(self, diagnosis: str, context: dict[str, Any]) -> str | None:
         """Map diagnosis to a safe automated remediation action."""

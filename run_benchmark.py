@@ -1,24 +1,31 @@
 #!/usr/bin/env python
-"""Unified CLI for the Agentic ML Fault Injection & Efficacy Benchmarking Suite.
+"""AutoPARK Fault Injection & Efficacy Benchmarking CLI.
+
+Executes progressive stress tests and fault injection scenarios across paired
+baseline vs. AutoPARK modes to map the autonomous self-healing frontier.
 
 Usage examples:
     # Run the complete benchmark suite across all scenarios
     python run_benchmark.py --all
 
-    # Run a specific benchmark scenario
-    python run_benchmark.py --scenario nan_divergence
+    # Run a specific benchmark scenario (e.g., Tier 4 triple cascade)
+    python run_benchmark.py --scenario triple_cascade_oom_lr_grad
 
-    # List all preset benchmark scenarios
+    # List all 14 preset benchmark scenarios across Tiers 1-7
     python run_benchmark.py --list
 
-    # Quick benchmarking with small dataset subset
-    python run_benchmark.py --all --subset 300 --epochs 2
+    # Quick benchmarking with small dataset subset on CPU/CUDA
+    python run_benchmark.py --scenario compound_oom_and_explosion --subset 500 --epochs 1 --device cpu
 """
 from __future__ import annotations
 
 import argparse
 import sys
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Always reload latest credentials and configuration from .env
+load_dotenv(override=True)
 
 from benchmarks.scenarios import PRESET_SCENARIOS, get_scenario, list_scenarios
 from benchmarks.harness import BenchmarkHarness
@@ -70,6 +77,12 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=3,
         help="Max retries per stage (default: 3)",
+    )
+    p.add_argument(
+        "--device",
+        choices=["cpu", "mps", "cuda"],
+        default=None,
+        help="Compute device (default: auto-detected cuda/mps/cpu)",
     )
     p.add_argument(
         "--output",
@@ -126,6 +139,7 @@ def main():
         epochs=args.epochs,
         subset=args.subset,
         max_retries=args.max_retries,
+        device=args.device,
     )
 
     # Run the benchmark suite

@@ -1,4 +1,12 @@
-"""Benchmark harness that executes scenarios across baseline vs agentic modes and collects efficacy metrics."""
+"""AutoPARK Comparative Benchmark & Efficacy Harness.
+
+Executes controlled fault injection scenarios across paired modes:
+  1. Standard Baseline (--no-agentic): Fixed retry loops, static configurations.
+  2. AutoPARK Pipeline (--agentic): Real-time observation, Claude in-the-loop
+     cognitive triage, and closed-loop knob/plugin remediations.
+Measures autonomous self-healing success rates, compute time saved, incident
+provenance, and safe escalation behavior at the self-healing frontier.
+"""
 from __future__ import annotations
 
 import json
@@ -65,11 +73,15 @@ class BenchmarkHarness:
         subset: int = 500,
         max_retries: int = 3,
         base_dir: str = "experiments/benchmarks",
+        device: str | None = None,
     ):
+        from pipeline.config import get_default_device
+
         self.model = model
         self.epochs = epochs
         self.subset = subset
         self.max_retries = max_retries
+        self.device = device or get_default_device()
         self.base_dir = Path(base_dir)
         self.base_dir.mkdir(parents=True, exist_ok=True)
 
@@ -140,8 +152,8 @@ class BenchmarkHarness:
             "momentum": 0.9,
             "weight_decay": 5e-4,
             "num_workers": 0,
-            "device": "mps",
-            "use_gpu": True,
+            "device": self.device,
+            "use_gpu": self.device in ("mps", "cuda"),
             "enable_agentic": enable_agentic,
             "max_retries": self.max_retries,
             "enable_tuning": False,

@@ -1,4 +1,15 @@
-"""Benchmark scenarios and preset fault injection catalog for testing agentic ML efficacy."""
+"""AutoPARK Fault Injection Catalog & Progressive Difficulty Testbench.
+
+Defines the complete 7-tier benchmark escalation matrix designed to map the
+empirical Self-Healing Frontier of autonomous ML platforms:
+  - Tier 1: Isolated Hyperparameter Faults (NaN Loss, Batch OOM)
+  - Tier 2: Multi-Fault Cascades (Compound OOM + Gradient Shock, Memory + Runaway LR)
+  - Tier 3: Complex Deceptive & Infrastructure (Mid-Epoch Delayed Explosion, Spot Churn)
+  - Tier 4: Triple Cascaded Instability (OOM -> Runaway LR -> Grad Explosion)
+  - Tier 5: Statistical Silent Traps (90% Catastrophic Label Noise)
+  - Tier 6: Structural Architecture Frontier (PyTorch Tensor Dimension Mismatch)
+  - Tier 7: Dynamical Control Frontier (Antagonistic Bimodal Thrashing Trap)
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -7,18 +18,31 @@ from typing import Any
 
 @dataclass
 class BenchmarkScenario:
-    """Definition of a benchmark fault scenario."""
+    """Specification for an AutoPARK fault injection scenario.
+
+    Attributes:
+        id: Unique scenario identifier string.
+        title: Human-readable scenario title.
+        category: Failure class taxonomy (e.g., 'training_instability', 'multi_fault_cascade').
+        description: Technical explanation of the injected defect.
+        fault_type: Key matching the runtime trigger in pipeline stages.
+        initial_overrides: Config parameter mutations applied before run start.
+        expected_baseline_outcome: Anticipated unassisted baseline behavior.
+        expected_agentic_outcome: Anticipated AutoPARK autonomous resolution or escalation.
+        target_stage: Primary pipeline stage where the fault manifests.
+        is_recoverable: True if in-memory self-healing is possible; False if safe escalation is expected.
+    """
 
     id: str
     title: str
-    category: str  # 'training_instability', 'resource_pressure', 'data_quality', 'optimizer_stagnation', 'baseline'
+    category: str
     description: str
     fault_type: str | None
     initial_overrides: dict[str, Any]
     expected_baseline_outcome: str
     expected_agentic_outcome: str
     target_stage: str
-    is_recoverable: bool  # True if the fault can be automatically fixed; False if safe early halt is expected
+    is_recoverable: bool
 
 
 # Preset catalog of benchmark scenarios
@@ -107,6 +131,122 @@ PRESET_SCENARIOS: dict[str, BenchmarkScenario] = {
         expected_agentic_outcome="Passes: Completes all stages with Claude in-the-loop telemetry confirming healthy convergence.",
         target_stage="evaluation",
         is_recoverable=True,
+    ),
+    "compound_oom_and_explosion": BenchmarkScenario(
+        id="compound_oom_and_explosion",
+        title="Cascaded Multi-Fault: Memory OOM + Gradient Shock",
+        category="multi_fault_cascade",
+        description=(
+            "Simulates concurrent faults: oversized batch_size=512 triggers memory exhaustion; "
+            "once resolved (batch_size halved to 128), unclipped gradient explosion hits on backward pass."
+        ),
+        fault_type="compound_oom_and_explosion",
+        initial_overrides={"batch_size": 512, "max_grad_norm": None, "fault_injection": "compound_oom_and_explosion"},
+        expected_baseline_outcome="Fails: Crashes continuously across retries without adapting batch size or clipping.",
+        expected_agentic_outcome="Self-heals: Agent resolves memory pressure first (halving batch_size 512->256->128), then detects gradient explosion and enables clipping (max_grad_norm=1.0), succeeding on attempt 3.",
+        target_stage="training",
+        is_recoverable=True,
+    ),
+    "delayed_stochastic_explosion": BenchmarkScenario(
+        id="delayed_stochastic_explosion",
+        title="Complex Deceptive Fault: Mid-Epoch Delayed Gradient Shock",
+        category="complex_instability",
+        description=(
+            "Deceptive failure mode: step 1 passes with normal loss (~2.3), but step 2 suffers "
+            "sudden numerical explosion due to unclipped weight updates."
+        ),
+        fault_type="delayed_stochastic_explosion",
+        initial_overrides={"max_grad_norm": None, "fault_injection": "delayed_stochastic_explosion"},
+        expected_baseline_outcome="Fails: Crashes mid-epoch on step 2 across all retries.",
+        expected_agentic_outcome="Self-heals: Agent identifies mid-epoch gradient shock, Claude recommends clipping, Remediator enables max_grad_norm=1.0, retry completes full epoch.",
+        target_stage="training",
+        is_recoverable=True,
+    ),
+    "cascaded_lr_and_memory": BenchmarkScenario(
+        id="cascaded_lr_and_memory",
+        title="Cascaded Multi-Fault: Memory Pressure + Divergent Learning Rate",
+        category="multi_fault_cascade",
+        description=(
+            "Simulates dual misconfiguration: oversized batch_size=256 coupled with runaway learning rate lr=5.0."
+        ),
+        fault_type="cascaded_lr_and_memory",
+        initial_overrides={"batch_size": 256, "lr": 5.0, "fault_injection": "cascaded_lr_and_memory"},
+        expected_baseline_outcome="Fails: Crashes with OOM on attempt 1, then would crash with NaN loss.",
+        expected_agentic_outcome="Self-heals: Claude diagnoses memory pressure -> halves batch size, then diagnoses LR divergence -> reduces LR by 10x twice, successfully converging.",
+        target_stage="training",
+        is_recoverable=True,
+    ),
+    "spot_worker_churn": BenchmarkScenario(
+        id="spot_worker_churn",
+        title="Complex Infrastructure Fault: Spot Node Task Preemption",
+        category="cluster_fault",
+        description=(
+            "Simulates an AWS Spot instance worker preemption during distributed training, throwing transient task failure."
+        ),
+        fault_type="spot_worker_churn",
+        initial_overrides={"fault_injection": "spot_worker_churn"},
+        expected_baseline_outcome="Fails: Unhandled task interruption terminates pipeline.",
+        expected_agentic_outcome="Self-heals: ClusterHealthAgent catches task failure, Claude diagnoses worker churn, Remediator triggers retry_stage, subsequent attempt completes.",
+        target_stage="training",
+        is_recoverable=True,
+    ),
+    "triple_cascade_oom_lr_grad": BenchmarkScenario(
+        id="triple_cascade_oom_lr_grad",
+        title="Tier 4 Triple Cascade: OOM + Runaway LR + Gradient Explosion",
+        category="multi_fault_cascade",
+        description=(
+            "Simulates extreme compounding failure: oversized batch_size=256 triggers OOM, "
+            "followed by runaway LR=5.0 triggering loss explosion, followed by unclipped gradient explosion."
+        ),
+        fault_type="triple_cascade_oom_lr_grad",
+        initial_overrides={"batch_size": 256, "lr": 5.0, "max_grad_norm": None, "fault_injection": "triple_cascade_oom_lr_grad"},
+        expected_baseline_outcome="Fails: Crashes across all retries at different failure points.",
+        expected_agentic_outcome="Self-heals: Agent fleet iteratively solves memory (halves batch_size), LR divergence (reduces LR twice), and gradient clipping (enables max_grad_norm=1.0).",
+        target_stage="training",
+        is_recoverable=True,
+    ),
+    "catastrophic_label_noise": BenchmarkScenario(
+        id="catastrophic_label_noise",
+        title="Tier 5 Statistical Trap: 90% Ground-Truth Label Inversion",
+        category="statistical_trap",
+        description=(
+            "Simulates corrupted training labels (90% noise) causing loss to plateau and accuracy to flatline near random guessing (~10%)."
+        ),
+        fault_type="catastrophic_label_noise",
+        initial_overrides={"fault_injection": "catastrophic_label_noise"},
+        expected_baseline_outcome="Silent Failure: Completes training blindly with useless weights (~10% accuracy) without alerting operator.",
+        expected_agentic_outcome="In-the-loop Diagnosis: TrainingWatchAgent identifies accuracy stagnation and inability to converge, Claude alerts operator to data corruption.",
+        target_stage="training",
+        is_recoverable=False,
+    ),
+    "architecture_tensor_mismatch": BenchmarkScenario(
+        id="architecture_tensor_mismatch",
+        title="Tier 6 Failure Frontier: Model Architecture Tensor Shape Defect",
+        category="structural_code_defect",
+        description=(
+            "Simulates a non-remediable structural PyTorch bug: linear projection shape mismatch (128x512 vs 1024x10). Cannot be resolved by PipelineConfig mutations."
+        ),
+        fault_type="architecture_tensor_mismatch",
+        initial_overrides={"fault_injection": "architecture_tensor_mismatch"},
+        expected_baseline_outcome="Fails: Crashes with PyTorch shape mismatch across retries.",
+        expected_agentic_outcome="Safe Escalation: Supervisor and Claude diagnose structural code defect, recognize it cannot be auto-remediated, and safely escalate to engineer.",
+        target_stage="training",
+        is_recoverable=False,
+    ),
+    "thrashing_bimodal_trap": BenchmarkScenario(
+        id="thrashing_bimodal_trap",
+        title="Tier 7 Control Frontier: Antagonistic Thrashing / Bimodal Optimization Trap",
+        category="control_thrashing",
+        description=(
+            "Simulates an ill-conditioned optimization landscape where any lr >= 0.01 triggers instant NaN explosion, "
+            "but any lr < 0.01 triggers instant loss stagnation. The agent enters a paradoxical thrashing loop until retry budget exhaustion."
+        ),
+        fault_type="thrashing_bimodal_trap",
+        initial_overrides={"lr": 0.05, "fault_injection": "thrashing_bimodal_trap"},
+        expected_baseline_outcome="Fails: Crashes with NaN divergence on all retries.",
+        expected_agentic_outcome="Self-Healing Inability: Agent attempts remediation (reducing LR), which immediately triggers opposite failure (plateau/stagnation), demonstrating the autonomous control frontier.",
+        target_stage="training",
+        is_recoverable=False,
     ),
 }
 

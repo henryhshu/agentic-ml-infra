@@ -1,6 +1,6 @@
 # AWS Cloud Infrastructure & Deployment Guide
 
-This guide details the complete deployment workflow for running the **Agentic ML Training Platform** on Amazon Web Services (AWS). The infrastructure leverages **Amazon EKS** with GPU-accelerated node groups, **KubeRay** for distributed PyTorch training, **Amazon S3** for parquet datasets and experiment artifacts, **IAM Roles for Service Accounts (IRSA)** for least-privilege pod security, **Amazon CloudWatch** for observability, and **Amazon Bedrock / Claude 3.5 Sonnet** for autonomous agent monitoring and remediation.
+This guide details the complete deployment workflow for running the **Agentic ML Training Platform** on Amazon Web Services (AWS). The infrastructure leverages **Amazon EKS** with GPU-accelerated node groups, **KubeRay** for distributed PyTorch training, **Amazon S3** for parquet datasets and experiment artifacts, **IAM Roles for Service Accounts (IRSA)** for least-privilege pod security, **Amazon CloudWatch** for observability, and **Claude Platform on AWS** for autonomous agent monitoring and remediation.
 
 ---
 
@@ -25,7 +25,7 @@ flowchart TB
 
         subgraph ObservabilityAI["Monitoring & LLM"]
             CW["Amazon CloudWatch\n- Container Insights\n- Log Streams & Metrics"]
-            Bedrock["Amazon Bedrock\n(Anthropic Claude 3.5 Sonnet)"]
+            ClaudePlatform["Claude Platform on AWS\n(Anthropic Claude)"]
         end
 
         IRSA["AWS IAM (IRSA)\n- RayWorkerRole\n- AgentRole\n- RemediatorRole"]
@@ -38,7 +38,7 @@ flowchart TB
     WorkerGPU -->|Stream Logs & Metrics| CW
     AgentPod -->|Read/Write Metrics| S3
     AgentPod -->|Read Logs & Alarms| CW
-    AgentPod <-->|Diagnosis & Reasoning| Bedrock
+    AgentPod <-->|Diagnosis & Reasoning| ClaudePlatform
     RemediatorPod -->|EKS Describe / Heal| EKS
     IRSA -.->|STS Web Identity| Head
     IRSA -.->|STS Web Identity| AgentPod
@@ -55,7 +55,7 @@ Ensure the following tools are installed on your workstation:
 |------|-----------------|--------------------|---------|
 | [AWS CLI](https://aws.amazon.com/cli/) | `>= 2.15.0` | `aws --version` | AWS resource management & auth |
 | [eksctl](https://eksctl.io/) | `>= 0.170.0` | `eksctl version` | EKS cluster lifecycle & node groups |
-| [kubectl](https://kubernetes.io/docs/tasks/tools/) | `>= 1.29.0` | `kubectl version --client` | Kubernetes cluster management |
+| [kubectl](https://kubernetes.io/docs/tasks/tools/) | `>= 1.31.0` | `kubectl version --client` | Kubernetes cluster management |
 | [Helm](https://helm.sh/) | `>= 3.12.0` | `helm version` | KubeRay operator installation |
 | [Docker](https://www.docker.com/) | `>= 24.0.0` | `docker version` | Building container images |
 
@@ -75,13 +75,9 @@ export CLUSTER_NAME="park-ml-cluster"
 export S3_BUCKET_NAME="park-ml-experiments-${AWS_ACCOUNT_ID}-${AWS_REGION}"
 export IMAGE_TAG="v1"
 
-# LLM Provider Configuration (Choose Option A or Option B)
-# Option A: Amazon Bedrock (Recommended for AWS deployments)
-export CLAUDE_CODE_USE_BEDROCK=1
-export AWS_BEDROCK_REGION="us-west-2"
-
-# Option B: Direct Anthropic API
-# export ANTHROPIC_API_KEY="sk-ant-api03-..."
+# LLM Configuration: Claude Platform on AWS
+export ANTHROPIC_AWS_API_KEY="aws-external-anthropic-api-key-..."
+export ANTHROPIC_AWS_WORKSPACE_ID="wrkspc_..."
 ```
 
 Verify your active caller identity:
@@ -115,7 +111,7 @@ This script will:
 ## Step 2: Create EKS Cluster with GPU Node Groups
 
 Deploy the EKS cluster using `aws/eks-cluster.yaml`. This provisions:
-- EKS Control Plane (Kubernetes 1.29) with IAM OIDC Provider enabled.
+- EKS Control Plane (Kubernetes 1.31) with IAM OIDC Provider enabled.
 - `cpu-workers` node group: `m5.2xlarge` (2–8 nodes) for Ray head and agent pods.
 - `gpu-workers` node group: `g4dn.xlarge` with NVIDIA T4 GPUs (0–4 nodes) for distributed training.
 - CloudWatch control-plane log streams.
@@ -134,11 +130,13 @@ kubectl get nodes -L nvidia.com/gpu,role
 Install the NVIDIA Kubernetes device plugin so GPU instances expose allocatable `nvidia.com/gpu` resources:
 
 ```bash
-kubectl create -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v0.15.0/deployments/static/gpu-feature-discovery-daemonset.yaml
-kubectl create -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v0.15.0/deployments/static/nvidia-device-plugin.yaml
+# Option A: Deploy via official DaemonSet manifest (.yml)
+kubectl create -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v0.17.1/deployments/static/nvidia-device-plugin.yml
 
-# Verify GPU resource capacity on gpu-workers
-kubectl get nodes -l nvidia.com/gpu=true -o custom-columns=NAME:.metadata.name,GPUS:.status.allocatable.'nvidia\.com/gpu'
+# Option B: Deploy via Helm (Recommended)
+helm repo add nvdp https://nvidia.github.io/k8s-device-plugin
+helm repo update
+helm upgrade -i nvdp nvdp/nvidia-device-plugin --namespace kube-system
 ```
 
 ---
@@ -407,10 +405,16 @@ spec:
           value: "us-west-2"
         - name: S3_BUCKET_NAME
           value: "<S3_BUCKET_NAME>"
-        - name: CLAUDE_CODE_USE_BEDROCK
-          value: "1"
-        - name: AWS_BEDROCK_REGION
-          value: "us-west-2"
+        - name: ANTHROPIC_AWS_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: claude-aws-credentials
+              key: api-key
+        - name: ANTHROPIC_AWS_WORKSPACE_ID
+          valueFrom:
+            secretKeyRef:
+              name: claude-aws-credentials
+              key: workspace-id
       command: ["python3", "-c"]
       args:
         - |

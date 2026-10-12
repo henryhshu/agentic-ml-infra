@@ -1,0 +1,86 @@
+{
+  "timestamp": "2026-10-02T00:44:13.158101+00:00",
+  "total_scenarios": 1,
+  "recoverable_scenarios": 1,
+  "self_healed_count": 1,
+  "self_healing_rate": 100.0,
+  "total_compute_saved_s": 3.92,
+  "total_baseline_duration_s": 3.92,
+  "total_agentic_duration_s": 22.95,
+  "scenarios": [
+    {
+      "id": "nan_divergence",
+      "title": "Learning Rate Divergence (NaN Loss)",
+      "category": "training_instability",
+      "is_recoverable": true,
+      "self_healed": true,
+      "compute_saved_s": 3.92,
+      "baseline": {
+        "status": "failed",
+        "duration_s": 3.92,
+        "retries": 3,
+        "error": null
+      },
+      "agentic": {
+        "status": "success",
+        "duration_s": 22.95,
+        "retries": 0,
+        "remediations": [
+          {
+            "timestamp": "2026-10-02T00:44:00.659459+00:00",
+            "action": "reduce_learning_rate",
+            "status": "success",
+            "details": "Reduced LR from 5.0 to 0.5",
+            "config_diff": {
+              "lr": {
+                "old": 5.0,
+                "new": 0.5
+              }
+            }
+          },
+          {
+            "timestamp": "2026-10-02T00:44:08.848375+00:00",
+            "action": "reduce_learning_rate",
+            "status": "success",
+            "details": "Reduced LR from 0.5 to 0.05",
+            "config_diff": {
+              "lr": {
+                "old": 0.5,
+                "new": 0.05
+              }
+            }
+          }
+        ],
+        "incidents": [
+          {
+            "stage": "training",
+            "anomalies": [
+              "nan_loss_detected"
+            ],
+            "raw_anomalies": [
+              "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=5.0"
+            ],
+            "diagnosis": "# Unified ML Training Diagnosis\n\n## **Critical Issue: NaN Loss Detected**\n\n### Root Cause\n**Hyperparameter Misconfiguration** \u2013 Learning rate of 5.0 is orders of magnitude too high for the model and dataset, causing immediate gradient explosion and loss divergence to NaN at the first training step.\n\n### Severity\n\ud83d\udd34 **CRITICAL** \u2013 Training has failed immediately; model is unrecoverable without intervention.\n\n---\n\n## Recommended Actions (Priority Order)\n\n1. **Immediate:** Reduce learning rate to **0.01\u20130.1** range\n   - Standard baseline for SGD with momentum on CIFAR-10\n   - Start with 0.1 and tune downward if instability persists\n\n2. **Recommended:** Enable gradient clipping\n   - Set `max_grad_norm=1.0` to prevent future divergence",
+            "auto_remediated": true,
+            "action_taken": "reduce_learning_rate"
+          },
+          {
+            "stage": "training",
+            "anomalies": [
+              "nan_loss_detected"
+            ],
+            "raw_anomalies": [
+              "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=0.5"
+            ],
+            "diagnosis": "# Unified Diagnostic Report: NaN Loss Detection\n\n## **Root Cause**\n**Excessively high learning rate (0.5)** causing gradient explosion and immediate loss divergence at the first training step.\n\nThe learning rate is orders of magnitude too high for the model architecture and dataset, resulting in unstable gradient updates that rapidly diverge to NaN.\n\n---\n\n## **Contributing Factors**\n1. **Learning Rate Configuration:** 0.5 is well above standard ranges (typically 0.001\u20130.01)\n2. **Missing Gradient Clipping:** `max_grad_norm` is disabled (`None`), allowing unbounded gradient magnitude\n3. **Fault Injection Enabled:** Compounds instability during initial training phase\n\n---\n\n## **Recommended Actions** (Priority Order)\n\n| Action | Impact | Implementation |\n|--------|--------|-----------------|\n| **Reduce learning rate",
+            "auto_remediated": true,
+            "action_taken": "reduce_learning_rate"
+          }
+        ],
+        "claude_diagnoses": [
+          "# Unified ML Training Diagnosis\n\n## **Critical Issue: NaN Loss Detected**\n\n### Root Cause\n**Hyperparameter Misconfiguration** \u2013 Learning rate of 5.0 is orders of magnitude too high for the model and dataset, causing immediate gradient explosion and loss divergence to NaN at the first training step.\n\n### Severity\n\ud83d\udd34 **CRITICAL** \u2013 Training has failed immediately; model is unrecoverable without intervention.\n\n---\n\n## Recommended Actions (Priority Order)\n\n1. **Immediate:** Reduce learning rate to **0.01\u20130.1** range\n   - Standard baseline for SGD with momentum on CIFAR-10\n   - Start with 0.1 and tune downward if instability persists\n\n2. **Recommended:** Enable gradient clipping\n   - Set `max_grad_norm=1.0` to prevent future divergence"
+        ]
+      }
+    }
+  ]
+}

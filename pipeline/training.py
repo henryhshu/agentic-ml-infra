@@ -125,12 +125,29 @@ class TrainingStage:
             optimizer, T_max=self.config.epochs
         )
 
-        # ── Fault injection: Simulated Memory Pressure / OOM ──
-        if self.config.fault_injection in ("batch_oom", "memory_pressure") and self.config.batch_size >= 256:
+        # ── Fault injection: Structural Architecture Tensor Dimension Mismatch (Failure Frontier) ──
+        if self.config.fault_injection == "architecture_tensor_mismatch":
+            raise RuntimeError(
+                "Internal PyTorch Architecture Defect: mat1 and mat2 shapes cannot be multiplied (128x512 and 1024x10). "
+                "Linear projection layer in model architecture has dimension mismatch."
+            )
+
+        # ── Fault injection: Simulated Memory Pressure / OOM (Compound or standalone) ──
+        if self.config.fault_injection in (
+            "batch_oom", "memory_pressure", "compound_oom_and_explosion", "cascaded_lr_and_memory", "triple_cascade_oom_lr_grad"
+        ) and self.config.batch_size >= 256:
             raise _TrainingAnomalyError(
                 "memory_pressure",
                 f"Simulated CUDA Out of Memory: failed to allocate memory for batch_size={self.config.batch_size}",
                 {"batch_size": self.config.batch_size},
+            )
+
+        # ── Fault injection: Simulated Spot Node Preemption / Worker Task Failure ──
+        if self.config.fault_injection == "spot_worker_churn" and not getattr(self.config, "workers_restarted", False):
+            raise _TrainingAnomalyError(
+                "worker_shortage",
+                "Ray cluster worker shortage: worker node preempted by EC2 Spot interruption during distributed training",
+                {"worker_count": 0, "expected_workers": 2, "task_failed": True, "event": "spot_interruption"},
             )
 
         per_epoch: list[dict] = []
@@ -151,11 +168,35 @@ class TrainingStage:
             for step, (images, labels) in enumerate(self.train_loader, start=1):
                 images = images.to(device, non_blocking=True)
                 labels = torch.as_tensor(labels, device=device)
+
+                # ── Fault injection: Catastrophic Label Noise (Tier 5 Statistical Trap) ──
+                if self.config.fault_injection == "catastrophic_label_noise":
+                    mask = torch.rand(labels.shape) < 0.90
+                    labels = labels.clone()
+                    labels[mask] = torch.randint(0, 10, (mask.sum().item(),), device=labels.device)
+
                 optimizer.zero_grad()
                 loss = criterion(model(images), labels)
 
-                # ── Fault injection: NaN / Extreme LR divergence ──
-                if self.config.fault_injection in ("nan_divergence", "nan_loss") and self.config.lr >= 0.5:
+                # ── Fault injection: Tier 7 Thrashing Bimodal Trap (Control Frontier) ──
+                if self.config.fault_injection == "thrashing_bimodal_trap":
+                    if self.config.lr >= 0.01:
+                        raise _TrainingAnomalyError(
+                            "nan_loss",
+                            f"Loss exploded to NaN at epoch {epoch_num}, step {step}: unstable gradient trajectory with lr={self.config.lr:.4f} >= 0.01",
+                            {"epoch": epoch_num, "step": step, "lr": self.config.lr, "loss": float("nan")},
+                        )
+                    else:
+                        raise _TrainingAnomalyError(
+                            "loss_plateau",
+                            f"Loss stagnated in non-convex saddle at epoch {epoch_num}, step {step}: dead gradient flow with lr={self.config.lr:.6f} < 0.01",
+                            {"epoch": epoch_num, "step": step, "lr": self.config.lr, "loss": 2.30},
+                        )
+
+                # ── Fault injection: NaN / Extreme LR divergence (Cascaded or standalone) ──
+                if self.config.fault_injection in (
+                    "nan_divergence", "nan_loss", "cascaded_lr_and_memory", "triple_cascade_oom_lr_grad"
+                ) and self.config.lr >= 0.5:
                     raise _TrainingAnomalyError(
                         "nan_loss",
                         f"NaN/Inf loss detected at epoch {epoch_num}, step {step}: divergent loss with excessive lr={self.config.lr}",
@@ -180,12 +221,23 @@ class TrainingStage:
                 total_norm = total_norm ** 0.5
 
                 # ── Fault injection: Gradient explosion (healed by gradient clipping) ──
-                if self.config.fault_injection == "gradient_explosion" and self.config.max_grad_norm is None and step == 1:
+                if self.config.fault_injection in (
+                    "gradient_explosion", "compound_oom_and_explosion", "triple_cascade_oom_lr_grad"
+                ) and self.config.max_grad_norm is None and step == 1:
                     total_norm = 999.9
                     raise _TrainingAnomalyError(
                         "gradient_explosion",
                         f"Gradient explosion detected: grad_norm={total_norm:.1f} exceeds stability threshold",
                         {"epoch": epoch_num, "step": step, "grad_norm": total_norm},
+                    )
+
+                # ── Complex Fault injection: Delayed Mid-Epoch Gradient Shock (step 2 explosion) ──
+                if self.config.fault_injection == "delayed_stochastic_explosion" and self.config.max_grad_norm is None and step == 2:
+                    total_norm = 842.1
+                    raise _TrainingAnomalyError(
+                        "gradient_explosion",
+                        f"Stealth gradient shock detected at step 2: grad_norm={total_norm:.1f} exploded after step 1 normal loss",
+                        {"epoch": epoch_num, "step": step, "grad_norm": total_norm, "delayed": True},
                     )
 
                 total_grad_norm += total_norm
@@ -281,6 +333,12 @@ class TrainingStage:
                 })
                 if agent_result and agent_result.get("anomalies"):
                     self._log_agent_anomalies(agent_result["anomalies"], epoch_num)
+                    if "catastrophic_underperformance" in agent_result["anomalies"]:
+                        raise _TrainingAnomalyError(
+                            "catastrophic_underperformance",
+                            f"Model failed to converge: test accuracy {test_acc:.4f} is at or below random guessing threshold (0.15). Suspected label corruption or representational collapse.",
+                            {"accuracy": test_acc, "loss": train_loss, "epoch": epoch_num},
+                        )
 
         self.model = model
         self.best_accuracy = best_acc

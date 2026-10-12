@@ -1,6 +1,7 @@
-"""Pipeline runner — orchestrates all stages with optional agentic monitoring."""
+"""AutoPARK Pipeline Runner — orchestrates multi-stage ML training with closed-loop agentic self-healing."""
 from __future__ import annotations
 
+import os
 import time
 import traceback
 from pathlib import Path
@@ -11,10 +12,12 @@ from pipeline.config import PipelineConfig
 
 
 class PipelineRunner:
-    """Orchestrates the full ML pipeline: validation → loading → training → [tuning] → evaluation.
+    """Orchestrates the full AutoPARK ML pipeline: validation -> loading -> training -> [tuning] -> evaluation.
 
-    When agentic monitoring is enabled, an agent fleet watches each stage,
-    detects anomalies, and can trigger intelligent retries.
+    When agentic monitoring is enabled (`config.enable_agentic=True`), launches
+    the AutoPARK supervisor and specialized sub-agent fleet. The fleet monitors
+    telemetry, routes errors to Claude on AWS, executes closed-loop knob mutations
+    on live `PipelineConfig` in shared RAM, and retries stages intelligently.
     """
 
     def __init__(self, config: PipelineConfig):
@@ -156,6 +159,18 @@ class PipelineRunner:
             remediator = self.supervisor.sub_agents.get("remediator")
             if remediator is not None:
                 remediator.save_audit_log()
+
+        # Sync experiment results to S3 if configured
+        s3_bucket = getattr(self.config, "s3_bucket", None) or os.environ.get("S3_BUCKET_NAME")
+        if s3_bucket:
+            try:
+                from aws.s3_config import S3Config, S3MetricsStore
+                region = os.environ.get("AWS_REGION", "us-east-1")
+                store = S3MetricsStore(S3Config(bucket_name=s3_bucket, region=region))
+                count = store.sync_run(self.tracker.run_dir, run_id=run_id)
+                print(f"  ☁️ Synced {count} experiment artifact(s) to s3://{s3_bucket}/experiments/{run_id}/")
+            except Exception as e:
+                print(f"  ⚠️ S3 artifact sync failed: {e}")
 
         # ── Print final summary ──
         print(f"\n{'='*70}")

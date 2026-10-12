@@ -3,8 +3,8 @@ kind: ClusterConfig
 
 metadata:
   name: park-ml-cluster
-  region: us-west-2
-  version: "1.29"
+  region: us-east-1
+  version: "1.31"
   tags:
     Environment: production
     Project: agentic-ml-platform
@@ -27,6 +27,7 @@ addons:
     version: latest
     attachPolicyARNs:
       - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+      
   - name: coredns
     version: latest
   - name: kube-proxy
@@ -37,12 +38,13 @@ addons:
       ebsCSIController: true
 
 managedNodeGroups:
-  - name: cpu-workers
-    instanceType: m5.2xlarge
-    minSize: 2
-    maxSize: 8
+  - name: spot-cpu-workers
+    instanceType: c6i.xlarge
+    spot: true
+    minSize: 1
+    maxSize: 4
     desiredCapacity: 2
-    volumeSize: 100
+    volumeSize: 80
     volumeType: gp3
     volumeEncrypted: true
     privateNetworking: false
@@ -59,7 +61,7 @@ managedNodeGroups:
     tags:
       k8s.io/cluster-autoscaler/enabled: "true"
       k8s.io/cluster-autoscaler/park-ml-cluster: "owned"
-      NodeType: cpu-worker
+      NodeType: spot-cpu-worker
 
   - name: gpu-workers
     instanceType: g4dn.xlarge

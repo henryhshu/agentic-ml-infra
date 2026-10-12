@@ -1,0 +1,62 @@
+{
+  "timestamp": "2026-10-11T04:49:52.738151+00:00",
+  "total_scenarios": 1,
+  "recoverable_scenarios": 1,
+  "self_healed_count": 1,
+  "self_healing_rate": 100.0,
+  "total_compute_saved_s": 3.28,
+  "total_baseline_duration_s": 3.28,
+  "total_agentic_duration_s": 9.43,
+  "scenarios": [
+    {
+      "id": "delayed_stochastic_explosion",
+      "title": "Complex Deceptive Fault: Mid-Epoch Delayed Gradient Shock",
+      "category": "complex_instability",
+      "is_recoverable": true,
+      "self_healed": true,
+      "compute_saved_s": 3.28,
+      "baseline": {
+        "status": "failed",
+        "duration_s": 3.28,
+        "retries": 3,
+        "error": null
+      },
+      "agentic": {
+        "status": "success",
+        "duration_s": 9.43,
+        "retries": 0,
+        "remediations": [
+          {
+            "timestamp": "2026-10-11T04:49:51.177262+00:00",
+            "action": "enable_gradient_clipping",
+            "status": "success",
+            "details": "Enabled gradient clipping with max_norm=1.0",
+            "config_diff": {
+              "max_grad_norm": {
+                "old": null,
+                "new": 1.0
+              }
+            }
+          }
+        ],
+        "incidents": [
+          {
+            "stage": "training",
+            "anomalies": [
+              "gradient_explosion"
+            ],
+            "raw_anomalies": [
+              "Stealth gradient shock detected at step 2: grad_norm=842.1 exploded after step 1 normal loss"
+            ],
+            "diagnosis": "# Unified ML Training Diagnosis\n\n## **Critical Issue: Gradient Explosion at Step 2**\n\n### Root Cause Analysis\nThe gradient explosion is caused by a **confluence of three factors**:\n\n1. **Aggressive Learning Rate (0.1)** \u2013 Too high for the current model architecture and batch size\n2. **Disabled Gradient Clipping** \u2013 No safety threshold (`max_grad_norm=None`) to bound gradient magnitudes\n3. **High Momentum (0.9)** \u2013 Amplifies gradient updates without stabilization\n\nThis instability is further exacerbated by the active fault injection (`delayed_stochastic_explosion`), which simulates real-world training failures.\n\n---\n\n## **Recommended Actions (Priority Order)**\n\n| Action | Setting | Rationale |\n|--------|---------|-----------|\n| **Enable gradient clipping** | `max_grad_norm=",
+            "auto_remediated": true,
+            "action_taken": "enable_gradient_clipping"
+          }
+        ],
+        "claude_diagnoses": [
+          "# Unified ML Training Diagnosis\n\n## **Critical Issue: Gradient Explosion at Step 2**\n\n### Root Cause Analysis\nThe gradient explosion is caused by a **confluence of three factors**:\n\n1. **Aggressive Learning Rate (0.1)** \u2013 Too high for the current model architecture and batch size\n2. **Disabled Gradient Clipping** \u2013 No safety threshold (`max_grad_norm=None`) to bound gradient magnitudes\n3. **High Momentum (0.9)** \u2013 Amplifies gradient updates without stabilization\n\nThis instability is further exacerbated by the active fault injection (`delayed_stochastic_explosion`), which simulates real-world training failures.\n\n---\n\n## **Recommended Actions (Priority Order)**\n\n| Action | Setting | Rationale |\n|--------|---------|-----------|\n| **Enable gradient clipping** | `max_grad_norm="
+        ]
+      }
+    }
+  ]
+}

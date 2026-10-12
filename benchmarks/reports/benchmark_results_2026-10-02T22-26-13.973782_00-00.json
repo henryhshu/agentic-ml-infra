@@ -1,0 +1,330 @@
+{
+  "timestamp": "2026-10-02T22:26:13.973782+00:00",
+  "total_scenarios": 6,
+  "recoverable_scenarios": 5,
+  "self_healed_count": 6,
+  "self_healing_rate": 100.0,
+  "total_compute_saved_s": 8.72,
+  "total_baseline_duration_s": 19.28,
+  "total_agentic_duration_s": 110.63,
+  "scenarios": [
+    {
+      "id": "nan_divergence",
+      "title": "Learning Rate Divergence (NaN Loss)",
+      "category": "training_instability",
+      "is_recoverable": true,
+      "self_healed": true,
+      "compute_saved_s": 4.46,
+      "baseline": {
+        "status": "failed",
+        "duration_s": 4.46,
+        "retries": 3,
+        "error": null
+      },
+      "agentic": {
+        "status": "success",
+        "duration_s": 22.67,
+        "retries": 0,
+        "remediations": [
+          {
+            "timestamp": "2026-10-02T22:24:19.225499+00:00",
+            "action": "reduce_learning_rate",
+            "status": "success",
+            "details": "Reduced LR from 5.0 to 0.5",
+            "config_diff": {
+              "lr": {
+                "old": 5.0,
+                "new": 0.5
+              }
+            }
+          },
+          {
+            "timestamp": "2026-10-02T22:24:27.556868+00:00",
+            "action": "reduce_learning_rate",
+            "status": "success",
+            "details": "Reduced LR from 0.5 to 0.05",
+            "config_diff": {
+              "lr": {
+                "old": 0.5,
+                "new": 0.05
+              }
+            }
+          }
+        ],
+        "incidents": [
+          {
+            "stage": "training",
+            "anomalies": [
+              "nan_loss_detected"
+            ],
+            "raw_anomalies": [
+              "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=5.0"
+            ],
+            "diagnosis": "# ML Training Supervisor - Unified Diagnosis\n\n## **CRITICAL ISSUE: NaN Loss at Training Initialization**\n\n### Root Cause\n**Hyperparameter misconfiguration** - Learning rate of 5.0 is catastrophically high, causing immediate gradient explosion and loss divergence to NaN at the first training step.\n\n### Impact\n- Training fails at step 1 with complete loss divergence\n- No viable training progress possible with current configuration\n\n### Recommended Actions (Priority Order)\n\n1. **Immediate Fix:**\n   - Reduce learning rate to `0.01-0.1` (start with 0.01 for SGD on CIFAR-10)\n   - Enable gradient clipping: `max_grad_norm=1.0`\n\n2. **Process Improvement:**\n   - Implement hyperparameter validation checks before training launch\n   - Add sanity checks for learning",
+            "auto_remediated": true,
+            "action_taken": "reduce_learning_rate"
+          },
+          {
+            "stage": "training",
+            "anomalies": [
+              "nan_loss_detected"
+            ],
+            "raw_anomalies": [
+              "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=0.5"
+            ],
+            "diagnosis": "# Unified Diagnosis: NaN Loss Detected\n\n## Summary\nTraining has failed immediately due to **numerical instability from an excessively high learning rate (0.5)**, causing loss divergence and NaN values at the first training step.\n\n## Root Cause\n- **Learning rate of 0.5 is far too aggressive** for the current model architecture and loss landscape\n- Gradient updates are overshooting the optimal parameter space, causing loss values to explode into NaN territory\n- No safeguards (gradient clipping) are in place to prevent unstable updates\n\n## Critical Actions (Priority: URGENT)\n\n| Action | Specification |\n|--------|---------------|\n| **Reduce Learning Rate** | Set to `0.001\u20130.01` range (consensus across all subagents) |\n| **Enable Gradient Clipping** | Add `max_grad_norm=1.0",
+            "auto_remediated": true,
+            "action_taken": "reduce_learning_rate"
+          }
+        ],
+        "claude_diagnoses": [
+          "# ML Training Supervisor - Unified Diagnosis\n\n## **CRITICAL ISSUE: NaN Loss at Training Initialization**\n\n### Root Cause\n**Hyperparameter misconfiguration** - Learning rate of 5.0 is catastrophically high, causing immediate gradient explosion and loss divergence to NaN at the first training step.\n\n### Impact\n- Training fails at step 1 with complete loss divergence\n- No viable training progress possible with current configuration\n\n### Recommended Actions (Priority Order)\n\n1. **Immediate Fix:**\n   - Reduce learning rate to `0.01-0.1` (start with 0.01 for SGD on CIFAR-10)\n   - Enable gradient clipping: `max_grad_norm=1.0`\n\n2. **Process Improvement:**\n   - Implement hyperparameter validation checks before training launch\n   - Add sanity checks for learning",
+          "# Unified Diagnosis: NaN Loss Detected\n\n## Summary\nTraining has failed immediately due to **numerical instability from an excessively high learning rate (0.5)**, causing loss divergence and NaN values at the first training step.\n\n## Root Cause\n- **Learning rate of 0.5 is far too aggressive** for the current model architecture and loss landscape\n- Gradient updates are overshooting the optimal parameter space, causing loss values to explode into NaN territory\n- No safeguards (gradient clipping) are in place to prevent unstable updates\n\n## Critical Actions (Priority: URGENT)\n\n| Action | Specification |\n|--------|---------------|\n| **Reduce Learning Rate** | Set to `0.001\u20130.01` range (consensus across all subagents) |\n| **Enable Gradient Clipping** | Add `max_grad_norm=1.0"
+        ]
+      }
+    },
+    {
+      "id": "gradient_explosion",
+      "title": "Unclipped Gradient Shock (Exploding Norm)",
+      "category": "training_instability",
+      "is_recoverable": true,
+      "self_healed": true,
+      "compute_saved_s": 2.27,
+      "baseline": {
+        "status": "failed",
+        "duration_s": 2.27,
+        "retries": 3,
+        "error": null
+      },
+      "agentic": {
+        "status": "success",
+        "duration_s": 13.89,
+        "retries": 0,
+        "remediations": [
+          {
+            "timestamp": "2026-10-02T22:24:43.934269+00:00",
+            "action": "enable_gradient_clipping",
+            "status": "success",
+            "details": "Enabled gradient clipping with max_norm=1.0",
+            "config_diff": {
+              "max_grad_norm": {
+                "old": null,
+                "new": 1.0
+              }
+            }
+          }
+        ],
+        "incidents": [
+          {
+            "stage": "training",
+            "anomalies": [
+              "gradient_explosion"
+            ],
+            "raw_anomalies": [
+              "Gradient explosion detected: grad_norm=999.9 exceeds stability threshold"
+            ],
+            "diagnosis": "# Unified Diagnosis: Gradient Explosion\n\n## Problem Summary\nThe model is experiencing gradient explosion during early training due to an overly aggressive learning rate (0.1) combined with high momentum (0.9) and absent gradient clipping controls.\n\n## Root Cause Analysis\n- **Primary Factor:** Learning rate of 0.1 is too high for the current model architecture and initialization\n- **Amplification:** Momentum value of 0.9 magnifies gradient updates, compounding the instability\n- **Missing Safeguard:** No gradient clipping mechanism (`max_grad_norm=None`) to contain gradient norms (observed: grad_norm=999.9)\n\n## Recommended Actions (Priority Order)\n\n### Immediate (Required)\n1. **Enable Gradient Clipping:** Set `max_grad_norm=1.0` to prevent unbounded gradient propagation\n2. **Reduce",
+            "auto_remediated": true,
+            "action_taken": "enable_gradient_clipping"
+          }
+        ],
+        "claude_diagnoses": [
+          "# Unified Diagnosis: Gradient Explosion\n\n## Problem Summary\nThe model is experiencing gradient explosion during early training due to an overly aggressive learning rate (0.1) combined with high momentum (0.9) and absent gradient clipping controls.\n\n## Root Cause Analysis\n- **Primary Factor:** Learning rate of 0.1 is too high for the current model architecture and initialization\n- **Amplification:** Momentum value of 0.9 magnifies gradient updates, compounding the instability\n- **Missing Safeguard:** No gradient clipping mechanism (`max_grad_norm=None`) to contain gradient norms (observed: grad_norm=999.9)\n\n## Recommended Actions (Priority Order)\n\n### Immediate (Required)\n1. **Enable Gradient Clipping:** Set `max_grad_norm=1.0` to prevent unbounded gradient propagation\n2. **Reduce"
+        ]
+      }
+    },
+    {
+      "id": "batch_oom",
+      "title": "Memory Pressure (Simulated Batch OOM)",
+      "category": "resource_pressure",
+      "is_recoverable": true,
+      "self_healed": true,
+      "compute_saved_s": 1.99,
+      "baseline": {
+        "status": "failed",
+        "duration_s": 1.99,
+        "retries": 3,
+        "error": null
+      },
+      "agentic": {
+        "status": "success",
+        "duration_s": 23.9,
+        "retries": 0,
+        "remediations": [
+          {
+            "timestamp": "2026-10-02T22:24:59.492581+00:00",
+            "action": "reduce_batch_size",
+            "status": "success",
+            "details": "Reduced batch size from 512 to 256",
+            "config_diff": {
+              "batch_size": {
+                "old": 512,
+                "new": 256
+              }
+            }
+          },
+          {
+            "timestamp": "2026-10-02T22:25:09.549138+00:00",
+            "action": "reduce_batch_size",
+            "status": "success",
+            "details": "Reduced batch size from 256 to 128",
+            "config_diff": {
+              "batch_size": {
+                "old": 256,
+                "new": 128
+              }
+            }
+          }
+        ],
+        "incidents": [
+          {
+            "stage": "training",
+            "anomalies": [
+              "memory_pressure"
+            ],
+            "raw_anomalies": [
+              "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=512"
+            ],
+            "diagnosis": "# **UNIFIED DIAGNOSIS: Memory Pressure During Training**\n\n## **Critical Issue**\nTraining job is experiencing **Out-Of-Memory (OOM) failure** due to batch size misconfiguration on GPU.\n\n### **Root Cause**\nBatch size of **512 is oversized** for the available GPU memory (MPS device) on the Ray worker cluster, causing immediate memory exhaustion and training pipeline failure.\n\n---\n\n## **Recommended Actions (Priority Order)**\n\n1. **Immediate (Primary Solution)**\n   - **Reduce batch_size to 128-256** \u2014 aligns with MPS device memory constraints while maintaining training stability\n\n2. **Alternative Optimizations**\n   - Enable **gradient accumulation** to maintain effective batch size without increasing per-step memory footprint\n   - Increase **num_workers** (currently 0) to parallelize data loading and reduce memory bottlenecks",
+            "auto_remediated": true,
+            "action_taken": "reduce_batch_size"
+          },
+          {
+            "stage": "training",
+            "anomalies": [
+              "memory_pressure"
+            ],
+            "raw_anomalies": [
+              "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+            ],
+            "diagnosis": "# Unified Diagnosis: Memory Pressure During Training\n\n## Root Cause\n**Batch size of 256 exceeds available GPU memory on the MPS device**, causing CUDA Out of Memory errors during training attempt 2.\n\n## Primary Issue\nThe current configuration exhausts GPU VRAM, preventing successful training iterations.\n\n## Recommended Actions (Priority Order)\n\n1. **Reduce batch size** to 64-128\n   - Direct solution to fit within MPS device memory constraints\n   \n2. **Enable gradient accumulation** (if batch size reduction impacts convergence)\n   - Maintains effective batch size while reducing per-step memory footprint\n   \n3. **Decrease `num_workers`** (secondary optimization)\n   - Reduces data pipeline memory overhead\n\n## Implementation Path\n- **Immediate**: Set `batch_size=64` and retry training\n- **If convergence issues arise**: Implement",
+            "auto_remediated": true,
+            "action_taken": "reduce_batch_size"
+          }
+        ],
+        "claude_diagnoses": [
+          "# Unified Diagnosis: Memory Pressure During Training\n\n## Root Cause\n**Batch size of 256 exceeds available GPU memory on the MPS device**, causing CUDA Out of Memory errors during training attempt 2.\n\n## Primary Issue\nThe current configuration exhausts GPU VRAM, preventing successful training iterations.\n\n## Recommended Actions (Priority Order)\n\n1. **Reduce batch size** to 64-128\n   - Direct solution to fit within MPS device memory constraints\n   \n2. **Enable gradient accumulation** (if batch size reduction impacts convergence)\n   - Maintains effective batch size while reducing per-step memory footprint\n   \n3. **Decrease `num_workers`** (secondary optimization)\n   - Reduces data pipeline memory overhead\n\n## Implementation Path\n- **Immediate**: Set `batch_size=64` and retry training\n- **If convergence issues arise**: Implement"
+        ]
+      }
+    },
+    {
+      "id": "corrupt_data",
+      "title": "Data Partition Corruption / Schema Mismatch",
+      "category": "data_quality",
+      "is_recoverable": false,
+      "self_healed": true,
+      "compute_saved_s": 0.0,
+      "baseline": {
+        "status": "failed",
+        "duration_s": 5.86,
+        "retries": 3,
+        "error": null
+      },
+      "agentic": {
+        "status": "failed",
+        "duration_s": 38.66,
+        "retries": 3,
+        "remediations": [],
+        "incidents": [
+          {
+            "stage": "data_validation",
+            "anomalies": [
+              "schema_error"
+            ],
+            "raw_anomalies": [
+              "Data validation failed: train: missing columns {'img'} (simulated schema error); train: corrupt parquet bytes in shard partition 0"
+            ],
+            "diagnosis": "# Unified ML Training Diagnosis\n\n## Stage\n**data_validation** \u2014 Pre-training failure during dataset initialization\n\n---\n\n## Critical Issue: Schema Mismatch + Data Corruption\n\n### Root Cause\nThe training pipeline cannot proceed due to **two compounding failures**:\n\n1. **Schema Error (Primary):** The required `'img'` column is missing from the dataset schema\n2. **Data Corruption (Secondary):** Parquet shard 0 contains corrupt bytes, blocking data deserialization\n\n### Impact\nTraining cannot start\u2014the dataset fails to load at validation time, preventing any model training.\n\n---\n\n## Immediate Actions (Priority Order)\n\n1. **Disable fault injection:**\n   - Remove or set `fault_injection: null` in your configuration\n   - This is likely artificially corrupting the parquet files\n\n2. **Regenerate/re-validate dataset:**\n   -",
+            "auto_remediated": false,
+            "action_taken": null
+          },
+          {
+            "stage": "data_validation",
+            "anomalies": [
+              "schema_error"
+            ],
+            "raw_anomalies": [
+              "Data validation failed: train: missing columns {'img'} (simulated schema error); train: corrupt parquet bytes in shard partition 0"
+            ],
+            "diagnosis": "# **UNIFIED DIAGNOSIS: Data Validation Failure**\n\n## **Critical Issue**\nTraining pipeline halted at data validation stage due to **schema mismatch** (missing 'img' column) combined with **corrupted parquet shards** in partition 0.\n\n## **Root Cause**\n- **Primary:** Fault injection configuration (`fault_injection: 'corrupt_data'`) is actively corrupting dataset files\n- **Secondary:** Data loading pipeline lacks parallel processing and validation error recovery\n- **Tertiary:** Cache contains corrupted/invalid parquet files\n\n## **Immediate Actions (Priority Order)**\n\n1. **Disable Fault Injection**\n   - Remove or set `fault_injection: 'corrupt_data'` to `null/false` in config\n\n2. **Data Remediation**\n   - Clear corrupted cache directory\n   - Re-download CIFAR-10",
+            "auto_remediated": false,
+            "action_taken": null
+          },
+          {
+            "stage": "data_validation",
+            "anomalies": [
+              "schema_error"
+            ],
+            "raw_anomalies": [
+              "Data validation failed: train: missing columns {'img'} (simulated schema error); train: corrupt parquet bytes in shard partition 0"
+            ],
+            "diagnosis": "# Unified ML Training Diagnosis\n\n## **Stage:** Data Validation  \n**Status:** \u274c FAILED (Attempt 3/3)\n\n---\n\n## **Critical Issue**\n\n**Schema Error + Data Corruption**: The data validation pipeline is failing due to a **two-fold failure**:\n\n1. **Schema Mismatch**: Missing required `'img'` column in dataset schema\n2. **Data Corruption**: Corrupted parquet bytes in shard partition 0 of `data/cifar10` cache\n\n---\n\n## **Root Cause**\n\nFault injection is actively enabled (`fault_injection: 'corrupt_data'`), systematically corrupting parquet shards while the data loader encounters schema misalignment. This combination has exhausted the retry limit (3/3 attempts) without recovery.\n\n---\n\n## **Immediate Actions (Priority Order)**\n\n| Action | Details",
+            "auto_remediated": false,
+            "action_taken": null
+          },
+          {
+            "stage": "data_validation",
+            "anomalies": [
+              "schema_error"
+            ],
+            "raw_anomalies": [
+              "Data validation failed: train: missing columns {'img'} (simulated schema error); train: corrupt parquet bytes in shard partition 0"
+            ],
+            "diagnosis": "# Unified ML Training Diagnosis Report\n\n**Stage:** Data Validation  \n**Severity:** Critical (Blocking)  \n**Status:** Schema Error\n\n---\n\n## Root Cause Analysis\n\nThe training pipeline is blocked by **dual data integrity failures**:\n\n1. **Schema Mismatch**: Missing `'img'` column in training dataset schema\n2. **Data Corruption**: Corrupted parquet bytes in shard partition 0\n\n**Primary Issue**: Data pipeline corruption stemming from active fault injection combined with dataset schema/integrity problems\u2014**not a model training defect**.\n\n---\n\n## Immediate Actions Required\n\n| Priority | Action | Owner |\n|----------|--------|-------|\n| **P0** | Disable `fault_injection='corrupt_data'` in training config | DevOps |\n| **P0** | Regenerate/re-download CIFAR-10 dataset from source",
+            "auto_remediated": false,
+            "action_taken": null
+          }
+        ],
+        "claude_diagnoses": [
+          "# Unified ML Training Diagnosis\n\n## Stage\n**data_validation** \u2014 Pre-training failure during dataset initialization\n\n---\n\n## Critical Issue: Schema Mismatch + Data Corruption\n\n### Root Cause\nThe training pipeline cannot proceed due to **two compounding failures**:\n\n1. **Schema Error (Primary):** The required `'img'` column is missing from the dataset schema\n2. **Data Corruption (Secondary):** Parquet shard 0 contains corrupt bytes, blocking data deserialization\n\n### Impact\nTraining cannot start\u2014the dataset fails to load at validation time, preventing any model training.\n\n---\n\n## Immediate Actions (Priority Order)\n\n1. **Disable fault injection:**\n   - Remove or set `fault_injection: null` in your configuration\n   - This is likely artificially corrupting the parquet files\n\n2. **Regenerate/re-validate dataset:**\n   -",
+          "# Unified ML Training Diagnosis\n\n## **Stage:** Data Validation  \n**Status:** \u274c FAILED (Attempt 3/3)\n\n---\n\n## **Critical Issue**\n\n**Schema Error + Data Corruption**: The data validation pipeline is failing due to a **two-fold failure**:\n\n1. **Schema Mismatch**: Missing required `'img'` column in dataset schema\n2. **Data Corruption**: Corrupted parquet bytes in shard partition 0 of `data/cifar10` cache\n\n---\n\n## **Root Cause**\n\nFault injection is actively enabled (`fault_injection: 'corrupt_data'`), systematically corrupting parquet shards while the data loader encounters schema misalignment. This combination has exhausted the retry limit (3/3 attempts) without recovery.\n\n---\n\n## **Immediate Actions (Priority Order)**\n\n| Action | Details",
+          "# Unified ML Training Diagnosis Report\n\n**Stage:** Data Validation  \n**Severity:** Critical (Blocking)  \n**Status:** Schema Error\n\n---\n\n## Root Cause Analysis\n\nThe training pipeline is blocked by **dual data integrity failures**:\n\n1. **Schema Mismatch**: Missing `'img'` column in training dataset schema\n2. **Data Corruption**: Corrupted parquet bytes in shard partition 0\n\n**Primary Issue**: Data pipeline corruption stemming from active fault injection combined with dataset schema/integrity problems\u2014**not a model training defect**.\n\n---\n\n## Immediate Actions Required\n\n| Priority | Action | Owner |\n|----------|--------|-------|\n| **P0** | Disable `fault_injection='corrupt_data'` in training config | DevOps |\n| **P0** | Regenerate/re-download CIFAR-10 dataset from source"
+        ]
+      }
+    },
+    {
+      "id": "loss_plateau",
+      "title": "Optimizer Stagnation / Dead Learning Rate",
+      "category": "optimizer_stagnation",
+      "is_recoverable": true,
+      "self_healed": true,
+      "compute_saved_s": 0.0,
+      "baseline": {
+        "status": "success",
+        "duration_s": 2.41,
+        "retries": 0,
+        "error": null
+      },
+      "agentic": {
+        "status": "success",
+        "duration_s": 6.0,
+        "retries": 0,
+        "remediations": [],
+        "incidents": [],
+        "claude_diagnoses": []
+      }
+    },
+    {
+      "id": "clean_run",
+      "title": "Reference Baseline (Clean Pipeline)",
+      "category": "baseline",
+      "is_recoverable": true,
+      "self_healed": true,
+      "compute_saved_s": 0.0,
+      "baseline": {
+        "status": "success",
+        "duration_s": 2.29,
+        "retries": 0,
+        "error": null
+      },
+      "agentic": {
+        "status": "success",
+        "duration_s": 5.51,
+        "retries": 0,
+        "remediations": [],
+        "incidents": [],
+        "claude_diagnoses": []
+      }
+    }
+  ]
+}

@@ -38,8 +38,8 @@ def build_transforms():
 def parse_args():
     p = argparse.ArgumentParser()
     p.add_argument("--model", choices=["resnet18", "tiny"], default="resnet18")
-    p.add_argument("--device", choices=["cpu", "mps", "cuda"], default="mps",
-                   help="explicit device (default: mps for Mac GPU)")
+    p.add_argument("--device", choices=["cpu", "mps", "cuda"], default=None,
+                   help="explicit device (default: auto-detected cuda/mps/cpu)")
     p.add_argument("--epochs", type=int, default=20)
     p.add_argument("--batch-size", type=int, default=128)
     p.add_argument("--lr", type=float, default=0.1)
@@ -62,7 +62,9 @@ BUILDERS = {
 
 def main():
     args = parse_args()
-    device = torch.device(args.device)
+    from pipeline.config import get_default_device
+    chosen_device = args.device or get_default_device()
+    device = torch.device(chosen_device)
     pin_memory = device.type == "cuda"
     print(f"[boot] using device: {device}", flush=True)
 

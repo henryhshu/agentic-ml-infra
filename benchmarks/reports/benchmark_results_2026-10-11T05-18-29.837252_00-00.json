@@ -1,0 +1,135 @@
+{
+  "timestamp": "2026-10-11T05:18:29.837252+00:00",
+  "total_scenarios": 1,
+  "recoverable_scenarios": 1,
+  "self_healed_count": 1,
+  "self_healing_rate": 100.0,
+  "total_compute_saved_s": 2.06,
+  "total_baseline_duration_s": 2.06,
+  "total_agentic_duration_s": 31.02,
+  "scenarios": [
+    {
+      "id": "triple_cascade_oom_lr_grad",
+      "title": "Tier 4 Triple Cascade: OOM + Runaway LR + Gradient Explosion",
+      "category": "multi_fault_cascade",
+      "is_recoverable": true,
+      "self_healed": true,
+      "compute_saved_s": 2.06,
+      "baseline": {
+        "status": "failed",
+        "duration_s": 2.06,
+        "retries": 4,
+        "error": null
+      },
+      "agentic": {
+        "status": "success",
+        "duration_s": 31.02,
+        "retries": 0,
+        "remediations": [
+          {
+            "timestamp": "2026-10-11T05:18:06.950684+00:00",
+            "action": "reduce_batch_size",
+            "status": "success",
+            "details": "Reduced batch size from 256 to 128",
+            "config_diff": {
+              "batch_size": {
+                "old": 256,
+                "new": 128
+              }
+            }
+          },
+          {
+            "timestamp": "2026-10-11T05:18:14.361091+00:00",
+            "action": "reduce_learning_rate",
+            "status": "success",
+            "details": "Reduced LR from 5.0 to 0.5",
+            "config_diff": {
+              "lr": {
+                "old": 5.0,
+                "new": 0.5
+              }
+            }
+          },
+          {
+            "timestamp": "2026-10-11T05:18:21.257298+00:00",
+            "action": "enable_gradient_clipping",
+            "status": "success",
+            "details": "Enabled gradient clipping with max_norm=1.0",
+            "config_diff": {
+              "max_grad_norm": {
+                "old": null,
+                "new": 1.0
+              }
+            }
+          },
+          {
+            "timestamp": "2026-10-11T05:18:28.280477+00:00",
+            "action": "reduce_learning_rate",
+            "status": "success",
+            "details": "Reduced LR from 0.5 to 0.05",
+            "config_diff": {
+              "lr": {
+                "old": 0.5,
+                "new": 0.05
+              }
+            }
+          }
+        ],
+        "incidents": [
+          {
+            "stage": "training",
+            "anomalies": [
+              "memory_pressure"
+            ],
+            "raw_anomalies": [
+              "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+            ],
+            "diagnosis": "# Unified ML Training Diagnosis\n\n## Primary Issue\n**Memory Pressure During Training Initialization**\n\nThe training pipeline is experiencing memory exhaustion due to a critical mismatch between computational resources and batch configuration.\n\n---\n\n## Root Cause Analysis\n\n| Factor | Details |\n|--------|---------|\n| **Batch Size** | 256 is incompatible with CPU-only execution |\n| **Hardware** | 2 Ray workers, no GPU acceleration |\n| **Bottleneck** | Model + data loader + batch tensors exceed available RAM |\n\n---\n\n## Unified Recommendations\n\n### **Immediate Actions (Priority 1)**\n1. **Reduce batch_size**: `256 \u2192 32-64`\n   - Proportionally reduces memory footprint for CPU training\n   - Prevents OOM failures before training begins\n\n2. **Adjust learning_rate**: `5.0 \u2192",
+            "auto_remediated": true,
+            "action_taken": "reduce_batch_size"
+          },
+          {
+            "stage": "training",
+            "anomalies": [
+              "nan_loss_detected"
+            ],
+            "raw_anomalies": [
+              "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=5.0"
+            ],
+            "diagnosis": "# \ud83d\udea8 UNIFIED DIAGNOSIS: NaN Loss Detection\n\n## **Critical Issue**\nTraining has diverged into NaN loss values due to **unstable numerical conditions** stemming from aggressive hyperparameters and insufficient safeguards.\n\n---\n\n## **Root Cause Analysis**\n\n| Component | Finding |\n|-----------|---------|\n| **Learning Rate** | 5.0 is dangerously high (typically 0.001\u20130.1 for most models) |\n| **Gradient Control** | `max_grad_norm: None` \u2192 no explosion prevention |\n| **Result** | Explosive gradient updates \u2192 loss divergence \u2192 NaN |\n| **Platform** | CPU execution amplifies numerical instability |\n\n---\n\n## **Immediate Actions Required**\n\n1. **Reduce learning rate**: `lr: 5.0 \u2192 0.01\u20130.1`",
+            "auto_remediated": true,
+            "action_taken": "reduce_learning_rate"
+          },
+          {
+            "stage": "training",
+            "anomalies": [
+              "nan_loss_detected"
+            ],
+            "raw_anomalies": [
+              "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=0.5"
+            ],
+            "diagnosis": "# Unified ML Training Diagnosis\n\n## **Critical Issue: NaN Loss Detected**\n\n### **Root Cause**\nTraining divergence caused by **excessively high learning rate (0.5)** combined with:\n- Absence of gradient clipping (`max_grad_norm=None`)\n- CPU-only execution (reduced numerical stability)\n- Aggressive fault injection configuration\n\nLoss exploded to NaN at the first optimization step.\n\n---\n\n### **Immediate Actions (Priority Order)**\n\n1. **Reduce Learning Rate** \u2192 `0.01` (conservative baseline)\n   - Range: 0.001\u20130.05 depending on convergence behavior\n   \n2. **Enable Gradient Clipping** \u2192 `max_grad_norm=1.0`\n   - Prevents gradient explosion propagation\n   \n3. **Switch to GPU Training** (if available)\n   - Impro",
+            "auto_remediated": true,
+            "action_taken": "enable_gradient_clipping"
+          },
+          {
+            "stage": "training",
+            "anomalies": [
+              "nan_loss_detected"
+            ],
+            "raw_anomalies": [
+              "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=0.5"
+            ],
+            "diagnosis": "# **UNIFIED ML TRAINING DIAGNOSIS**\n\n## **Critical Issue: NaN Loss Detected**\n\n### **Root Cause (Consensus)**\nThe training failure is caused by a **learning rate of 0.5 that is excessively high**, triggering gradient explosion and numerical instability at the first training step. This leads to NaN propagation through the computational graph.\n\n---\n\n## **Recommended Actions (Priority Order)**\n\n### **1. Immediate (Required)**\n- **Reduce learning rate** to `0.001\u20130.01` (minimum 50x reduction from current 0.5)\n- **Verify gradient clipping is applied** before the optimizer step (max_grad_norm=1.0 is configured but may not be properly enforced)\n\n### **2. Short-term (Recommended)**\n- Enable **gradient warmup scheduling** to stabilize initial convergence\n-",
+            "auto_remediated": true,
+            "action_taken": "reduce_learning_rate"
+          }
+        ],
+        "claude_diagnoses": [
+          "# Unified ML Training Diagnosis\n\n## Primary Issue\n**Memory Pressure During Training Initialization**\n\nThe training pipeline is experiencing memory exhaustion due to a critical mismatch between computational resources and batch configuration.\n\n---\n\n## Root Cause Analysis\n\n| Factor | Details |\n|--------|---------|\n| **Batch Size** | 256 is incompatible with CPU-only execution |\n| **Hardware** | 2 Ray workers, no GPU acceleration |\n| **Bottleneck** | Model + data loader + batch tensors exceed available RAM |\n\n---\n\n## Unified Recommendations\n\n### **Immediate Actions (Priority 1)**\n1. **Reduce batch_size**: `256 \u2192 32-64`\n   - Proportionally reduces memory footprint for CPU training\n   - Prevents OOM failures before training begins\n\n2. **Adjust learning_rate**: `5.0 \u2192",
+          "# Unified ML Training Diagnosis\n\n## **Critical Issue: NaN Loss Detected**\n\n### **Root Cause**\nTraining divergence caused by **excessively high learning rate (0.5)** combined with:\n- Absence of gradient clipping (`max_grad_norm=None`)\n- CPU-only execution (reduced numerical stability)\n- Aggressive fault injection configuration\n\nLoss exploded to NaN at the first optimization step.\n\n---\n\n### **Immediate Actions (Priority Order)**\n\n1. **Reduce Learning Rate** \u2192 `0.01` (conservative baseline)\n   - Range: 0.001\u20130.05 depending on convergence behavior\n   \n2. **Enable Gradient Clipping** \u2192 `max_grad_norm=1.0`\n   - Prevents gradient explosion propagation\n   \n3. **Switch to GPU Training** (if available)\n   - Impro"
+        ]
+      }
+    }
+  ]
+}

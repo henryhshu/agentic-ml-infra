@@ -272,6 +272,40 @@ class S3MetricsStore:
             logger.error(msg)
             raise S3StorageError(msg) from exc
 
+    def sync_run(self, run_dir: str | Path, run_id: str | None = None) -> int:
+        """Sync a local experiment directory to S3 and return the number of files uploaded.
+
+        Args:
+            run_dir: Path to the local experiment directory.
+            run_id: Optional explicit run ID. Defaults to directory name.
+
+        Returns:
+            Count of uploaded artifact files.
+        """
+        local_path = Path(run_dir).resolve()
+        if not local_path.exists() or not local_path.is_dir():
+            raise FileNotFoundError(f"Experiment directory not found: {local_path}")
+
+        r_id = run_id or local_path.name
+        prefix = self.config.experiment_prefix(r_id)
+        uploaded_files = 0
+
+        for file_path in local_path.rglob("*"):
+            if file_path.is_file():
+                rel_path = file_path.relative_to(local_path)
+                s3_key = f"{prefix}{rel_path.as_posix()}"
+                content_type = "application/json" if file_path.suffix == ".json" else "application/octet-stream"
+                self.client.upload_file(
+                    Filename=str(file_path),
+                    Bucket=self.config.bucket_name,
+                    Key=s3_key,
+                    ExtraArgs={"ContentType": content_type},
+                )
+                uploaded_files += 1
+
+        logger.info(f"Successfully synced {uploaded_files} files for experiment '{r_id}' to S3")
+        return uploaded_files
+
     def download_experiment(self, run_id: str, local_dir: str | Path) -> Path:
         """Download all files for an experiment run from S3 to a local directory.
 

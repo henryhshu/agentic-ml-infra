@@ -1,23 +1,28 @@
-# Agentic ML Training Platform — Architecture Specification
+# AutoPARK: Autonomous Closed-Loop Self-Healing ML Platform — Architecture Specification
 
-> Complete technical specification of the PARK-stack training platform with agentic monitoring, covering all implemented components, data flows, and deployment paths.
+> Complete technical architecture specification of the **AutoPARK platform**, detailing the Split-Plane Model, modular actuation plugins, shared-RAM knob mutations, multi-tier progressive fault injection testbench, and deployment paths on Amazon EKS + KubeRay.
 
 ---
 
-## 1. System Overview
+## 1. System Overview & The Split-Plane Model
 
-The platform implements a 5-stage ML training pipeline on the **PARK stack** (PyTorch + Arrow + Ray + Kubernetes) with an optional **agentic monitoring layer** powered by Claude. The agentic layer watches every pipeline stage, detects anomalies, and performs intelligent retries — saving wasted compute and reducing human intervention.
+AutoPARK implements a closed-loop, self-healing ML training architecture built on the **PARK stack** (PyTorch + Arrow + Ray + Kubernetes), supervised by a distributed fleet of cognitive agents powered by Claude on AWS (`claude-haiku-4-5-20251001` via `anthropic[aws]`).
+
+### The Split-Plane Architecture
+AutoPARK decouples execution into two operational planes:
+1. **The Deterministic Execution Plane (In-Container)**: Ray workers, PyTorch training loops, and Apache Arrow data loaders run at line-rate in Kubernetes containers.
+2. **The Cognitive Reasoning Plane (Cloud-Hosted)**: Claude on AWS inspects structured multi-factor telemetry across loss trajectories, gradient norms, batch sizes, and cluster events, synthesizing root causes and dispatching targeted interventions.
 
 ### Key Design Principles
 
 | Principle | Implementation |
 |---|---|
-| **Modular stages** | Pipeline broken into 5 discrete, independently-monitorable stages |
-| **Standardized metrics** | Every stage writes structured JSON metrics to `experiments/<run_id>/` |
-| **Agent checkpoints** | Structured events emitted at stage boundaries and epoch boundaries |
-| **Toggle-able agentic mode** | `--agentic / --no-agentic` flag for A/B comparison and ablation |
-| **Placeholder LLM calls** | Agents work with rule-based fallbacks; swap to real Claude via API key |
-| **Local-first** | Runs entirely on a laptop; cloud manifests ready for AWS deployment |
+| **Active Actuation ("Agents with Hands")** | Replaces passive dashboards with modular plugins that mutate in-memory configs, restart workers, and isolate corrupt data partitions. |
+| **Zero Cold-Boot Overhead** | Hyperparameter and resource ceiling mutations occur directly in shared RAM (`PipelineConfig`), avoiding multi-minute Kubernetes pod restarts. |
+| **Split-Plane Decoupling** | High-throughput GPU/CPU loops never wait on LLM tokens unless an anomaly is intercepted. |
+| **Strict Safety Boundaries** | Hardcoded `SAFE_REMEDIATIONS` gates ensure un-remediable structural or code bugs safely escalate to human engineers. |
+| **A/B Benchmark Ablation** | Built-in comparative test harness executes identical workloads across unassisted baseline vs. AutoPARK modes. |
+| **Local-to-Cloud Parity** | Runs seamlessly on local Apple Silicon / CPU and on Amazon EKS with Spot `c6i.xlarge` nodes. |
 
 ---
 
@@ -214,17 +219,14 @@ flowchart TD
 ```mermaid
 flowchart TD
     A["Agent._call_llm"]
-    A --> B{"API key or Bedrock set?"}
-    B -->|"Yes"| C["Import claude_agent_sdk"]
-    B -->|"No"| D["Rule-based fallback"]
-    C --> E{"SDK available?"}
-    E -->|"Yes"| F["Call Claude API"]
-    E -->|"No"| D
-    D --> G["Return placeholder string"]
-    F --> H["Log call to tracker"]
+    A --> B{"Client initialized?"}
+    B -->|"Yes"| C["AnthropicAWS.messages.create()"]
+    B -->|"No"| D["Raise RuntimeError<br/>(Rule fallback disabled)"]
+    C -->|"Success"| E["Return Claude analysis & log"]
+    C -->|"Error"| F["Raise RuntimeError<br/>(Fails loudly)"]
 ```
 
-**To activate real LLM agents**: Set `ANTHROPIC_API_KEY=sk-...` or `CLAUDE_CODE_USE_BEDROCK=1` + `AWS_REGION`.
+**To activate agents**: Set `ANTHROPIC_AWS_API_KEY` and `ANTHROPIC_AWS_WORKSPACE_ID` in `.env` for Claude Platform on AWS. Rule-based fallbacks are strictly disabled.
 
 ---
 
@@ -495,7 +497,7 @@ flowchart LR
     end
 
     subgraph Prod["Stage 3: Production"]
-        P1["Claude on Bedrock"]
+        P1["Claude Platform on AWS"]
         P2["CloudWatch"]
         P3["Agents as K8s Jobs"]
     end
@@ -507,9 +509,10 @@ flowchart LR
 
 | Variable | Local | Cloud | Purpose |
 |---|---|---|---|
-| `ANTHROPIC_API_KEY` | Optional | Not used | Direct API key for dev |
-| `CLAUDE_CODE_USE_BEDROCK` | `0` | `1` | Route via Bedrock |
-| `AWS_REGION` | Not set | `us-west-2` | AWS region |
+| `ANTHROPIC_AWS_API_KEY` | In `.env` | Secrets Manager | Claude Platform on AWS API key |
+| `ANTHROPIC_AWS_WORKSPACE_ID` | In `.env` | Secrets Manager | Workspace ID for Claude Platform on AWS |
+| `AWS_REGION` | `us-east-1` | `us-east-1` / `us-west-2` | AWS region |
+| `ANTHROPIC_MODEL` | Optional | Optional | Model identifier (defaults to `claude-haiku-4-5-20251001`) |
 | `AGENTIC_MODE` | `0` or `1` | `1` | Env var fallback for agent toggle |
 | `HF_TOKEN` | Optional | Secrets Manager | HF authentication |
 

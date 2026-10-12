@@ -1,9 +1,32 @@
+"""Pipeline configuration module for AutoPARK.
+
+Defines `PipelineConfig`, which acts as the shared-RAM state container and
+knob-actuation surface manipulated dynamically by `RemediatorAgent` during
+autonomous self-healing without requiring pod restarts or cold boots.
+"""
 from __future__ import annotations
 import argparse
-from dataclasses import dataclass, asdict
+import os
+import torch
+from dataclasses import dataclass, asdict, field
+
+
+def get_default_device() -> str:
+    if torch.cuda.is_available():
+        return "cuda"
+    if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+        return "mps"
+    return "cpu"
+
 
 @dataclass
 class PipelineConfig:
+    """AutoPARK Shared Runtime Configuration & Actuation Knob Interface.
+
+    Contains all training hyperparameters, hardware bindings, and runtime flags.
+    Mutated in shared memory by the RemediatorAgent upon anomaly detection to
+    adjust learning rates, batch sizes, gradient clipping, or worker restart state.
+    """
     model: str = 'tiny'
     epochs: int = 5
     batch_size: int = 128
@@ -13,7 +36,7 @@ class PipelineConfig:
     num_workers: int = 0
     ray_workers: int = 2
     use_gpu: bool = True
-    device: str = 'mps'
+    device: str = field(default_factory=get_default_device)
     enable_agentic: bool = False
     max_retries: int = 3
     enable_tuning: bool = False
@@ -22,6 +45,7 @@ class PipelineConfig:
     cache_dir: str = 'data/cifar10'
     log_every: int = 50
     run_id: str | None = None
+    s3_bucket: str | None = field(default_factory=lambda: os.environ.get("S3_BUCKET_NAME"))
     max_grad_norm: float | None = None  # Set by remediator to enable gradient clipping
     fault_injection: str | None = None  # Set by benchmark harness to inject controlled faults
 

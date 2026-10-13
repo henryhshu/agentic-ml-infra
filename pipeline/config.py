@@ -50,6 +50,10 @@ class PipelineConfig:
     fault_injection: str | None = None  # Set by benchmark harness to inject controlled faults
     accum_steps: int = 1  # Micro-batch gradient accumulation steps
     preserve_effective_batch: bool = True  # Invariant effective batch preservation during remediation
+    dataset: str = 'cifar10'  # Dataset identifier ('cifar10', 'synthetic', etc.)
+    num_classes: int = 10  # Number of prediction target classes
+    data_module: Any = field(default=None, repr=False)  # Optional BaseDataModule instance or factory
+    model_fn: Any = field(default=None, repr=False)  # Optional custom model builder callable
 
     @property
     def effective_batch_size(self) -> int:
@@ -64,4 +68,11 @@ class PipelineConfig:
         return cls(**filtered)
 
     def to_dict(self) -> dict:
-        return asdict(self)
+        d = {}
+        for k in self.__dataclass_fields__:
+            if k in ("data_module", "model_fn"):
+                continue
+            d[k] = getattr(self, k)
+        if self.data_module is not None:
+            d["data_module_name"] = getattr(self.data_module, "name", type(self.data_module).__name__)
+        return d

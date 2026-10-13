@@ -101,14 +101,24 @@ class TrainingStage:
 
     def execute(self) -> dict:
         """Run the training loop. Returns comprehensive metrics dict."""
-        from models.resnet import build_resnet18
-        from models.tiny_cnn import build_tiny_cnn
+        from pipeline.registry import get_model
 
-        builders = {"resnet18": build_resnet18, "tiny": build_tiny_cnn}
         device = torch.device(self.config.device)
+        num_classes = getattr(self.config, "num_classes", 10)
 
-        # Build model
-        model = builders[self.config.model](num_classes=10).to(device)
+        # Build model via custom model_fn or registered builder
+        if getattr(self.config, "model_fn", None) is not None:
+            if isinstance(self.config.model_fn, nn.Module):
+                model = self.config.model_fn.to(device)
+            elif callable(self.config.model_fn):
+                try:
+                    model = self.config.model_fn(num_classes=num_classes).to(device)
+                except TypeError:
+                    model = self.config.model_fn().to(device)
+            else:
+                raise TypeError(f"Invalid model_fn type: {type(self.config.model_fn)}")
+        else:
+            model = get_model(self.config.model, num_classes=num_classes).to(device)
         param_count = sum(p.numel() for p in model.parameters())
         self.tracker.log_event(
             self.STAGE_NAME,

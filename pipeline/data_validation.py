@@ -107,10 +107,32 @@ class DataValidationStage:
             raise
 
     def execute(self) -> dict:
-        """Validate parquet data files and return quality metrics."""
-        from datasets.cifar10 import download_split
-
+        """Validate parquet data files or custom DataModule and return quality metrics."""
         issues: list[str] = []
+
+        # Check if non-CIFAR DataModule or custom dataset is active
+        if getattr(self.config, "data_module", None) is not None or getattr(self.config, "dataset", "cifar10").lower() != "cifar10":
+            from pipeline.data_module import create_data_module
+            dm = create_data_module(self.config)
+            dm.setup("validate")
+            schema_ok, dm_issues = dm.validate_schema()
+            issues.extend(dm_issues)
+            num_train = dm.train_samples
+            num_test = dm.val_samples
+            quality_score = 1.0 if (schema_ok and len(issues) == 0) else max(0.0, 1.0 - len(issues) * 0.2)
+            self.tracker.log_metric(self.STAGE_NAME, "num_train_samples", num_train)
+            self.tracker.log_metric(self.STAGE_NAME, "num_test_samples", num_test)
+            self.tracker.log_metric(self.STAGE_NAME, "data_quality_score", quality_score)
+            return {
+                "num_train_samples": num_train,
+                "num_test_samples": num_test,
+                "schema_valid": schema_ok,
+                "sample_decode_ok": schema_ok,
+                "data_quality_score": quality_score,
+                "issues": issues,
+            }
+
+        from datasets.cifar10 import download_split
         cache_dir = Path(self.config.cache_dir)
 
         # Download and locate data files

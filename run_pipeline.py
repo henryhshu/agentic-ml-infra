@@ -43,8 +43,12 @@ def parse_args() -> argparse.Namespace:
     )
 
     # Model & training
-    p.add_argument("--model", choices=["tiny", "resnet18"], default="tiny",
-                    help="Model architecture (default: tiny)")
+    p.add_argument("--model", type=str, default="tiny",
+                    help="Model architecture from registry (default: tiny; choices: tiny, resnet18, mlp, simple_cnn)")
+    p.add_argument("--dataset", type=str, default="cifar10",
+                    help="Dataset module to load (default: cifar10; choices: cifar10, synthetic)")
+    p.add_argument("--num-classes", type=int, default=10,
+                    help="Number of classification target classes (default: 10)")
     p.add_argument("--epochs", type=int, default=5,
                     help="Number of training epochs (default: 5)")
     p.add_argument("--batch-size", type=int, default=128,
@@ -136,6 +140,8 @@ def main():
         cache_dir=args.cache_dir,
         run_id=args.run_id,
         log_every=args.log_every,
+        dataset=args.dataset,
+        num_classes=args.num_classes,
     )
 
     # Handle rollback execution

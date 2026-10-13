@@ -38,6 +38,18 @@ class EvaluationStage:
         self.checkpoint_emitter = checkpoint_emitter
         self.supervisor = supervisor
 
+        # Resolve class names and num_classes dynamically from data_module or config
+        self.num_classes = getattr(config, "num_classes", 10)
+        dm = getattr(config, "data_module", None)
+        if dm and getattr(dm, "class_names", None):
+            self.class_names = list(dm.class_names)
+            self.num_classes = len(self.class_names)
+        elif getattr(config, "dataset", "cifar10").lower() == "cifar10":
+            self.class_names = self.CLASS_NAMES
+            self.num_classes = 10
+        else:
+            self.class_names = [f"class_{i}" for i in range(self.num_classes)]
+
     @property
     def name(self) -> str:
         return self.STAGE_NAME
@@ -97,7 +109,7 @@ class EvaluationStage:
         self.tracker.log_event(self.STAGE_NAME, "info", "Starting final evaluation...")
 
         # Initialize confusion matrix
-        confusion = [[0] * self.NUM_CLASSES for _ in range(self.NUM_CLASSES)]
+        confusion = [[0] * self.num_classes for _ in range(self.num_classes)]
         per_class_correct = defaultdict(int)
         per_class_total = defaultdict(int)
 
@@ -122,7 +134,8 @@ class EvaluationStage:
 
                 # Update confusion matrix and per-class counts
                 for pred, true in zip(preds.cpu().tolist(), labels.cpu().tolist()):
-                    confusion[true][pred] += 1
+                    if 0 <= true < self.num_classes and 0 <= pred < self.num_classes:
+                        confusion[true][pred] += 1
                     per_class_total[true] += 1
                     if pred == true:
                         per_class_correct[true] += 1
@@ -134,8 +147,8 @@ class EvaluationStage:
 
         # Per-class accuracy
         per_class_accuracy = {}
-        for class_idx in range(self.NUM_CLASSES):
-            class_name = self.CLASS_NAMES[class_idx]
+        for class_idx in range(self.num_classes):
+            class_name = self.class_names[class_idx] if class_idx < len(self.class_names) else f"class_{class_idx}"
             class_total = per_class_total.get(class_idx, 0)
             class_correct = per_class_correct.get(class_idx, 0)
             per_class_accuracy[class_name] = (

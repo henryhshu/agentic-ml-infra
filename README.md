@@ -62,10 +62,13 @@ python run_benchmark.py --scenario batch_oom --subset 500 --epochs 1 --device cp
 # 6. Run the complete multi-tier benchmark suite
 python run_benchmark.py --all --subset 500 --epochs 1 --device cpu
 
-# 7. Inspect 4-pillar audit of autonomous changes from any past run ID or log
+# 7. Run custom dataset & architecture (e.g. Synthetic Vision with MLP)
+python run_pipeline.py --dataset synthetic --model mlp --epochs 1
+
+# 8. Inspect 4-pillar audit of autonomous changes from any past run ID or log
 python run_pipeline.py --inspect-run latest
 
-# 8. Roll back to pre-intervention configuration and re-execute pipeline
+# 9. Roll back to pre-intervention configuration and re-execute pipeline
 python run_pipeline.py --rollback-run latest
 ```
 
@@ -237,23 +240,68 @@ python run_pipeline.py --rollback-run run_20261012_213426_5cae
 
 ---
 
+## 🔌 Friction-Minimizing Pluggable Abstractions (DataModule, Registry & SDK)
+
+AutoPARK is designed so any ML engineer can adopt the platform for their custom dataset (vision, NLP, audio, tabular) and model architecture with zero pipeline rewrites:
+
+### 1. The `DataModule` Abstraction (`pipeline/data_module.py`)
+Decouples data validation, shard reading, and DataLoader construction:
+- `BaseDataModule`: Abstract interface defining `setup()`, `validate_schema()`, `train_dataloader()`, `val_dataloader()`.
+- `CIFAR10DataModule`: Production Parquet CIFAR-10 data loader with zero-copy caching.
+- `SyntheticVisionDataModule`: Zero-network, offline synthetic vision data generator for deterministic testing.
+- `CustomDataModule`: Wraps arbitrary PyTorch `Dataset`s with custom schema validators.
+
+### 2. Pluggable Model Registry (`pipeline/registry.py`)
+Eliminates hardcoded model dictionaries:
+```python
+from autopark import register_model
+
+@register_model("my_vit")
+def build_custom_vit(num_classes=10, **kwargs):
+    return timm.create_model("vit_base_patch16_224", num_classes=num_classes)
+```
+
+### 3. The 10-Line Developer SDK (`AutoParkRunner`)
+Wrap pre-existing PyTorch models and DataLoaders directly:
+```python
+import torch
+from autopark import AutoParkRunner
+
+runner = AutoParkRunner.from_loaders(
+    model=my_model,
+    train_loader=train_loader,
+    val_loader=val_loader,
+    num_classes=10,
+    epochs=5,
+    enable_agentic=True,  # Enables closed-loop Claude self-healing & AST patching
+)
+results = runner.run()
+```
+
+---
+
 ## 📁 Repository Structure
 
 ```
 agentic-ml-infra/
-├── run_pipeline.py            # Primary CLI — full 5-stage AutoPARK pipeline (--inspect-run, --rollback-run)
+├── run_pipeline.py            # Primary CLI — full 5-stage AutoPARK pipeline (--inspect-run, --rollback-run, --dataset)
 ├── run_benchmark.py           # Benchmark CLI — progressive fault injection suite
 ├── main.py                    # Standalone single-node training loop
+│
+├── autopark/                  # High-level Python SDK
+│   └── __init__.py            # AutoParkRunner, from_loaders convenience builder, exports
 │
 ├── pipeline/                  # Pipeline stage implementations
 │   ├── config.py              # PipelineConfig (shared RAM knob-actuation interface)
 │   ├── runner.py              # PipelineRunner — stage lifecycle & agentic retry loop
+│   ├── data_module.py         # BaseDataModule, CIFAR10, SyntheticVision, CustomDataModule
+│   ├── registry.py            # Model registry (@register_model, get_model, list_models)
 │   ├── reversion.py           # Reversion & Rollback Manifest generator, multi-hop resolver, and CLI inspector
-│   ├── data_validation.py     # Stage 1: Parquet schema, row, and image decodability
-│   ├── data_loading.py        # Stage 2: Parquet DataLoader builder & batch allocation
-│   ├── training.py            # Stage 3: PyTorch training loop with in-loop triggers
+│   ├── data_validation.py     # Stage 1: Schema & sample decodability (pluggable via DataModule)
+│   ├── data_loading.py        # Stage 2: DataLoader builder & batch allocation (pluggable via DataModule)
+│   ├── training.py            # Stage 3: PyTorch training loop with in-loop triggers & model registry
 │   ├── tuning.py              # Stage 4: Ray Tune ASHA hyperparameter search
-│   └── evaluation.py          # Stage 5: Final evaluation, per-class accuracy
+│   └── evaluation.py          # Stage 5: Final evaluation with dynamic class naming
 │
 ├── agents/                    # AutoPARK Agent Monitoring & Actuation Fleet
 │   ├── base.py                # AgentBase ABC — AnthropicAWS integration & LLM calls
@@ -268,6 +316,7 @@ agentic-ml-infra/
 │
 ├── tests/                     # Unit Tests & Mathematical Parity Testbench
 │   ├── conftest.py            # Pytest configuration & environment hooks
+│   ├── test_abstractions.py   # Unit tests for DataModule, Model Registry, and AutoParkRunner SDK
 │   ├── test_ast_patcher.py    # Unit tests & <50ms AST synthesis performance benchmark
 │   ├── test_accumulation_parity.py # Exact mathematical parity proofs for Accumulation Guard
 │   └── test_reversion_manifest.py  # Unit tests for 4-pillar Reversion & Rollback Manifests

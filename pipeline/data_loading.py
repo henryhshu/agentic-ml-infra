@@ -70,10 +70,44 @@ class DataLoadingStage:
 
     def execute(self) -> dict:
         """Download data and build DataLoaders. Returns timing metrics."""
-        from datasets.cifar10 import CIFAR10Parquet, download_split
-
-        cache_dir = Path(self.config.cache_dir)
         t0 = time.time()
+        pin_memory = self.config.device == "cuda"
+
+        # Check if non-CIFAR DataModule or custom dataset is active
+        if getattr(self.config, "data_module", None) is not None or getattr(self.config, "dataset", "cifar10").lower() != "cifar10":
+            from pipeline.data_module import create_data_module
+            dm = create_data_module(self.config)
+            dm.setup("fit")
+            self.train_loader = dm.train_dataloader(
+                batch_size=self.config.batch_size,
+                num_workers=self.config.num_workers,
+                pin_memory=pin_memory,
+            )
+            self.test_loader = dm.val_dataloader(
+                batch_size=self.config.batch_size,
+                num_workers=self.config.num_workers,
+                pin_memory=pin_memory,
+            )
+            self.train_set = getattr(dm, "train_dataset", getattr(dm, "train_set", None))
+            self.test_set = getattr(dm, "val_dataset", getattr(dm, "test_set", None))
+            train_samples = dm.train_samples
+            test_samples = dm.val_samples
+            load_time = time.time() - t0
+
+            self.tracker.log_metric(self.STAGE_NAME, "train_samples", train_samples)
+            self.tracker.log_metric(self.STAGE_NAME, "test_samples", test_samples)
+            self.tracker.log_metric(self.STAGE_NAME, "load_time_s", round(load_time, 2))
+            self.tracker.log_metric(self.STAGE_NAME, "batch_size", self.config.batch_size)
+
+            return {
+                "train_samples": train_samples,
+                "test_samples": test_samples,
+                "load_time_s": round(load_time, 2),
+                "batch_size": self.config.batch_size,
+            }
+
+        from datasets.cifar10 import CIFAR10Parquet, download_split
+        cache_dir = Path(self.config.cache_dir)
 
         # Build transforms
         train_tfm = transforms.Compose([

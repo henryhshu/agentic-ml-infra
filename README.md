@@ -214,7 +214,7 @@ When an autonomous remediation agent intervenes in a training pipeline, engineer
 Every manifest articulates four key questions:
 1. 🔴 **Issues Detected**: Complete incident records including the execution stage (`training`, `data_loading`), anomaly classification (e.g. `memory_pressure`), and raw hardware/runtime error signatures.
 2. 🛠️ **What Was Changed**: Complete table of mutations performed by the Remediator agent, including exact parameter diffs (e.g. `batch_size: 512 → 256`, `accum_steps: 1 → 2`) and any generated AST patches.
-3. 🧠 **Why It Was Changed**: The raw cognitive root-cause diagnosis emitted by Claude Haiku 4.5 on AWS Bedrock explaining why the failure occurred and why the remediation was chosen.
+3. 🧠 **Why It Was Changed**: The raw cognitive root-cause diagnosis emitted by Claude Haiku 4.5 on Claude Platform on AWS explaining why the failure occurred and why the remediation was chosen.
 4. 🔄 **How To Change It Back**:
    - **One-Command CLI Rollback**: Exact command to rerun the pipeline restoring the pre-intervention state.
    - **Manual Python Override**: Code snippet to set original parameters on `PipelineConfig`.

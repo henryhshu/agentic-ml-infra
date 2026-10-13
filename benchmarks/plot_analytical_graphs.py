@@ -190,7 +190,7 @@ def plot_fig2_agent_waterfall(
         "1. Training Driver (Worker)",
         "2. TrainingWatch Agent",
         "3. Supervisor Agent",
-        "4. Claude on Bedrock",
+        "4. Claude Platform on AWS",
         "5. Remediator Agent",
     ]
 

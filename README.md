@@ -53,10 +53,13 @@ python run_pipeline.py --model tiny --epochs 2 --subset 500 --no-tune
 # 3. Run with AutoPARK agentic monitoring & closed-loop self-healing
 python run_pipeline.py --model tiny --epochs 5 --subset 500 --agentic --no-tune
 
-# 4. Run an automated benchmark scenario (e.g. Tier 2 Compound OOM & Explosion)
-python run_benchmark.py --scenario compound_oom_and_explosion --subset 500 --epochs 1 --device cpu
+# 4. Run automated test suite & mathematical accumulation parity proofs
+pytest tests/ -v
 
-# 5. Run the complete multi-tier benchmark suite
+# 5. Run an automated benchmark scenario (e.g. Tier 1 Batch OOM)
+python run_benchmark.py --scenario batch_oom --subset 500 --epochs 1 --device cpu
+
+# 6. Run the complete multi-tier benchmark suite
 python run_benchmark.py --all --subset 500 --epochs 1 --device cpu
 ```
 
@@ -133,7 +136,7 @@ When `--agentic` is enabled, `PipelineRunner` initializes a specialized agent fl
 | **TrainingWatchAgent** | [`agents/training_watch.py`](agents/training_watch.py) | Watches per-epoch metrics (loss, accuracy, gradient norms). Intercepts NaN/Inf loss, gradient explosions (>100.0), vanishing gradients (<1e-7), loss plateaus, and catastrophic underperformance (accuracy ≤ 15% random chance floor). |
 | **ClusterHealthAgent** | [`agents/cluster_health.py`](agents/cluster_health.py) | Monitors KubeRay and AWS EKS cluster health, worker availability, memory pressure, and AWS Spot instance interruptions. |
 | **DataQualityAgent** | [`agents/data_quality.py`](agents/data_quality.py) | Validates Apache Arrow / Parquet dataset partitions, schema conformance, sample decodability, and class distribution integrity. |
-| **RemediatorAgent** | [`agents/remediator.py`](agents/remediator.py) | Executes approved knob mutations directly on live `PipelineConfig` in shared RAM: `reduce_learning_rate`, `reduce_batch_size`, `enable_gradient_clipping`, `restart_workers`, `retry_stage`. Audit logs every action to `action_log.json`. |
+| **RemediatorAgent** | [`agents/remediator.py`](agents/remediator.py) | Executes approved knob mutations directly on live `PipelineConfig` in shared RAM: `reduce_learning_rate`, `reduce_batch_size` (with invariant effective batch Accumulation Guard), `enable_gradient_clipping`, `restart_workers`, `convert_batchnorm_to_groupnorm`, `synthesize_code_patch`. Audit logs every action to `action_log.json`. |
 
 ---
 
@@ -217,7 +220,14 @@ agentic-ml-infra/
 │   ├── cluster_health.py      # ClusterHealthAgent — Ray & AWS Spot preemption monitor
 │   ├── data_quality.py        # DataQualityAgent — schema & partition validator
 │   ├── remediator.py          # RemediatorAgent — shared-RAM knob mutator & audit log
-│   └── checkpoints.py         # CheckpointEmitter & AgentCheckpoint schemas
+│   ├── checkpoints.py         # CheckpointEmitter & AgentCheckpoint schemas
+│   └── plugins/               # Modular Actuation Plugins ("Agents with Hands")
+│       └── ast_patcher.py     # ASTCodeSynthesizer — BatchNorm->GroupNorm & dimension repair
+│
+├── tests/                     # Unit Tests & Mathematical Parity Testbench
+│   ├── conftest.py            # Pytest configuration & environment hooks
+│   ├── test_ast_patcher.py    # Unit tests & <50ms AST synthesis performance benchmark
+│   └── test_accumulation_parity.py # Exact mathematical parity proofs for Accumulation Guard
 │
 ├── benchmarks/                # Fault Injection Benchmark Framework
 │   ├── scenarios.py           # Catalog of 14 preset scenarios across Tiers 1–7

@@ -48,6 +48,13 @@ class PipelineConfig:
     s3_bucket: str | None = field(default_factory=lambda: os.environ.get("S3_BUCKET_NAME"))
     max_grad_norm: float | None = None  # Set by remediator to enable gradient clipping
     fault_injection: str | None = None  # Set by benchmark harness to inject controlled faults
+    accum_steps: int = 1  # Micro-batch gradient accumulation steps
+    preserve_effective_batch: bool = True  # Invariant effective batch preservation during remediation
+
+    @property
+    def effective_batch_size(self) -> int:
+        """Effective batch size invariant across micro-batch downscaling."""
+        return self.batch_size * self.accum_steps
 
     @classmethod
     def from_args(cls, args: argparse.Namespace) -> PipelineConfig:

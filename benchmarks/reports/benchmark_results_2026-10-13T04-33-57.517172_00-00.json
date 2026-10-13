@@ -1,0 +1,119 @@
+{
+  "timestamp": "2026-10-13T04:33:57.517172+00:00",
+  "total_scenarios": 1,
+  "recoverable_scenarios": 1,
+  "self_healed_count": 0,
+  "self_healing_rate": 0.0,
+  "total_compute_saved_s": 0.0,
+  "total_baseline_duration_s": 3.53,
+  "total_agentic_duration_s": 39.28,
+  "scenarios": [
+    {
+      "id": "batch_oom",
+      "title": "Memory Pressure (Simulated Batch OOM)",
+      "category": "resource_pressure",
+      "is_recoverable": true,
+      "self_healed": false,
+      "compute_saved_s": 0.0,
+      "baseline": {
+        "status": "failed",
+        "duration_s": 3.53,
+        "retries": 3,
+        "error": null
+      },
+      "agentic": {
+        "status": "failed",
+        "duration_s": 39.28,
+        "retries": 3,
+        "remediations": [
+          {
+            "timestamp": "2026-10-13T04:33:29.042930+00:00",
+            "action": "reduce_batch_size",
+            "status": "success",
+            "details": "Reduced batch size from 512 to 256 and scaled accum_steps from 1 to 2 (invariant effective_batch_size=512)",
+            "config_diff": {
+              "batch_size": {
+                "old": 512,
+                "new": 256
+              },
+              "accum_steps": {
+                "old": 1,
+                "new": 2
+              }
+            }
+          },
+          {
+            "timestamp": "2026-10-13T04:33:37.519195+00:00",
+            "action": "reduce_batch_size",
+            "status": "success",
+            "details": "Reduced batch size from 256 to 128 and scaled accum_steps from 2 to 4 (invariant effective_batch_size=512)",
+            "config_diff": {
+              "batch_size": {
+                "old": 256,
+                "new": 128
+              },
+              "accum_steps": {
+                "old": 2,
+                "new": 4
+              }
+            }
+          }
+        ],
+        "incidents": [
+          {
+            "stage": "training",
+            "anomalies": [
+              "memory_pressure"
+            ],
+            "raw_anomalies": [
+              "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=512"
+            ],
+            "diagnosis": "# **Unified ML Training Diagnosis**\n\n## **Primary Issue: Memory Pressure**\nTraining is experiencing **CPU memory exhaustion** due to a mismatch between resource allocation and batch configuration.\n\n---\n\n## **Root Cause**\n- **Batch size (512)** is oversized for CPU-only execution\n- Training is running on **CPU despite GPU availability** in the cluster\n- Current memory capacity cannot accommodate the data loading and model computation pipeline\n\n---\n\n## **Consolidated Recommendation**\n\n**Immediate Action (Required):**\n1. **Reduce batch_size** from 512 \u2192 **64\u2013128** to fit CPU memory constraints\n2. **Increase num_workers** to 2\u20134 for efficient parallel data loading\n\n**Preferred Solution (Recommended):**\n- **Enable GPU acceleration** to leverage available cluster resources and eliminate CPU bottleneck\n- This would allow larger batch sizes and",
+            "auto_remediated": true,
+            "action_taken": "reduce_batch_size"
+          },
+          {
+            "stage": "training",
+            "anomalies": [
+              "memory_pressure"
+            ],
+            "raw_anomalies": [
+              "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+            ],
+            "diagnosis": "# **UNIFIED DIAGNOSIS: Memory Pressure During Training**\n\n## **Root Cause**\nCPU-only training configuration (`use_gpu=False`) with batch size of **256** significantly exceeds available memory capacity. The current gradient accumulation setting (`accum_steps=2`) is insufficient to mitigate this mismatch, and the fault injection test did not prevent OOM failure in production.\n\n## **Critical Issues**\n1. **Hardware-Config Mismatch:** Batch size 256 is incompatible with CPU memory constraints\n2. **Insufficient Accumulation:** Current `accum_steps=2` does not compensate for oversized batch\n3. **Persistent Risk:** Without intervention, OOM failures will recur across all training retries\n\n## **Recommended Actions (Priority Order)**\n\n| Action | Details |\n|--------|---------|\n| **1. Reduce batch size** |",
+            "auto_remediated": true,
+            "action_taken": "reduce_batch_size"
+          },
+          {
+            "stage": "training",
+            "anomalies": [
+              "corrupt_data"
+            ],
+            "raw_anomalies": [
+              "Model failed to converge: test accuracy 0.1400 is at or below random guessing threshold (0.15). Suspected label corruption or representational collapse."
+            ],
+            "diagnosis": "# Lead ML Training Supervisor - Unified Diagnosis\n\n## **Primary Issue: Label Corruption in Training Data**\nThe model is experiencing **representational collapse** caused by corrupted labels in the CIFAR-10 training subset (200 samples). Test accuracy (0.14) has fallen below random baseline (0.15), indicating the model is learning inverse patterns rather than meaningful representations.\n\n## **Contributing Factors**\n1. **Excessively high learning rate (0.1)** - Prevents stable convergence on noisy data\n2. **Insufficient training epochs** - Limited opportunity to recover from corrupted signals\n3. **Data integrity failure** - Fundamental unreliability in the training pipeline\n\n## **Immediate Actions (Priority Order)**\n\n| Action | Rationale |\n|--------|-----------|\n| **1. Data Validation & Cleaning** | Stop training immediately; audit and remove corrupted labels",
+            "auto_remediated": false,
+            "action_taken": null
+          },
+          {
+            "stage": "training",
+            "anomalies": [
+              "corrupt_data"
+            ],
+            "raw_anomalies": [
+              "Model failed to converge: test accuracy 0.1050 is at or below random guessing threshold (0.15). Suspected label corruption or representational collapse."
+            ],
+            "diagnosis": "# \ud83d\udd34 UNIFIED DIAGNOSIS: CORRUPT_DATA ANOMALY\n\n## PRIMARY ROOT CAUSE\n**Data Integrity Failure + Insufficient Training Signal**\n\nThe 200-sample CIFAR10 subset contains **corrupted or mislabeled training labels**, compounded by:\n- Only **1 epoch** of training (insufficient convergence)\n- **OOM fault injection** disrupting gradient accumulation\n- **Aggressive learning rate (0.1)** preventing recovery\n\n**Evidence:** Test accuracy of **10.5%** is below random baseline (10%), indicating the model is learning spurious patterns rather than class representations.\n\n---\n\n## IMMEDIATE ACTIONS (Priority Order)\n\n| Priority | Action | Rationale |\n|----------|--------|-----------|\n| **P0** | **Validate dataset integrity** | Audit labels in the 200-sample subset for corruption, permutation",
+            "auto_remediated": false,
+            "action_taken": null
+          }
+        ],
+        "claude_diagnoses": [
+          "# **Unified ML Training Diagnosis**\n\n## **Primary Issue: Memory Pressure**\nTraining is experiencing **CPU memory exhaustion** due to a mismatch between resource allocation and batch configuration.\n\n---\n\n## **Root Cause**\n- **Batch size (512)** is oversized for CPU-only execution\n- Training is running on **CPU despite GPU availability** in the cluster\n- Current memory capacity cannot accommodate the data loading and model computation pipeline\n\n---\n\n## **Consolidated Recommendation**\n\n**Immediate Action (Required):**\n1. **Reduce batch_size** from 512 \u2192 **64\u2013128** to fit CPU memory constraints\n2. **Increase num_workers** to 2\u20134 for efficient parallel data loading\n\n**Preferred Solution (Recommended):**\n- **Enable GPU acceleration** to leverage available cluster resources and eliminate CPU bottleneck\n- This would allow larger batch sizes and",
+          "# Lead ML Training Supervisor - Unified Diagnosis\n\n## **Primary Issue: Label Corruption in Training Data**\nThe model is experiencing **representational collapse** caused by corrupted labels in the CIFAR-10 training subset (200 samples). Test accuracy (0.14) has fallen below random baseline (0.15), indicating the model is learning inverse patterns rather than meaningful representations.\n\n## **Contributing Factors**\n1. **Excessively high learning rate (0.1)** - Prevents stable convergence on noisy data\n2. **Insufficient training epochs** - Limited opportunity to recover from corrupted signals\n3. **Data integrity failure** - Fundamental unreliability in the training pipeline\n\n## **Immediate Actions (Priority Order)**\n\n| Action | Rationale |\n|--------|-----------|\n| **1. Data Validation & Cleaning** | Stop training immediately; audit and remove corrupted labels"
+        ]
+      }
+    }
+  ]
+}

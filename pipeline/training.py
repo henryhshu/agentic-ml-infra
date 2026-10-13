@@ -168,6 +168,7 @@ class TrainingStage:
             running_loss = 0.0
             total_grad_norm = 0.0
             grad_samples = 0
+            optimizer.zero_grad()
 
             for step, (images, labels) in enumerate(self.train_loader, start=1):
                 images = images.to(device, non_blocking=True)
@@ -179,7 +180,6 @@ class TrainingStage:
                     labels = labels.clone()
                     labels[mask] = torch.randint(0, 10, (mask.sum().item(),), device=labels.device)
 
-                optimizer.zero_grad()
                 loss = criterion(model(images), labels)
 
                 # ── Fault injection: Tier 7 Thrashing Bimodal Trap (Control Frontier) ──
@@ -219,7 +219,17 @@ class TrainingStage:
                         {"epoch": epoch_num, "step": step, "loss": loss.item()},
                     )
 
-                loss.backward()
+                # ── Gradient Accumulation Guard: Loss Scaling & Boundary Gating ──
+                accum_steps = max(1, getattr(self.config, "accum_steps", 1))
+                is_accum_boundary = (step % accum_steps == 0) or (step == num_batches)
+                scaled_loss = loss / accum_steps
+
+                # Distributed no_sync() handling: suppress DDP all-reduce on non-boundary steps
+                if hasattr(model, "no_sync") and not is_accum_boundary:
+                    with model.no_sync():
+                        scaled_loss.backward()
+                else:
+                    scaled_loss.backward()
 
                 # Track gradient norm
                 total_norm = 0.0
@@ -253,13 +263,16 @@ class TrainingStage:
                 total_grad_norm += total_norm
                 grad_samples += 1
 
-                # Apply gradient clipping if enabled (set by remediator)
-                if self.config.max_grad_norm is not None:
-                    torch.nn.utils.clip_grad_norm_(
-                        model.parameters(), self.config.max_grad_norm
-                    )
+                # ── Combined Optimizer Update & Gradient Clearing at Accumulation Boundary ──
+                if is_accum_boundary:
+                    # Apply gradient clipping if enabled (set by remediator)
+                    if self.config.max_grad_norm is not None:
+                        torch.nn.utils.clip_grad_norm_(
+                            model.parameters(), self.config.max_grad_norm
+                        )
+                    optimizer.step()
+                    optimizer.zero_grad()
 
-                optimizer.step()
                 running_loss += loss.item() * images.size(0)
 
                 # Record healthy step telemetry

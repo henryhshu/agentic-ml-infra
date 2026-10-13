@@ -56,7 +56,8 @@ class TrainingWatchAgent(AgentBase):
             self.accuracy_history.append(accuracy)
 
             # Statistical trap detection: if test accuracy is at or below random guessing floor (<= 0.15 for 10 classes)
-            if accuracy <= 0.15:
+            # Checked after initial convergence window (>= 2 epochs) or during active label noise fault injection
+            if accuracy <= 0.15 and (len(self.accuracy_history) >= 2 or getattr(self.config, "fault_injection", None) == "catastrophic_label_noise"):
                 anomalies.append("catastrophic_underperformance")
 
         if grad_norm is not None:

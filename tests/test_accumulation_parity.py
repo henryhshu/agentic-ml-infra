@@ -259,28 +259,34 @@ class TestGradientAccumulationParity(unittest.TestCase):
 
     def test_remediator_invariant_effective_batch(self) -> None:
         """Verify Remediator scales accum_steps when halving batch_size to preserve effective batch."""
+        import shutil
+        import tempfile
         from agents.remediator import RemediatorAgent
         from metrics.experiment import ExperimentTracker
 
-        tracker = ExperimentTracker(base_dir="experiments/test_scan")
-        config = PipelineConfig(batch_size=512, accum_steps=1, preserve_effective_batch=True)
-        self.assertEqual(config.effective_batch_size, 512)
+        tmp_dir = tempfile.mkdtemp()
+        try:
+            tracker = ExperimentTracker(base_dir=tmp_dir)
+            config = PipelineConfig(batch_size=512, accum_steps=1, preserve_effective_batch=True)
+            self.assertEqual(config.effective_batch_size, 512)
 
-        remediator = RemediatorAgent("test_remediator", tracker, config)
+            remediator = RemediatorAgent("test_remediator", tracker, config)
 
-        # 1st OOM remediation: 512 -> 256, accum_steps 1 -> 2
-        res1 = remediator.execute_action("reduce_batch_size", config)
-        self.assertEqual(config.batch_size, 256)
-        self.assertEqual(config.accum_steps, 2)
-        self.assertEqual(config.effective_batch_size, 512)
-        self.assertEqual(res1["status"], "success")
+            # 1st OOM remediation: 512 -> 256, accum_steps 1 -> 2
+            res1 = remediator.execute_action("reduce_batch_size", config)
+            self.assertEqual(config.batch_size, 256)
+            self.assertEqual(config.accum_steps, 2)
+            self.assertEqual(config.effective_batch_size, 512)
+            self.assertEqual(res1["status"], "success")
 
-        # 2nd OOM remediation: 256 -> 128, accum_steps 2 -> 4
-        res2 = remediator.execute_action("reduce_batch_size", config)
-        self.assertEqual(config.batch_size, 128)
-        self.assertEqual(config.accum_steps, 4)
-        self.assertEqual(config.effective_batch_size, 512)
-        self.assertEqual(res2["status"], "success")
+            # 2nd OOM remediation: 256 -> 128, accum_steps 2 -> 4
+            res2 = remediator.execute_action("reduce_batch_size", config)
+            self.assertEqual(config.batch_size, 128)
+            self.assertEqual(config.accum_steps, 4)
+            self.assertEqual(config.effective_batch_size, 512)
+            self.assertEqual(res2["status"], "success")
+        finally:
+            shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
 if __name__ == "__main__":

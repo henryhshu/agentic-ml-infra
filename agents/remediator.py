@@ -152,6 +152,14 @@ class RemediatorAgent(AgentBase):
             with open(path, "w", encoding="utf-8") as f:
                 json.dump(self.action_log, f, indent=2)
             self._log("Audit log saved successfully.", level='success')
+
+            # Automatically generate Reversion & Rollback Manifest
+            try:
+                from pipeline.reversion import generate_manifest_from_run
+                generate_manifest_from_run(self.tracker.run_dir, save_files=True)
+                self._log("Reversion & Rollback Manifest generated successfully.", level='success')
+            except Exception as ex:
+                self._log(f"Notice: Reversion manifest creation: {ex}", level='info')
         except Exception as e:
             self._log(f"Failed to save audit log: {e}", level='error')
 

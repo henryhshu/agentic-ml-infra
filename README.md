@@ -61,6 +61,12 @@ python run_benchmark.py --scenario batch_oom --subset 500 --epochs 1 --device cp
 
 # 6. Run the complete multi-tier benchmark suite
 python run_benchmark.py --all --subset 500 --epochs 1 --device cpu
+
+# 7. Inspect 4-pillar audit of autonomous changes from any past run ID or log
+python run_pipeline.py --inspect-run latest
+
+# 8. Roll back to pre-intervention configuration and re-execute pipeline
+python run_pipeline.py --rollback-run latest
 ```
 
 ---
@@ -196,17 +202,53 @@ Live test results evaluated against the `park-ml-cluster` running PyTorch 2.3 an
 
 ---
 
+## 🔄 Reversion & Rollback Manifest: Full Auditability & Rapid Rollback
+
+When an autonomous remediation agent intervenes in a training pipeline, engineers must have complete visibility and immediate reversion capability. AutoPARK automatically generates a **Reversion and Rollback Manifest** (`reversion_manifest.json` and human-readable `reversion_manifest.md`) in each run directory.
+
+### The 4-Pillar Incident & Intervention Audit
+
+Every manifest articulates four key questions:
+1. 🔴 **Issues Detected**: Complete incident records including the execution stage (`training`, `data_loading`), anomaly classification (e.g. `memory_pressure`), and raw hardware/runtime error signatures.
+2. 🛠️ **What Was Changed**: Complete table of mutations performed by the Remediator agent, including exact parameter diffs (e.g. `batch_size: 512 → 256`, `accum_steps: 1 → 2`) and any generated AST patches.
+3. 🧠 **Why It Was Changed**: The raw cognitive root-cause diagnosis emitted by Claude Haiku 4.5 on AWS Bedrock explaining why the failure occurred and why the remediation was chosen.
+4. 🔄 **How To Change It Back**:
+   - **One-Command CLI Rollback**: Exact command to rerun the pipeline restoring the pre-intervention state.
+   - **Manual Python Override**: Code snippet to set original parameters on `PipelineConfig`.
+   - **Restoration Table**: Exact side-by-side comparison of mutated vs. restored parameters.
+
+### Multi-Hop Chained Mutation Resolution
+
+If the agent undertakes multiple chained interventions in a single run (e.g., halving batch size twice: $512 \to 256 \to 128$), an inverse of the last action would only roll back to $256$. AutoPARK tracks chronological parameter history to resolve the **earliest known pre-intervention baseline** ($512$), ensuring that rollback always restores the engineer's true intended configuration.
+
+### CLI Usage & Backward Compatibility with Old Run IDs
+
+AutoPARK dynamically constructs manifests from old log artifacts (`action_log.json`, `incidents.json`, `config.json`) for historical runs:
+
+```bash
+# Inspect the 4-pillar audit of the most recent run (or any run ID)
+python run_pipeline.py --inspect-run latest
+python run_pipeline.py --inspect-run run_20261012_213426_5cae
+
+# Execute a rollback run: restores original parameters and re-executes
+python run_pipeline.py --rollback-run latest
+python run_pipeline.py --rollback-run run_20261012_213426_5cae
+```
+
+---
+
 ## 📁 Repository Structure
 
 ```
 agentic-ml-infra/
-├── run_pipeline.py            # Primary CLI — full 5-stage AutoPARK pipeline
+├── run_pipeline.py            # Primary CLI — full 5-stage AutoPARK pipeline (--inspect-run, --rollback-run)
 ├── run_benchmark.py           # Benchmark CLI — progressive fault injection suite
 ├── main.py                    # Standalone single-node training loop
 │
 ├── pipeline/                  # Pipeline stage implementations
 │   ├── config.py              # PipelineConfig (shared RAM knob-actuation interface)
 │   ├── runner.py              # PipelineRunner — stage lifecycle & agentic retry loop
+│   ├── reversion.py           # Reversion & Rollback Manifest generator, multi-hop resolver, and CLI inspector
 │   ├── data_validation.py     # Stage 1: Parquet schema, row, and image decodability
 │   ├── data_loading.py        # Stage 2: Parquet DataLoader builder & batch allocation
 │   ├── training.py            # Stage 3: PyTorch training loop with in-loop triggers
@@ -227,7 +269,8 @@ agentic-ml-infra/
 ├── tests/                     # Unit Tests & Mathematical Parity Testbench
 │   ├── conftest.py            # Pytest configuration & environment hooks
 │   ├── test_ast_patcher.py    # Unit tests & <50ms AST synthesis performance benchmark
-│   └── test_accumulation_parity.py # Exact mathematical parity proofs for Accumulation Guard
+│   ├── test_accumulation_parity.py # Exact mathematical parity proofs for Accumulation Guard
+│   └── test_reversion_manifest.py  # Unit tests for 4-pillar Reversion & Rollback Manifests
 │
 ├── benchmarks/                # Fault Injection Benchmark Framework
 │   ├── scenarios.py           # Catalog of 14 preset scenarios across Tiers 1–7

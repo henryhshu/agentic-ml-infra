@@ -147,6 +147,9 @@ class FullModel(nn.Module):
         self.blocks = nn.ModuleList([ResNetBlock(64, 64) for _ in range(8)])
         self.linear = nn.Linear(1024, 10)
 """
+        # Warm-up to eliminate first-time module loading jitter
+        self.synthesizer.replace_batchnorm_with_groupnorm(complex_model_source)
+
         iterations = 20
         times: list[float] = []
 

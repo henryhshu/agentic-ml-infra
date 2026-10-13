@@ -90,11 +90,26 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--log-every", type=int, default=50,
                     help="Print training progress every N batches")
 
+    # Reversion & Rollback Inspection
+    p.add_argument("--inspect-run", type=str, default=None,
+                    help="Inspect an old run ID or 'latest' to view issues detected, changes, diagnosis, and rollback manifest")
+    p.add_argument("--rollback-run", type=str, default=None,
+                    help="Restore pre-intervention parameters from an old run ID or 'latest' and execute pipeline")
+
     return p.parse_args()
 
 
 def main():
     args = parse_args()
+
+    # Handle run inspection
+    if args.inspect_run:
+        from pipeline.reversion import generate_manifest_from_run, format_reversion_terminal
+        manifest = generate_manifest_from_run(args.inspect_run)
+        print(format_reversion_terminal(manifest))
+        print(f"📄 Full Markdown manifest: experiments/{manifest.run_id}/reversion_manifest.md")
+        print(f"📊 JSON manifest:          experiments/{manifest.run_id}/reversion_manifest.json\n")
+        sys.exit(0)
 
     # Resolve agentic flag
     enable_agentic = args.agentic and not args.no_agentic
@@ -122,6 +137,20 @@ def main():
         run_id=args.run_id,
         log_every=args.log_every,
     )
+
+    # Handle rollback execution
+    if args.rollback_run:
+        from pipeline.reversion import apply_rollback, generate_manifest_from_run
+        manifest = generate_manifest_from_run(args.rollback_run)
+        print(f"\n🔄 Rolling back to pre-intervention configuration from run '{manifest.run_id}':")
+        if not manifest.rollback_diff:
+            print("   ℹ️ No parameters were mutated in that run; executing with original configuration.")
+        else:
+            for k, v in manifest.rollback_diff.items():
+                print(f"   • Reverting {k} ➔ {v}")
+        apply_rollback(args.rollback_run, config)
+        print()
+
 
     runner = PipelineRunner(config)
     result = runner.run()

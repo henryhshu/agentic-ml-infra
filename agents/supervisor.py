@@ -190,13 +190,23 @@ class SupervisorAgent(AgentBase):
         # Remediate or Escalate
         remediator = self.sub_agents.get("remediator")
         action_taken = None
+        remediation_result: dict[str, Any] = {}
 
         if self.should_auto_remediate(overall_diagnosis, canonical) and remediator:
-            action = remediator.recommend_action(overall_diagnosis, context)
-            if action:
-                self._log(f"Auto-remediating: executing '{action}'", level="info")
-                result = remediator.execute_action(action, self.config)
-                action_taken = result.get("action")
+            try:
+                action = remediator.recommend_action(overall_diagnosis, context)
+                if action:
+                    self._log(f"Auto-remediating: executing '{action}'", level="info")
+                    remediation_result = remediator.execute_action(action, self.config)
+                    if remediation_result.get("status") in ("success", "retry_requested"):
+                        action_taken = remediation_result.get("action")
+                    else:
+                        self._log(
+                            f"Auto-remediation '{action}' failed to actuate: {remediation_result.get('details')}",
+                            level="warning",
+                        )
+            except Exception as e:
+                self._log(f"Remediation execution failed with error: {e}", level="error")
         else:
             self._log(f"Escalating anomaly to human/operator — manual intervention advised for: {canonical}", level="warning")
 
@@ -207,6 +217,8 @@ class SupervisorAgent(AgentBase):
             "diagnosis": overall_diagnosis,
             "auto_remediated": action_taken is not None,
             "action_taken": action_taken,
+            "remediation_status": remediation_result.get("status", "escalated" if action_taken is None else "success"),
+            "remediation_details": remediation_result.get("details", ""),
         }
         self.incidents.append(incident)
         return overall_diagnosis

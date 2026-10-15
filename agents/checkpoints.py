@@ -35,10 +35,12 @@ class CheckpointEmitter:
         filename = filename.replace(":", "-").replace(" ", "_")
         file_path = self.checkpoints_dir / filename
         
-        with open(file_path, "w", encoding="utf-8") as f:
-            json.dump(checkpoint.to_dict(), f, indent=2)
-            
-        print(f"🤖 [Checkpoint] {checkpoint.stage} ({checkpoint.event_type}): {len(checkpoint.anomalies_detected)} anomalies detected.")
+        try:
+            with open(file_path, "w", encoding="utf-8") as f:
+                json.dump(checkpoint.to_dict(), f, indent=2)
+            print(f"🤖 [Checkpoint] {checkpoint.stage} ({checkpoint.event_type}): {len(checkpoint.anomalies_detected)} anomalies detected.")
+        except Exception as e:
+            print(f"⚠️ [Checkpoint] Failed to emit checkpoint {file_path.name}: {e}")
 
     def load_checkpoints(self, stage: str | None = None) -> list[AgentCheckpoint]:
         checkpoints = []

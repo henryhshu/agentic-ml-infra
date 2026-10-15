@@ -1,0 +1,112 @@
+{
+  "timestamp": "2026-10-14T08:24:47.568043+00:00",
+  "total_scenarios": 1,
+  "recoverable_scenarios": 1,
+  "self_healed_count": 0,
+  "self_healing_rate": 0.0,
+  "total_compute_saved_s": 0.0,
+  "total_baseline_duration_s": 2.51,
+  "total_agentic_duration_s": 33.69,
+  "scenarios": [
+    {
+      "id": "nan_divergence",
+      "title": "Learning Rate Divergence (NaN Loss)",
+      "category": "training_instability",
+      "is_recoverable": true,
+      "self_healed": false,
+      "compute_saved_s": 0.0,
+      "baseline": {
+        "status": "failed",
+        "duration_s": 2.51,
+        "retries": 3,
+        "error": null
+      },
+      "agentic": {
+        "status": "failed",
+        "duration_s": 33.69,
+        "retries": 3,
+        "remediations": [
+          {
+            "timestamp": "2026-10-14T08:24:22.029157+00:00",
+            "action": "reduce_learning_rate",
+            "status": "success",
+            "details": "Reduced LR from 5.0 to 0.5",
+            "config_diff": {
+              "lr": {
+                "old": 5.0,
+                "new": 0.5
+              }
+            }
+          },
+          {
+            "timestamp": "2026-10-14T08:24:28.810863+00:00",
+            "action": "reduce_learning_rate",
+            "status": "success",
+            "details": "Reduced LR from 0.5 to 0.05",
+            "config_diff": {
+              "lr": {
+                "old": 0.5,
+                "new": 0.05
+              }
+            }
+          }
+        ],
+        "incidents": [
+          {
+            "stage": "training",
+            "anomalies": [
+              "nan_loss_detected"
+            ],
+            "raw_anomalies": [
+              "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=5.0"
+            ],
+            "diagnosis": "# Unified ML Training Diagnosis\n\n## **Critical Issue: NaN Loss Detected**\n\n**Severity:** Critical \u2013 Training failure on first step\n\n---\n\n## **Root Cause Analysis**\nAll subagents converge on a single root cause:\n\n**Excessively high learning rate (5.0)** is causing immediate loss divergence to NaN during the first training iteration. This is compounded by:\n- Batch size of 128 with model architecture mismatch\n- Unstable gradient updates leading to numerical overflow\n- Potential lack of input data normalization\n\n---\n\n## **Recommended Actions** (Priority Order)\n\n1. **Immediate:** Reduce learning rate to **0.01\u20130.1** range (consensus across all subagents)\n2. **Enable gradient clipping:** Set `max_grad_norm=1.0` to stabilize gradient flow during CPU training\n3",
+            "auto_remediated": true,
+            "action_taken": "reduce_learning_rate"
+          },
+          {
+            "stage": "training",
+            "anomalies": [
+              "nan_loss_detected"
+            ],
+            "raw_anomalies": [
+              "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=0.5"
+            ],
+            "diagnosis": "# **UNIFIED DIAGNOSIS: NaN Loss Detection**\n\n## **Critical Issue**\nTraining has failed at the first step due to **loss divergence to NaN**, caused by an excessively high learning rate (0.5) that exceeds stability thresholds for your model architecture, batch size, and compute environment (CPU).\n\n## **Root Cause**\n- Learning rate of 0.5 is 10-50\u00d7 higher than optimal for stable gradient descent\n- Without gradient clipping, this permits explosive gradient growth, causing numerical overflow to NaN\n\n## **Immediate Actions (Priority Order)**\n\n1. **Reduce Learning Rate**: Set to `0.01\u20130.05` range (conservative: start at `0.01`)\n2. **Enable Gradient Clipping**: Add `max_grad_norm=1.0` to prevent gradient explosion\n3. **Restart Training**: Resume from scratch with",
+            "auto_remediated": true,
+            "action_taken": "reduce_learning_rate"
+          },
+          {
+            "stage": "training",
+            "anomalies": [
+              "corrupt_data"
+            ],
+            "raw_anomalies": [
+              "Model failed to converge: test accuracy 0.1200 is at or below random guessing threshold (0.15). Suspected label corruption or representational collapse."
+            ],
+            "diagnosis": "# Unified Diagnosis: Training Failure Due to Data Corruption\n\n## Primary Root Cause\n**Artificial NaN injection via `fault_injection: 'nan_divergence'` setting** is the confirmed culprit. This deliberately corrupts training data, triggering representational collapse across the model.\n\n## Supporting Evidence\n- **Test Accuracy:** 0.12 (below random baseline of 0.15 for CIFAR10)\n- **Loss Plateau:** ~2.3 (stagnant, indicating no learning signal)\n- **Label Integrity:** Confirmed corruption in 500-sample CIFAR10 subset\n- **Training Duration:** Only 2 epochs\u2014insufficient for recovery even without injection\n\n## Immediate Actions (Priority Order)\n\n1. **Disable fault injection immediately**\n   - Set `fault_injection: null` or remove the parameter entirely\n   - This removes the",
+            "auto_remediated": false,
+            "action_taken": null
+          },
+          {
+            "stage": "training",
+            "anomalies": [
+              "corrupt_data"
+            ],
+            "raw_anomalies": [
+              "Model failed to converge: test accuracy 0.0740 is at or below random guessing threshold (0.15). Suspected label corruption or representational collapse."
+            ],
+            "diagnosis": "# Unified ML Training Diagnosis\n\n## **Critical Issue: Corrupt Data with Artificial Fault Injection**\n\n### Root Cause Analysis\nThe training failure stems from **combined data corruption and intentional fault injection**:\n\n1. **Artificial NaN Injection** (`fault_injection: 'nan_divergence'`)\n   - Artificially corrupting gradients during training\n   - Causing representational collapse and divergence\n\n2. **Underlying Data Quality Issues**\n   - Label corruption or severe mislabeling in CIFAR-10 subset\n   - Possible preprocessing failures in the 500-sample training set\n\n3. **Insufficient Training Capacity**\n   - Only 2 epochs insufficient to recover from compounded faults\n   - Aggressive hyperparameters (lr=0.05, momentum=0.9) amplifying instability on corrupted data\n   - Tiny model",
+            "auto_remediated": false,
+            "action_taken": null
+          }
+        ],
+        "claude_diagnoses": [
+          "# Unified ML Training Diagnosis\n\n## **Critical Issue: NaN Loss Detected**\n\n**Severity:** Critical \u2013 Training failure on first step\n\n---\n\n## **Root Cause Analysis**\nAll subagents converge on a single root cause:\n\n**Excessively high learning rate (5.0)** is causing immediate loss divergence to NaN during the first training iteration. This is compounded by:\n- Batch size of 128 with model architecture mismatch\n- Unstable gradient updates leading to numerical overflow\n- Potential lack of input data normalization\n\n---\n\n## **Recommended Actions** (Priority Order)\n\n1. **Immediate:** Reduce learning rate to **0.01\u20130.1** range (consensus across all subagents)\n2. **Enable gradient clipping:** Set `max_grad_norm=1.0` to stabilize gradient flow during CPU training\n3",
+          "# Unified Diagnosis: Training Failure Due to Data Corruption\n\n## Primary Root Cause\n**Artificial NaN injection via `fault_injection: 'nan_divergence'` setting** is the confirmed culprit. This deliberately corrupts training data, triggering representational collapse across the model.\n\n## Supporting Evidence\n- **Test Accuracy:** 0.12 (below random baseline of 0.15 for CIFAR10)\n- **Loss Plateau:** ~2.3 (stagnant, indicating no learning signal)\n- **Label Integrity:** Confirmed corruption in 500-sample CIFAR10 subset\n- **Training Duration:** Only 2 epochs\u2014insufficient for recovery even without injection\n\n## Immediate Actions (Priority Order)\n\n1. **Disable fault injection immediately**\n   - Set `fault_injection: null` or remove the parameter entirely\n   - This removes the",
+          "# Unified ML Training Diagnosis\n\n## **Critical Issue: Corrupt Data with Artificial Fault Injection**\n\n### Root Cause Analysis\nThe training failure stems from **combined data corruption and intentional fault injection**:\n\n1. **Artificial NaN Injection** (`fault_injection: 'nan_divergence'`)\n   - Artificially corrupting gradients during training\n   - Causing representational collapse and divergence\n\n2. **Underlying Data Quality Issues**\n   - Label corruption or severe mislabeling in CIFAR-10 subset\n   - Possible preprocessing failures in the 500-sample training set\n\n3. **Insufficient Training Capacity**\n   - Only 2 epochs insufficient to recover from compounded faults\n   - Aggressive hyperparameters (lr=0.05, momentum=0.9) amplifying instability on corrupted data\n   - Tiny model"
+        ]
+      }
+    }
+  ]
+}

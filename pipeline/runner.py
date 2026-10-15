@@ -313,8 +313,14 @@ class PipelineRunner:
                         "error": str(exc),
                         "config": self.config.to_dict(),
                     }
-                    action = self.supervisor.handle_anomaly(stage_name, anomalies, context)
-                    print(f"  🤖 Agent recommendation: {action}")
+                    try:
+                        action = self.supervisor.handle_anomaly(stage_name, anomalies, context)
+                        print(f"  🤖 Agent recommendation: {action}")
+                    except Exception as ag_exc:
+                        print(f"  ⚠️ Supervisor failed during anomaly handling: {ag_exc}")
+                        self.tracker.log_event(
+                            stage_name, "error", f"Supervisor anomaly handling failed: {ag_exc}"
+                        )
 
                 if attempt >= retries:
                     print(f"  ❌ Stage {stage_name} failed after {retries + 1} attempts")

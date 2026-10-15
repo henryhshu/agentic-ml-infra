@@ -1,0 +1,60 @@
+{
+  "timestamp": "2026-10-14T08:26:19.938826+00:00",
+  "total_scenarios": 1,
+  "recoverable_scenarios": 1,
+  "self_healed_count": 1,
+  "self_healing_rate": 100.0,
+  "total_compute_saved_s": 2.44,
+  "total_baseline_duration_s": 2.44,
+  "total_agentic_duration_s": 9.77,
+  "scenarios": [
+    {
+      "id": "gradient_explosion",
+      "title": "Unclipped Gradient Shock (Exploding Norm)",
+      "category": "training_instability",
+      "is_recoverable": true,
+      "self_healed": true,
+      "compute_saved_s": 2.44,
+      "baseline": {
+        "status": "failed",
+        "duration_s": 2.44,
+        "retries": 3,
+        "error": null
+      },
+      "agentic": {
+        "status": "success",
+        "duration_s": 9.77,
+        "retries": 0,
+        "remediations": [
+          {
+            "timestamp": "2026-10-14T08:26:18.123305+00:00",
+            "action": "enable_gradient_clipping",
+            "status": "success",
+            "details": "Enabled gradient clipping with max_norm=1.0",
+            "config_diff": {
+              "max_grad_norm": {
+                "old": null,
+                "new": 1.0
+              }
+            }
+          }
+        ],
+        "incidents": [
+          {
+            "stage": "training",
+            "anomalies": [
+              "gradient_explosion"
+            ],
+            "raw_anomalies": [
+              "Gradient explosion detected: grad_norm=999.9 exceeds stability threshold"
+            ],
+            "diagnosis": "# **UNIFIED DIAGNOSIS: Gradient Explosion**\n\n## **Root Cause**\nUnstable gradient updates caused by the convergence of three factors:\n1. **Excessive learning rate** (0.1) \u2013 too aggressive for model/dataset combination\n2. **Aggressive momentum** (0.9) \u2013 compounds gradient updates without dampening\n3. **Missing gradient clipping** (`max_grad_norm=None`) \u2013 no safeguard against explosion\n\n## **Impact**\n- Exploding loss values propagating through backpropagation\n- Training divergence and model non-convergence\n- Potential NaN/Inf values in subsequent training steps\n\n## **Immediate Actions (Priority Order)**\n1. **Reduce learning rate**: `0.1 \u2192 0.01`\n2. **Enable gradient clipping**: Set `max_grad_norm=1.0`\n3.",
+            "auto_remediated": true,
+            "action_taken": "enable_gradient_clipping"
+          }
+        ],
+        "claude_diagnoses": []
+      }
+    }
+  ]
+}

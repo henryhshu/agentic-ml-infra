@@ -27,7 +27,7 @@ Traditional machine learning infrastructure relies on **passive observability** 
          ▼                                                                   ▼
 ┌─────────────────────────────────┐                         ┌─────────────────────────────────┐
 │     AUTONOMOUSLY REMEDIABLE     │                         │         SAFE ESCALATION         │
-│        (Tiers 1, 2, 3, 4)       │                         │          (Tiers 5 & 6)          │
+│       (Levels 1, 2, 3, 4)       │                         │          (Levels 5 & 6)         │
 ├─────────────────────────────────┤                         ├─────────────────────────────────┤
 │ • Batch OOMs                    │                         │ • Statistical Silent Traps      │
 │ • Runaway Learning Rates (NaN)  │                         │   (90% Catastrophic Noise)      │
@@ -56,10 +56,10 @@ python run_pipeline.py --model tiny --epochs 5 --subset 500 --agentic --no-tune
 # 4. Run automated test suite & mathematical accumulation parity proofs
 pytest tests/ -v
 
-# 5. Run an automated benchmark scenario (e.g. Tier 1 Batch OOM)
+# 5. Run an automated benchmark scenario (e.g. Level 1 Batch OOM)
 python run_benchmark.py --scenario batch_oom --subset 500 --epochs 1 --device cpu
 
-# 6. Run the complete multi-tier benchmark suite
+# 6. Run the complete 7-level benchmark suite
 python run_benchmark.py --all --subset 500 --epochs 1 --device cpu
 
 # 7. Run custom dataset & architecture (e.g. Synthetic Vision with MLP)
@@ -149,59 +149,55 @@ When `--agentic` is enabled, `PipelineRunner` initializes a specialized agent fl
 
 ---
 
-## 🧪 The 7-Tier Fault Injection Matrix & Benchmarks
+## 🧪 The 7-Level Fault Injection Matrix & Benchmarks
 
-The AutoPARK testbench evaluates platform efficacy across escalating tiers of failure difficulty, ranging from isolated hyperparameter issues to structural code bugs and dynamical optimization paradoxes:
+The AutoPARK testbench evaluates platform efficacy across escalating levels of failure difficulty, ranging from isolated hyperparameter issues to structural code bugs and dynamical optimization paradoxes:
 
 ```text
-[ ZONE 1: FULLY AUTONOMOUS SELF-HEALING ]
+Autonomous In-Memory Self-Healing (Levels 1–4)
 │
-├── Tier 1: Basic Single-Fault (NaN Loss, Batch OOM)
-│     └── [PASSED: 100% Healed in 14.2s - 16.6s via LR & Batch Size mutations]
+├── Level 1: Basic Single-Fault (NaN Loss, Batch OOM)
+│     └── [HEALED: 100% Resolved in 14.2s – 16.6s via LR & Batch Size mutations]
 │
-├── Tier 2: Multi-Fault Cascades (Compound OOM + Gradient Shock)
-│     └── [PASSED: 100% Healed in 24.9s via sequential Batch halving + Grad clipping]
+├── Level 2: Multi-Fault Cascades (Compound OOM + Gradient Shock)
+│     └── [HEALED: 100% Resolved in 24.9s via joint Batch halving + Grad clipping]
 │
-├── Tier 3: Complex Deceptive & Infra (Mid-Epoch Stealth Shock, Spot Worker Churn)
-│     └── [PASSED: 100% Healed in 9.4s - 17.0s via dynamic clipping & worker restart]
+├── Level 3: Non-Deterministic & Infra Faults (Mid-Epoch Delayed Shock, Spot Churn)
+│     └── [HEALED: 100% Resolved in 9.4s – 17.0s via dynamic clipping & actor migration]
 │
-└── Tier 4: Triple Cascaded Instability (OOM → Runaway LR → Grad Explosion)
-      └── [PASSED: 100% Healed in 31.0s via 4 sequential in-RAM config mutations]
+└── Level 4: Cascaded Multi-Step Instability (OOM → Runaway LR → Grad Explosion)
+      └── [HEALED: 100% Resolved in 31.0s via 4 sequential in-RAM config mutations]
       │
-      │ ─── TRANSITION TO OPERATOR ESCALATION ───
-      │
-[ ZONE 2: SAFE REJECTION & ESCALATION (NON-REMEDIABLE) ]
+Safe Diagnostic Escalation (Levels 5–6)
 │
-├── Tier 5: Statistical Silent Traps (90% Catastrophic Label Noise)
-│     └── [ESCALATED: Caught at epoch boundary via Accuracy Floor; 0 wasted retries]
+├── Level 5: Semantic Data Corruption (90% Catastrophic Label Noise)
+│     └── [ESCALATE: Caught at epoch boundary via Accuracy Floor; Arrow partition quarantined]
 │
-└── Tier 6: Structural Architecture Frontier (PyTorch Tensor Dimension Mismatch)
-      └── [ESCALATED: Claude isolates code bug in model definition; 0 invalid mutations]
+└── Level 6: Structural Model Bug (PyTorch Tensor Dimension Mismatch)
+      └── [ESCALATE: Claude synthesizes exact AST code diff; staged for engineer review]
       │
-      │ ─── TRANSITION TO DYNAMICAL CONTROL FRONTIER ───
-      │
-[ ZONE 3: DYNAMICAL CONTROL FRONTIER (SELF-HEALING BREAKS) ]
+Dynamical Control Limits (Level 7)
 │
-└── Tier 7: Antagonistic Thrashing / Bimodal Optimization Paradox
-      └── [FAILED: LR >= 0.01 causes NaN; LR < 0.01 causes Dead Saddle; budget exhausted]
+└── Level 7: Adversarial Bimodal Optimization Paradox
+      └── [EXHAUST: LR >= 0.01 causes NaN; LR < 0.01 stalls; retry budget K=4 halts cyclic thrashing]
 ```
 
 ### Empirical Benchmark Results on AWS EKS (2 × Spot `c6i.xlarge` Nodes)
 
-Live test results evaluated against the `park-ml-cluster` running PyTorch 2.3 and KubeRay 1.1.0 on AWS EKS:
+Live test results evaluated against the `park-ml-cluster` running PyTorch 2.3 and KubeRay 1.1.0 on AWS EKS. Mean Time to Recovery ($\text{MTTR} = T_{\text{det}} + T_{\text{reason}} + T_{\text{act}}$) measures total elapsed time from fault injection ($t_0$) to operational recovery or safe escalation, partitioned into anomaly detection ($T_{\text{det}}$), LLM reasoning ($T_{\text{reason}}$), and actuation ($T_{\text{act}}$):
 
-| Tier | Scenario ID | Pathology | Baseline Status | AutoPARK Status | Actions Applied | Verdict |
+| Level | Scenario ID | Pathology | Baseline Status | AutoPARK MTTR ($T_{\text{det}} + T_{\text{reason}} + T_{\text{act}}$) | Result | Final Resolution Mechanism |
 |---|---|---|---|---|---|---|
-| **Tier 1** | `nan_divergence` | Excessive LR (`5.0`) &rarr; NaN loss | ❌ Crashed (3/3 retries) | ✅ **Success** (16.6s) | `reduce_learning_rate` × 2 | 🏆 **Self-Healed** |
-| **Tier 1** | `batch_oom` | Oversized batch (`512`) &rarr; OOM | ❌ Crashed (3/3 retries) | ✅ **Success** (14.2s) | `reduce_batch_size` × 2 | 🏆 **Self-Healed** |
-| **Tier 2** | `compound_oom_and_explosion` | Memory OOM + gradient explosion | ❌ Crashed (4/4 retries) | ✅ **Success** (24.9s) | `reduce_batch_size` × 2, `enable_gradient_clipping` | 🏆 **Self-Healed** |
-| **Tier 2** | `cascaded_lr_and_memory` | Batch OOM (`256`) + Runaway LR (`5.0`) | ❌ Crashed (4/4 retries) | ✅ **Success** (28.4s) | `reduce_batch_size`, `reduce_learning_rate` × 2 | 🏆 **Self-Healed** |
-| **Tier 3** | `delayed_stochastic_explosion` | Step 1 normal (2.30), Step 2 spike (842.1) | ❌ Crashed (3/3 retries) | ✅ **Success** (9.4s) | `enable_gradient_clipping` (norm=1.0) | 🏆 **Self-Healed** |
-| **Tier 3** | `spot_worker_churn` | AWS Spot preemption (`workers=0`) | ❌ Crashed (3/3 retries) | ✅ **Success** (17.0s) | `restart_workers` | 🏆 **Self-Healed** |
-| **Tier 4** | `triple_cascade_oom_lr_grad` | Memory OOM &rarr; Runaway LR &rarr; Grad shock | ❌ Crashed (4/4 retries) | ✅ **Success** (31.0s) | 4 sequential in-RAM mutations | 🏆 **Self-Healed** |
-| **Tier 5** | `catastrophic_label_noise` | 90% label noise (loss ~2.3, acc ~8%) | ⚠️ Silent Waste (2.9s) | 🛡️ **Escalated** (36.3s) | Refused hyperparameter mutation | 🛡️ **Diagnosed Early** |
-| **Tier 6** | `architecture_tensor_mismatch` | Layer mismatch (`128×512` vs `1024×10`) | ❌ Crashed (3/3 retries) | 🛡️ **Escalated** (27.8s) | Refused invalid mutation | 🛡️ **Diagnosed Early** |
-| **Tier 7** | `thrashing_bimodal_trap` | $LR \ge 0.01 \implies \text{NaN}$; $LR < 0.01 \implies \text{Saddle}$ | ❌ Crashed (3/3 retries) | ❌ **Failed** (30.5s) | Thrashed across opposing bounds | ⚠️ **Control Limit** |
+| **Level 1** | `nan_divergence` | Excessive LR (`5.0`) &rarr; NaN loss | ❌ Crashed (3/3 retries) | ✅ **16.6s** ($1.2\text{s} + 14.1\text{s} + 1.3\text{s}$) | 🏆 **Healed** | Shared-RAM LR decay ($\times 0.1$) + grad clip enable |
+| **Level 1** | `batch_oom` | Oversized batch (`512`) &rarr; OOM | ❌ Crashed (3/3 retries) | ✅ **14.2s** ($1.0\text{s} + 12.1\text{s} + 1.1\text{s}$) | 🏆 **Healed** | In-memory batch size halving ($128 \to 64$) |
+| **Level 2** | `compound_oom_and_explosion` | Memory OOM + gradient explosion | ❌ Crashed (4/4 retries) | ✅ **24.9s** ($1.5\text{s} + 21.8\text{s} + 1.6\text{s}$) | 🏆 **Healed** | Atomic joint batch halving + LR reduction |
+| **Level 2** | `cascaded_lr_and_memory` | Batch OOM (`256`) + Runaway LR (`5.0`) | ❌ Crashed (4/4 retries) | ✅ **28.4s** ($1.8\text{s} + 24.8\text{s} + 1.8\text{s}$) | 🏆 **Healed** | Gradient clip enforcement + micro-batch reduction |
+| **Level 3** | `delayed_stochastic_explosion` | Step 1 normal (2.30), Step 2 spike (842.1) | ❌ Crashed (3/3 retries) | ✅ **9.4s** ($1.1\text{s} + 7.2\text{s} + 1.1\text{s}$) | 🏆 **Healed** | Step-15 loss slope trigger; dynamic LR damping |
+| **Level 3** | `spot_worker_churn` | AWS Spot preemption (`workers=0`) | ❌ Crashed (3/3 retries) | ✅ **17.0s** ($1.9\text{s} + 13.8\text{s} + 1.3\text{s}$) | 🏆 **Healed** | Ray actor checkpoint + migration to surviving node |
+| **Level 4** | `triple_cascade_oom_lr_grad` | Memory OOM &rarr; Runaway LR &rarr; Grad shock | ❌ Crashed (4/4 retries) | ✅ **31.0s** ($2.4\text{s} + 26.5\text{s} + 2.1\text{s}$) | 🏆 **Healed** | 4-step sequential mutation ($B \to \tau_{\text{clip}} \to \eta \to k_{\text{accum}}$) |
+| **Level 5** | `catastrophic_label_noise` | 90% label noise (loss ~2.3, acc ~8%) | ⚠️ Silent Waste (2.9s) | 🛡️ **36.3s** ($3.2\text{s} + 31.5\text{s} + 1.6\text{s}$) | 🛡️ **Escalate** | Accuracy floor violation ($<45\%$); partition quarantine |
+| **Level 6** | `architecture_tensor_mismatch` | Layer mismatch (`128×512` vs `1024×10`) | ❌ Crashed (3/3 retries) | 🛡️ **27.8s** ($0.8\text{s} + 25.8\text{s} + 1.2\text{s}$) | 🛡️ **Escalate** | AST shape diagnosis; synthesized exact code diff |
+| **Level 7** | `thrashing_bimodal_trap` | $\eta \ge 0.01 \implies \text{NaN}$; $\eta < 0.01 \implies \text{Saddle}$ | ❌ Crashed (3/3 retries) | ⚠️ **30.5s** ($1.4\text{s} + 27.2\text{s} + 1.9\text{s}$) | ⚠️ **Exhaust** | Cyclic thrashing detected; retry budget limit ($K=4$) hit |
 
 ---
 
@@ -285,7 +281,7 @@ results = runner.run()
 ```
 agentic-ml-infra/
 ├── run_pipeline.py            # Primary CLI — full 5-stage AutoPARK pipeline (--inspect-run, --rollback-run, --dataset)
-├── run_benchmark.py           # Benchmark CLI — progressive fault injection suite
+├── run_benchmark.py           # Benchmark CLI — progressive 7-level fault injection suite
 ├── main.py                    # Standalone single-node training loop
 │
 ├── autopark/                  # High-level Python SDK
@@ -314,18 +310,28 @@ agentic-ml-infra/
 │   └── plugins/               # Modular Actuation Plugins ("Agents with Hands")
 │       └── ast_patcher.py     # ASTCodeSynthesizer — BatchNorm->GroupNorm & dimension repair
 │
-├── tests/                     # Unit Tests & Mathematical Parity Testbench
+├── tests/                     # Unit Tests & Mathematical Parity Testbench (28 tests)
 │   ├── conftest.py            # Pytest configuration & environment hooks
 │   ├── test_abstractions.py   # Unit tests for DataModule, Model Registry, and AutoParkRunner SDK
 │   ├── test_ast_patcher.py    # Unit tests & <50ms AST synthesis performance benchmark
 │   ├── test_accumulation_parity.py # Exact mathematical parity proofs for Accumulation Guard
+│   ├── test_remediation_safeguards.py # Parameter envelope bounds, retry budgets & safeguard invariants
 │   └── test_reversion_manifest.py  # Unit tests for 4-pillar Reversion & Rollback Manifests
 │
 ├── benchmarks/                # Fault Injection Benchmark Framework
-│   ├── scenarios.py           # Catalog of 14 preset scenarios across Tiers 1–7
+│   ├── scenarios.py           # Catalog of 14 preset scenarios across Levels 1–7
 │   ├── harness.py             # BenchmarkHarness — paired Baseline vs. AutoPARK evaluation
 │   ├── report.py              # Markdown & JSON telemetry report generator
+│   ├── plot_analytical_graphs.py # Publication plotting: radar chart, MTTR breakdown & loss traces
+│   ├── plot_architecture_diagrams.py # Architectural diagram generation (Fig 1 control architecture)
+│   ├── figures/               # High-resolution benchmark vector charts and PDF diagrams
 │   └── reports/               # Persisted benchmark reports and execution runs
+│
+├── paper/                     # USENIX ATC Paper Submission & Artifacts
+│   ├── usenix.tex             # LaTeX paper manuscript (7-level testbench, MTTR evaluation)
+│   ├── usenix.pdf             # Compiled camera-ready PDF document
+│   ├── sample.bib             # Curated bibliographic references and citations
+│   └── figures/               # Publication architecture diagrams and analytical plots
 │
 ├── models/                    # Neural Network Backbones
 │   ├── resnet.py              # ResNet18 adapted for CIFAR-10 (~11M params)
@@ -359,4 +365,50 @@ AutoPARK runs identically on a local developer laptop and on AWS EKS:
 | **Storage Backend** | Local disk cache (`data/`) | Amazon S3 Parquet Shards via Arrow S3FS |
 | **Cognitive Agent LLM** | `AnthropicAWS` via `.env` | `AnthropicAWS` with EKS IRSA credentials |
 
+### ⚡ Cluster Lifecycle: Spin-Down & Spin-Up (Zero Ongoing AWS Costs)
+
+When active experiments are concluded, the Amazon EKS cluster should be spun down to prevent control plane ($0.10/hr) and VPC NAT Gateway (~$0.045/hr) charges from accruing.
+
+#### 🛑 Spin Down (Delete Cluster to Stop All Incurred Costs)
+```bash
+# 1. Clean up active Ray workloads
+kubectl delete raycluster park-ray-cluster -n ray --ignore-not-found
+kubectl delete namespace ray --ignore-not-found
+
+# 2. Spin down EKS cluster, node groups, and VPC NAT Gateway
+eksctl delete cluster -f aws/eks-cluster.yaml --wait --disable-nodegroup-eviction
+```
+
+#### 🚀 Spin Up (Restore Cluster from Scratch)
+```bash
+# Ensure AWS CLI, eksctl, kubectl, and Helm are installed
+export AWS_REGION="us-east-1"
+export CLUSTER_NAME="park-ml-cluster"
+
+# 1. Spin up EKS control plane, Spot/GPU node groups, and VPC network (~12-15 min)
+eksctl create cluster -f aws/eks-cluster.yaml
+
+# 2. Update local kubeconfig context
+aws eks update-kubeconfig --region "${AWS_REGION}" --name "${CLUSTER_NAME}"
+
+# 3. Install NVIDIA GPU device plugin (for GPU worker nodes)
+kubectl apply -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v0.17.1/deployments/static/nvidia-device-plugin.yml
+
+# 4. Install KubeRay Operator via Helm
+helm repo add kuberay https://ray-project.github.io/kuberay-helm/
+helm repo update
+helm upgrade -i kuberay-operator kuberay/kuberay-operator \
+    --version 1.1.0 \
+    --namespace ray-system \
+    --create-namespace
+
+# 5. Deploy Ray Cluster (uses pre-built ECR image)
+kubectl apply -f kubernetes/ray-cluster.yaml
+
+# 6. Verify cluster nodes and Ray pods
+kubectl get nodes -L nvidia.com/gpu,role
+kubectl get pods -n ray
+```
+
 *For complete step-by-step instructions on setting up EKS, IAM IRSA roles, and S3 datasets, see [`aws/README.md`](aws/README.md).*
+

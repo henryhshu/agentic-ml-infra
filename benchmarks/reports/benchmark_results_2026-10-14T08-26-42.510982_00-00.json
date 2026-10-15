@@ -1,0 +1,57 @@
+{
+  "timestamp": "2026-10-14T08:26:42.510982+00:00",
+  "total_scenarios": 1,
+  "recoverable_scenarios": 1,
+  "self_healed_count": 1,
+  "self_healing_rate": 100.0,
+  "total_compute_saved_s": 2.19,
+  "total_baseline_duration_s": 2.19,
+  "total_agentic_duration_s": 9.97,
+  "scenarios": [
+    {
+      "id": "spot_worker_churn",
+      "title": "Complex Infrastructure Fault: Spot Node Task Preemption",
+      "category": "cluster_fault",
+      "is_recoverable": true,
+      "self_healed": true,
+      "compute_saved_s": 2.19,
+      "baseline": {
+        "status": "failed",
+        "duration_s": 2.19,
+        "retries": 3,
+        "error": null
+      },
+      "agentic": {
+        "status": "success",
+        "duration_s": 9.97,
+        "retries": 0,
+        "remediations": [
+          {
+            "timestamp": "2026-10-14T08:26:40.318269+00:00",
+            "action": "restart_workers",
+            "status": "success",
+            "details": "Ray worker nodes successfully restarted and health-checked.",
+            "config_diff": {}
+          }
+        ],
+        "incidents": [
+          {
+            "stage": "training",
+            "anomalies": [
+              "worker_shortage"
+            ],
+            "raw_anomalies": [
+              "Ray cluster worker shortage: worker node preempted by EC2 Spot interruption during distributed training"
+            ],
+            "diagnosis": "# Unified Lead ML Training Supervisor Diagnosis\n\n## Primary Issue\n**EC2 Spot Instance Preemption \u2192 Ray Worker Node Failure \u2192 Training Job Interruption**\n\nA Spot instance hosting a Ray worker was preempted during distributed training, reducing the cluster from 2 to 1 worker. This falls below the minimum threshold required to continue the training job, causing immediate failure.\n\n---\n\n## Critical Action Items (Prioritized)\n\n| Priority | Action | Rationale |\n|----------|--------|-----------|\n| **P0** | **Increase ray_workers to 3-4** | Provides redundancy; tolerates 1-2 Spot preemptions without job failure |\n| **P1** | **Enable Ray auto-scaling + fault tolerance** | Automatically provisions replacement workers on preemption events |\n| **P1** | **Switch to On-Demand",
+            "auto_remediated": true,
+            "action_taken": "restart_workers"
+          }
+        ],
+        "claude_diagnoses": [
+          "# Unified Lead ML Training Supervisor Diagnosis\n\n## Primary Issue\n**EC2 Spot Instance Preemption \u2192 Ray Worker Node Failure \u2192 Training Job Interruption**\n\nA Spot instance hosting a Ray worker was preempted during distributed training, reducing the cluster from 2 to 1 worker. This falls below the minimum threshold required to continue the training job, causing immediate failure.\n\n---\n\n## Critical Action Items (Prioritized)\n\n| Priority | Action | Rationale |\n|----------|--------|-----------|\n| **P0** | **Increase ray_workers to 3-4** | Provides redundancy; tolerates 1-2 Spot preemptions without job failure |\n| **P1** | **Enable Ray auto-scaling + fault tolerance** | Automatically provisions replacement workers on preemption events |\n| **P1** | **Switch to On-Demand"
+        ]
+      }
+    }
+  ]
+}

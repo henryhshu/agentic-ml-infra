@@ -1,0 +1,95 @@
+{
+  "timestamp": "2026-10-14T08:25:57.572613+00:00",
+  "total_scenarios": 1,
+  "recoverable_scenarios": 1,
+  "self_healed_count": 1,
+  "self_healing_rate": 100.0,
+  "total_compute_saved_s": 1.94,
+  "total_baseline_duration_s": 1.94,
+  "total_agentic_duration_s": 16.71,
+  "scenarios": [
+    {
+      "id": "batch_oom",
+      "title": "Memory Pressure (Simulated Batch OOM)",
+      "category": "resource_pressure",
+      "is_recoverable": true,
+      "self_healed": true,
+      "compute_saved_s": 1.94,
+      "baseline": {
+        "status": "failed",
+        "duration_s": 1.94,
+        "retries": 3,
+        "error": null
+      },
+      "agentic": {
+        "status": "success",
+        "duration_s": 16.71,
+        "retries": 0,
+        "remediations": [
+          {
+            "timestamp": "2026-10-14T08:25:48.135372+00:00",
+            "action": "reduce_batch_size",
+            "status": "success",
+            "details": "Reduced batch size from 512 to 256 and scaled accum_steps from 1 to 2 (invariant effective_batch_size=512)",
+            "config_diff": {
+              "batch_size": {
+                "old": 512,
+                "new": 256
+              },
+              "accum_steps": {
+                "old": 1,
+                "new": 2
+              }
+            }
+          },
+          {
+            "timestamp": "2026-10-14T08:25:54.894028+00:00",
+            "action": "reduce_batch_size",
+            "status": "success",
+            "details": "Reduced batch size from 256 to 128 and scaled accum_steps from 2 to 4 (invariant effective_batch_size=512)",
+            "config_diff": {
+              "batch_size": {
+                "old": 256,
+                "new": 128
+              },
+              "accum_steps": {
+                "old": 2,
+                "new": 4
+              }
+            }
+          }
+        ],
+        "incidents": [
+          {
+            "stage": "training",
+            "anomalies": [
+              "memory_pressure"
+            ],
+            "raw_anomalies": [
+              "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=512"
+            ],
+            "diagnosis": "# Unified ML Training Diagnosis\n\n## Anomaly: Memory Pressure\n\n**Severity:** Critical  \n**Stage:** Training  \n**Root Cause:** Configuration mismatch\u2014CPU-only training (`use_gpu=False`) with `batch_size=512` exceeds available memory capacity.\n\n---\n\n## Recommended Actions (Priority Order)\n\n1. **Reduce batch size** \u2192 `batch_size=32-64`\n2. **Enable gradient accumulation** \u2192 `accum_steps=4-8` (maintains effective batch size ~256-512)\n3. **Alternative:** Enable GPU acceleration (`use_gpu=True`) if hardware available\n\n---\n\n## Expected Outcome\nResolves immediate out-of-memory allocation failure and prevents pipeline interruption while maintaining training stability.",
+            "auto_remediated": true,
+            "action_taken": "reduce_batch_size"
+          },
+          {
+            "stage": "training",
+            "anomalies": [
+              "memory_pressure"
+            ],
+            "raw_anomalies": [
+              "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+            ],
+            "diagnosis": "# Unified ML Training Diagnosis\n\n## Primary Issue\n**Memory Pressure during CPU-only Training**\n\n---\n\n## Root Cause\nBatch size of **256 exceeds available CPU memory** in CPU-only execution mode (`use_gpu=False`). The training pipeline is attempting to load full batches into system RAM without GPU acceleration, causing memory exhaustion across the data loading and gradient computation stages.\n\n---\n\n## Recommended Actions (Priority Order)\n\n1. **Reduce batch_size to 64-128** (immediate)\n   - Provides immediate relief and maintains training stability\n\n2. **Implement gradient accumulation** (if maintaining large effective batch size)\n   - Set `accum_steps=8` with `batch_size=64` to preserve effective batch size of 512\n\n3. **Enable GPU acceleration** (preferred long-term)\n   - Switch `use_gpu=True` to off",
+            "auto_remediated": true,
+            "action_taken": "reduce_batch_size"
+          }
+        ],
+        "claude_diagnoses": [
+          "# Unified ML Training Diagnosis\n\n## Anomaly: Memory Pressure\n\n**Severity:** Critical  \n**Stage:** Training  \n**Root Cause:** Configuration mismatch\u2014CPU-only training (`use_gpu=False`) with `batch_size=512` exceeds available memory capacity.\n\n---\n\n## Recommended Actions (Priority Order)\n\n1. **Reduce batch size** \u2192 `batch_size=32-64`\n2. **Enable gradient accumulation** \u2192 `accum_steps=4-8` (maintains effective batch size ~256-512)\n3. **Alternative:** Enable GPU acceleration (`use_gpu=True`) if hardware available\n\n---\n\n## Expected Outcome\nResolves immediate out-of-memory allocation failure and prevents pipeline interruption while maintaining training stability.",
+          "# Unified ML Training Diagnosis\n\n## Primary Issue\n**Memory Pressure during CPU-only Training**\n\n---\n\n## Root Cause\nBatch size of **256 exceeds available CPU memory** in CPU-only execution mode (`use_gpu=False`). The training pipeline is attempting to load full batches into system RAM without GPU acceleration, causing memory exhaustion across the data loading and gradient computation stages.\n\n---\n\n## Recommended Actions (Priority Order)\n\n1. **Reduce batch_size to 64-128** (immediate)\n   - Provides immediate relief and maintains training stability\n\n2. **Implement gradient accumulation** (if maintaining large effective batch size)\n   - Set `accum_steps=8` with `batch_size=64` to preserve effective batch size of 512\n\n3. **Enable GPU acceleration** (preferred long-term)\n   - Switch `use_gpu=True` to off"
+        ]
+      }
+    }
+  ]
+}

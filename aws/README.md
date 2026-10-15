@@ -8,10 +8,10 @@ This guide details the complete deployment workflow for running the **Agentic ML
 
 ```mermaid
 flowchart TB
-    subgraph AWS["AWS Cloud (us-west-2)"]
+    subgraph AWS["AWS Cloud (us-east-1)"]
         subgraph EKS["Amazon EKS Cluster: park-ml-cluster"]
             subgraph KubeRay["Namespace: ray"]
-                Head["Ray Head Pod\n(CPU: m5.2xlarge)\nSA: ray-worker-sa"]
+                Head["Ray Head Pod\n(CPU: c6i.xlarge Spot)\nSA: ray-worker-sa"]
                 WorkerGPU["Ray GPU Workers\n(NVIDIA T4: g4dn.xlarge)\nPyTorch DDP"]
                 AgentPod["ML Agent Pod\n(Metrics / Anomaly Detector)\nSA: agent-runner-sa"]
                 RemediatorPod["Remediator Agent Pod\n(Self-Healing Controller)\nSA: remediator-sa"]
@@ -47,6 +47,76 @@ flowchart TB
 
 ---
 
+## ⚡ Rapid Cluster Lifecycle: Spin-Down & Spin-Up (Zero Ongoing Cost)
+
+> [!IMPORTANT]
+> Amazon EKS incurs an hourly control plane charge ($0.10/hr) and provisioned VPC NAT Gateways incur ~$0.045/hr plus data processing charges even when 0 EC2 worker instances are running. To eliminate all ongoing AWS infrastructure costs when not running experiments, follow the Spin-Down procedure below. When needed again, the cluster can be spun back up in ~12 minutes using the Spin-Up procedure.
+
+### 🛑 Spin Down (Delete Cluster to Stop All Costs)
+
+```bash
+# 1. Clean up active Ray workloads & namespace
+kubectl delete raycluster park-ray-cluster -n ray --ignore-not-found
+kubectl delete namespace ray --ignore-not-found
+
+# 2. Delete EKS cluster, node groups, and VPC NAT Gateway via eksctl
+# This cleanly terminates worker instances, removes the control plane, and deletes the VPC/NAT gateway
+eksctl delete cluster -f aws/eks-cluster.yaml --wait --disable-nodegroup-eviction
+```
+
+### 🚀 Spin Up (Recreate Cluster from Scratch)
+
+```bash
+# 1. Set environment variables
+export AWS_REGION="us-east-1"
+export CLUSTER_NAME="park-ml-cluster"
+
+# 2. Provision the EKS cluster, Spot CPU/GPU nodegroups, and VPC (~12-15 mins)
+eksctl create cluster -f aws/eks-cluster.yaml
+
+# 3. Update local kubeconfig context
+aws eks update-kubeconfig --region "${AWS_REGION}" --name "${CLUSTER_NAME}"
+
+# 4. Verify connected nodes
+kubectl get nodes -L nvidia.com/gpu,role
+
+# 5. Install NVIDIA Kubernetes Device Plugin (for GPU worker nodes)
+kubectl apply -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v0.17.1/deployments/static/nvidia-device-plugin.yml
+
+# 6. Install KubeRay Operator via Helm
+helm repo add kuberay https://ray-project.github.io/kuberay-helm/
+helm repo update
+helm upgrade -i kuberay-operator kuberay/kuberay-operator \
+    --version 1.1.0 \
+    --namespace ray-system \
+    --create-namespace
+
+# 7. (If not already present) Deploy IAM IRSA Roles
+OIDC_PROVIDER_ARN=$(aws eks describe-cluster --name "${CLUSTER_NAME}" --region "${AWS_REGION}" \
+    --query "cluster.identity.oidc.issuer" --output text | sed -e 's|https://||' -e "s|^|arn:aws:iam::515966515749:oidc-provider/|")
+
+aws cloudformation deploy \
+    --template-file aws/iam_roles.yaml \
+    --stack-name "${CLUSTER_NAME}-iam-roles" \
+    --capabilities CAPABILITY_NAMED_IAM \
+    --parameter-overrides \
+        OIDCProviderArn="${OIDC_PROVIDER_ARN}" \
+        S3BucketName="park-ml-experiments-515966515749-us-east-1" \
+        Namespace="ray" \
+        RayWorkerServiceAccount="ray-worker-sa" \
+        AgentServiceAccount="agent-runner-sa" \
+        RemediatorServiceAccount="remediator-sa" \
+        EKSClusterName="${CLUSTER_NAME}"
+
+# 8. Deploy Ray Cluster (uses pre-built ECR images)
+kubectl apply -f kubernetes/ray-cluster.yaml
+
+# 9. Verify Ray pods
+kubectl get pods -n ray
+```
+
+---
+
 ## Prerequisites & Tooling
 
 Ensure the following tools are installed on your workstation:
@@ -66,8 +136,8 @@ Ensure the following tools are installed on your workstation:
 Configure your environment before executing the deployment steps:
 
 ```bash
-# Target AWS Region and Account
-export AWS_REGION="us-west-2"
+# Target AWS Region and Account (default: us-east-1)
+export AWS_REGION="us-east-1"
 export AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
 
 # Cluster and Storage Configuration
@@ -112,12 +182,12 @@ This script will:
 
 Deploy the EKS cluster using `aws/eks-cluster.yaml`. This provisions:
 - EKS Control Plane (Kubernetes 1.31) with IAM OIDC Provider enabled.
-- `cpu-workers` node group: `m5.2xlarge` (2–8 nodes) for Ray head and agent pods.
+- `spot-cpu-workers` node group: Spot `c6i.xlarge` (0–4 nodes) for Ray head and agent pods.
 - `gpu-workers` node group: `g4dn.xlarge` with NVIDIA T4 GPUs (0–4 nodes) for distributed training.
 - CloudWatch control-plane log streams.
 
 ```bash
-# Provision the cluster (takes ~15-20 minutes)
+# Provision the cluster (takes ~12-15 minutes)
 eksctl create cluster -f aws/eks-cluster.yaml
 
 # Update local kubeconfig context
@@ -470,20 +540,20 @@ kubectl exec -it -n ray $(kubectl get pods -n ray -l ray.io/node-type=head -o js
 If `gpu-workers` fail to scale up:
 ```bash
 # Check EKS managed nodegroup scaling activity
-aws eks describe-nodegroup --cluster-name park-ml-cluster --nodegroup-name gpu-workers
+aws eks describe-nodegroup --cluster-name park-ml-cluster --nodegroup-name gpu-workers --region us-east-1
 
 # Verify Service Quotas for Running On-Demand G and VT instances
 aws service-quotas get-service-quota \
     --service-code ec2 \
     --quota-code L-DB2E16CF \
-    --region us-west-2
+    --region us-east-1
 ```
 
 ### 3. Verify S3 Metrics Storage from Python
 ```python
 from aws.s3_config import S3Config, S3MetricsStore
 
-config = S3Config(bucket_name="park-ml-experiments-ACCOUNT-REGION")
+config = S3Config(bucket_name="park-ml-experiments-515966515749-us-east-1", region="us-east-1")
 store = S3MetricsStore(config)
 print("Experiment Runs:", store.list_experiments())
 ```
@@ -496,20 +566,20 @@ To avoid ongoing AWS charges after running experiments, clean up resources in re
 
 ```bash
 # 1. Delete Ray Cluster and Agent pods
-kubectl delete raycluster park-cluster -n ray
-kubectl delete namespace ray
+kubectl delete raycluster park-ray-cluster -n ray --ignore-not-found
+kubectl delete namespace ray --ignore-not-found
 
-# 2. Delete CloudFormation IAM stack
-aws cloudformation delete-stack --stack-name "${CLUSTER_NAME}-iam-roles"
+# 2. Delete EKS Cluster (deletes VPC, NAT Gateway, security groups, and nodegroups)
+eksctl delete cluster -f aws/eks-cluster.yaml --wait --disable-nodegroup-eviction
 
-# 3. Empty and delete S3 Bucket
-aws s3 rm "s3://${S3_BUCKET_NAME}" --recursive
-aws s3api delete-bucket --bucket "${S3_BUCKET_NAME}" --region "${AWS_REGION}"
+# 3. (Optional) Delete CloudFormation IAM stack (IAM roles incur no charge, but can be removed if desired)
+aws cloudformation delete-stack --stack-name "park-ml-iam-roles" --region us-east-1
 
-# 4. Delete EKS Cluster (deletes VPC, security groups, and nodegroups)
-eksctl delete cluster -f aws/eks-cluster.yaml
+# 4. (Optional) Empty and delete S3 Bucket
+aws s3 rm "s3://park-ml-experiments-515966515749-us-east-1" --recursive
+aws s3api delete-bucket --bucket "park-ml-experiments-515966515749-us-east-1" --region us-east-1
 
-# 5. Delete ECR Repositories (optional)
-aws ecr delete-repository --repository-name park-cifar10 --force --region "${AWS_REGION}"
-aws ecr delete-repository --repository-name park-pytorch --force --region "${AWS_REGION}"
+# 5. (Optional) Delete ECR Repositories
+aws ecr delete-repository --repository-name park-cifar10 --force --region us-east-1
+aws ecr delete-repository --repository-name park-pytorch --force --region us-east-1
 ```

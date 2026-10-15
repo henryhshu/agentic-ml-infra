@@ -260,6 +260,9 @@ class ASTCodeSynthesizer:
     ) -> tuple[str, str, int]:
         """Read a Python file, apply BatchNorm -> GroupNorm AST transformation, and return patch."""
         path = Path(file_path)
+        if not path.is_file():
+            raise FileNotFoundError(f"Target model file not found for AST patching: {path}")
+
         with open(path, "r", encoding="utf-8") as f:
             original_code = f.read()
 

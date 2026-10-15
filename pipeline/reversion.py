@@ -135,6 +135,9 @@ def generate_manifest_from_run(
     collected_patches: list[str] = []
 
     for item in action_log:
+        # Ignore failed or incomplete actions to avoid rolling back unapplied mutations
+        if item.get("status") not in ("success", "retry_requested"):
+            continue
         cdiff = item.get("config_diff", {})
         for key, val in cdiff.items():
             if isinstance(val, dict) and "old" in val and "new" in val:

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, TYPE_CHECKING
 from agents.base import AgentBase
 
@@ -59,75 +60,106 @@ class RemediatorAgent(AgentBase):
 
         self._log(f"Executing action: {action}", level='info')
 
-        if action == 'reduce_learning_rate':
-            old_lr = config.lr
-            config.lr = old_lr * 0.1
-            result['status'] = 'success'
-            result['details'] = f'Reduced LR from {old_lr} to {config.lr}'
-            result['config_diff'] = {'lr': {'old': old_lr, 'new': config.lr}}
+        try:
+            if action == 'reduce_learning_rate':
+                old_lr = config.lr
+                if old_lr is None or old_lr <= 0:
+                    result['status'] = 'failed'
+                    result['details'] = f"Cannot reduce learning rate: invalid current lr={old_lr}"
+                else:
+                    new_lr = old_lr * 0.1
+                    config.lr = new_lr
+                    result['status'] = 'success'
+                    result['details'] = f'Reduced LR from {old_lr} to {config.lr}'
+                    result['config_diff'] = {'lr': {'old': old_lr, 'new': config.lr}}
 
-        elif action == 'reduce_batch_size':
-            old_bs = config.batch_size
-            old_accum = getattr(config, "accum_steps", 1)
-            new_bs = max(1, old_bs // 2)
-            config.batch_size = new_bs
-            config_diff: dict[str, Any] = {'batch_size': {'old': old_bs, 'new': new_bs}}
+            elif action == 'reduce_batch_size':
+                old_bs = config.batch_size
+                if old_bs is None or old_bs <= 1:
+                    result['status'] = 'failed'
+                    result['details'] = f"Cannot reduce batch size: already at minimum {old_bs}"
+                else:
+                    old_accum = getattr(config, "accum_steps", 1)
+                    new_bs = max(1, old_bs // 2)
+                    config.batch_size = new_bs
+                    config_diff: dict[str, Any] = {'batch_size': {'old': old_bs, 'new': new_bs}}
 
-            if getattr(config, "preserve_effective_batch", True):
-                factor = max(1, old_bs // new_bs)
-                new_accum = old_accum * factor
-                config.accum_steps = new_accum
-                config_diff['accum_steps'] = {'old': old_accum, 'new': new_accum}
-                details = (
-                    f"Reduced batch size from {old_bs} to {new_bs} and scaled accum_steps "
-                    f"from {old_accum} to {new_accum} (invariant effective_batch_size={config.effective_batch_size})"
-                )
-            else:
-                details = f"Reduced batch size from {old_bs} to {new_bs}"
+                    if getattr(config, "preserve_effective_batch", True):
+                        factor = max(1, old_bs // new_bs)
+                        new_accum = old_accum * factor
+                        config.accum_steps = new_accum
+                        config_diff['accum_steps'] = {'old': old_accum, 'new': new_accum}
+                        details = (
+                            f"Reduced batch size from {old_bs} to {new_bs} and scaled accum_steps "
+                            f"from {old_accum} to {new_accum} (invariant effective_batch_size={config.effective_batch_size})"
+                        )
+                    else:
+                        details = f"Reduced batch size from {old_bs} to {new_bs}"
 
-            result['status'] = 'success'
-            result['details'] = details
-            result['config_diff'] = config_diff
+                    result['status'] = 'success'
+                    result['details'] = details
+                    result['config_diff'] = config_diff
 
-        elif action == 'convert_batchnorm_to_groupnorm':
-            from agents.plugins.ast_patcher import ASTCodeSynthesizer
-            synthesizer = ASTCodeSynthesizer()
-            model_file = "models/resnet.py" if getattr(config, "model", "") == "resnet18" else "models/tiny_cnn.py"
-            transformed, patch, count = synthesizer.patch_file(model_file, inplace=False)
-            setattr(config, "use_group_norm", True)
-            result['status'] = 'success'
-            result['details'] = f"Synthesized GroupNorm AST patch ({count} layers converted) to preserve equivalence under gradient accumulation."
-            result['config_diff'] = {'use_group_norm': {'old': False, 'new': True}, 'ast_patch': patch}
+            elif action == 'convert_batchnorm_to_groupnorm':
+                from agents.plugins.ast_patcher import ASTCodeSynthesizer
+                synthesizer = ASTCodeSynthesizer()
+                model_name = getattr(config, "model", "")
+                if model_name == "resnet18":
+                    model_file = "models/resnet.py"
+                elif model_name and (Path(model_name).exists() or "/" in str(model_name)):
+                    model_file = str(model_name)
+                else:
+                    model_file = "models/tiny_cnn.py"
 
-        elif action == 'synthesize_code_patch':
-            from agents.plugins.ast_patcher import ASTCodeSynthesizer
-            synthesizer = ASTCodeSynthesizer()
-            patch_result = synthesizer.synthesize_code_patch("architecture_tensor_mismatch", {
-                "source_code": "linear = nn.Linear(1024, 10)",
-                "old_in": 1024, "old_out": 10, "new_in": 512, "new_out": 10
-            })
-            result['status'] = 'success'
-            result['details'] = f"Synthesized unified AST diff (.patch) for structural architecture repair in {patch_result['latency_ms']}ms."
-            result['config_diff'] = {'patch': patch_result.get('patch', '')}
+                transformed, patch, count = synthesizer.patch_file(model_file, inplace=False)
+                if count <= 0:
+                    result['status'] = 'failed'
+                    result['details'] = f"No BatchNorm layers found in {model_file} to convert."
+                else:
+                    setattr(config, "use_group_norm", True)
+                    result['status'] = 'success'
+                    result['details'] = f"Synthesized GroupNorm AST patch ({count} layers converted) to preserve equivalence under gradient accumulation."
+                    result['config_diff'] = {'use_group_norm': {'old': False, 'new': True}, 'ast_patch': patch}
 
-        elif action == 'enable_gradient_clipping':
-            config.max_grad_norm = 1.0
-            result['status'] = 'success'
-            result['details'] = 'Enabled gradient clipping with max_norm=1.0'
-            result['config_diff'] = {'max_grad_norm': {'old': None, 'new': 1.0}}
+            elif action == 'synthesize_code_patch':
+                from agents.plugins.ast_patcher import ASTCodeSynthesizer
+                synthesizer = ASTCodeSynthesizer()
+                patch_result = synthesizer.synthesize_code_patch("architecture_tensor_mismatch", {
+                    "source_code": "linear = nn.Linear(1024, 10)",
+                    "old_in": 1024, "old_out": 10, "new_in": 512, "new_out": 10
+                })
+                if patch_result.get("status") == "success" and patch_result.get("replacements", 0) > 0:
+                    result['status'] = 'success'
+                    result['details'] = f"Synthesized unified AST diff (.patch) for structural architecture repair in {patch_result['latency_ms']}ms."
+                    result['config_diff'] = {'patch': patch_result.get('patch', '')}
+                else:
+                    result['status'] = 'failed'
+                    err = patch_result.get("error") or "No matching layers found to patch"
+                    result['details'] = f"AST code patch synthesis failed: {err}"
 
-        elif action == 'restart_workers':
-            setattr(config, "workers_restarted", True)
-            result['status'] = 'success'
-            result['details'] = 'Ray worker nodes successfully restarted and health-checked.'
+            elif action == 'enable_gradient_clipping':
+                config.max_grad_norm = 1.0
+                result['status'] = 'success'
+                result['details'] = 'Enabled gradient clipping with max_norm=1.0'
+                result['config_diff'] = {'max_grad_norm': {'old': None, 'new': 1.0}}
 
-        elif action == 'retry_stage':
-            result['status'] = 'retry_requested'
-            result['details'] = 'Stage will be retried with current config.'
+            elif action == 'restart_workers':
+                setattr(config, "workers_restarted", True)
+                result['status'] = 'success'
+                result['details'] = 'Ray worker nodes successfully restarted and health-checked.'
 
-        elif action == 'skip_and_continue':
-            result['status'] = 'skipped'
-            result['details'] = 'Skipped current stage.'
+            elif action == 'retry_stage':
+                result['status'] = 'retry_requested'
+                result['details'] = 'Stage will be retried with current config.'
+
+            elif action == 'skip_and_continue':
+                result['status'] = 'skipped'
+                result['details'] = 'Skipped current stage.'
+
+        except Exception as exc:
+            result['status'] = 'failed'
+            result['details'] = f"Actuation failed for action '{action}': {exc}"
+            self._log(f"Exception during {action}: {exc}", level='error')
 
         log_level = 'success' if result['status'] in ('success', 'retry_requested', 'logged', 'skipped') else 'error'
         self._log(f"Action '{action}' → {result['status']}: {result['details']}", level=log_level)

@@ -10,7 +10,7 @@ AutoPARK implements a closed-loop, self-healing ML training architecture built o
 
 ### The Split-Plane Architecture
 AutoPARK decouples execution into two operational planes:
-1. **The Deterministic Execution Plane (In-Container)**: Ray workers, PyTorch training loops, and Apache Arrow data loaders run at line-rate in Kubernetes containers.
+1. **The Deterministic Execution Plane (In-Container)**: Ray workers, PyTorch training loops, and Apache Arrow data loaders run at full throughput in Kubernetes containers.
 2. **The Cognitive Reasoning Plane (Cloud-Hosted)**: Claude on AWS inspects structured multi-factor telemetry across loss trajectories, gradient norms, batch sizes, and cluster events, synthesizing root causes and dispatching targeted interventions.
 
 ### Key Design Principles

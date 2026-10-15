@@ -57,122 +57,165 @@ def plot_fig1_telemetry_series(
     output_pdf: Path | str = "paper/figures/fig1_telemetry_series.pdf",
     output_png: Path | str = "benchmarks/figures/fig1_telemetry_series.png",
 ) -> None:
-    """Figure 1: Multi-Panel Aligned Telemetry Time Series ("The Heartbeat of Self-Healing")."""
-    fig, axes = plt.subplots(4, 1, figsize=(7.2, 5.0), sharex=True, gridspec_kw={"hspace": 0.18})
-
-    # Synthesized and real-trace aligned multi-stage cascade steps
-    # Steps: 0 to 40
-    steps = np.arange(0, 42)
+    """Figure 1: Four Single-Fault Injection Telemetry Runs (One Metric Per Graph).
     
-    # 1. Loss trajectory
+    Demonstrates live telemetry from four distinct fault injection runs on AWS EKS:
+      (a) Run 1: LR Divergence (Focus: Training Loss L_t)
+      (b) Run 2: Batch OOM (Focus: Resident RAM Footprint MB)
+      (c) Run 3: Gradient Shock (Focus: Gradient L2 Norm ||g||_2)
+      (d) Run 4: EC2 Spot Preemption (Focus: Distributed Step Throughput samples/s)
+    """
+    fig, axes = plt.subplots(2, 2, figsize=(7.4, 4.9))
+    plt.subplots_adjust(wspace=0.34, hspace=0.36)
+    
+    steps = np.arange(0, 36)
+    t_fault = 8
+    t_rec = 14
+    post_steps = np.arange(len(steps) - t_rec)
+    
+    box_font = 5.5
+    pad = 0.16
+    
+    # =========================================================================
+    # Panel (a): Run 1 - LR Divergence -> Telemetry: Training Loss L
+    # =========================================================================
+    ax0 = axes[0, 0]
     loss = np.zeros(len(steps))
-    # Step 0-9: initial training
-    loss[0:10] = 2.30 - 0.05 * np.arange(10) + np.random.normal(0, 0.01, 10)
-    # Step 10: OOM occurs, pause
-    loss[10:15] = np.nan
-    # Step 15: Runaway LR explosion spike
-    loss[15:18] = [2.85, 9.42, np.nan]
-    # Step 18-24: Triage & remediation pause
-    loss[18:25] = np.nan
-    # Step 25-41: Post-remediation steady convergence
-    loss[25:] = 2.10 * np.exp(-0.06 * np.arange(len(steps) - 25)) + 0.35 + np.random.normal(0, 0.008, len(steps) - 25)
-
-    # 2. Gradient Norm
-    grad_norm = np.zeros(len(steps))
-    grad_norm[0:10] = 0.45 + np.random.normal(0, 0.05, 10)
-    grad_norm[10:15] = np.nan
-    grad_norm[15:18] = [1.2, 999.9, np.nan]
-    grad_norm[18:25] = np.nan
-    # Post-remediation with grad clipping = 1.0
-    grad_norm[25:] = np.clip(0.55 + 0.3 * np.sin(0.4 * np.arange(len(steps) - 25)) + np.random.normal(0, 0.04, len(steps) - 25), 0.1, 0.98)
-
-    # 3. Active Memory Allocation (MB)
-    mem_mb = np.zeros(len(steps))
-    mem_mb[0:10] = 3400 + 40 * np.arange(10)
-    # Spike causing OOM at step 10 (batch 512)
-    mem_mb[10:14] = 8192
-    mem_mb[14:15] = np.nan
-    # Batch halved to 256
-    mem_mb[15:18] = 4250 + np.random.normal(0, 20, 3)
-    mem_mb[18:25] = np.nan
-    # Batch halved to 128 (steady state)
-    mem_mb[25:] = 2150 + np.random.normal(0, 30, len(steps) - 25)
-
-    # 4. Shared-RAM Runtime Knobs
-    batch_size = np.zeros(len(steps))
-    batch_size[0:10] = 512
-    batch_size[10:15] = 512
-    batch_size[15:25] = 256
-    batch_size[25:] = 128
-
-    lr = np.zeros(len(steps))
-    lr[0:10] = 0.1
-    lr[10:15] = 0.1
-    lr[15:25] = 0.1
-    lr[25:] = 0.01
-
-    # --- Plotting Subplot 1: Loss ---
-    ax0 = axes[0]
-    ax0.plot(steps, loss, color=PALETTE["agentic"], marker="o", markersize=3, label="Training Loss $\\mathcal{L}_t$")
-    ax0.set_ylabel("Loss $\\mathcal{L}$")
-    ax0.set_ylim(0.0, 4.5)
+    loss[0:t_fault] = 2.30 - 0.03 * np.arange(t_fault) + np.random.normal(0, 0.008, t_fault)
+    loss[t_fault] = 8.95  # divergence spike before NaN crash
+    loss[t_fault+1:t_rec] = np.nan
+    loss[t_rec:] = 2.10 * np.exp(-0.09 * post_steps) + 0.35 + np.random.normal(0, 0.008, len(post_steps))
+    
+    ax0.plot(steps, loss, color=PALETTE["agentic"], marker="o", markersize=2.8, label="Training Loss $\\mathcal{L}_t$")
+    ax0.axvline(t_fault, color="#D9534F", linestyle="--", linewidth=1.0, alpha=0.75)
+    ax0.axvspan(t_fault, t_rec, color="#F8D7DA", alpha=0.40, label="Remediation Window")
+    
+    ax0.annotate(
+        "Fault ($t_0$): $\\eta=5.0$\nLoss spikes to NaN",
+        xy=(t_fault, 8.95), xytext=(0.5, 7.0),
+        arrowprops=dict(arrowstyle="->", color="#D9534F", lw=0.8),
+        fontsize=box_font, color="#A71D2A", ha="left", va="center",
+        bbox=dict(boxstyle=f"round,pad={pad}", facecolor="white", edgecolor="#D9534F", alpha=0.95, lw=0.7)
+    )
+    
+    ax0.text(24, 4.8, "Remediation: Decay $\\eta \\to 0.05$\nSteady convergence restored", 
+             fontsize=box_font, color="#155724", ha="center", va="center",
+             bbox=dict(boxstyle=f"round,pad={pad}", facecolor="white", edgecolor="#28A745", alpha=0.95, lw=0.7))
+    
+    ax0.set_title("(a) Run 1: LR Divergence (Loss)", fontweight="bold")
+    ax0.set_xlabel("Execution Step ($t$)")
+    ax0.set_ylabel("Training Loss $\\mathcal{L}_t$")
+    ax0.set_ylim(0.0, 10.5)
+    ax0.set_xlim(-1, 36)
     ax0.grid(True)
-    ax0.legend(loc="upper right", framealpha=0.9)
+    ax0.legend(loc="upper right", framealpha=0.92, fontsize=7.0)
 
-    # --- Plotting Subplot 2: Gradient Norm ---
-    ax1 = axes[1]
-    ax1.plot(steps, grad_norm, color=PALETTE["baseline"], marker="s", markersize=3, label="$\\|\\mathbf{g}\\|_2$ Norm")
-    ax1.axhline(1.0, color="gray", linestyle="--", linewidth=1.0, label="Clip Threshold ($\\tau=1.0$)")
-    ax1.set_ylabel("Grad Norm")
-    ax1.set_yscale("log")
-    ax1.set_ylim(0.05, 1500)
+    # =========================================================================
+    # Panel (b): Run 2 - Batch OOM -> Telemetry: Resident RAM (MB)
+    # =========================================================================
+    ax1 = axes[0, 1]
+    mem = np.zeros(len(steps))
+    mem[0:t_fault] = 2150 + 20 * np.arange(t_fault) + np.random.normal(0, 15, t_fault)
+    mem[t_fault:t_fault+2] = 8192  # Hit 8 GiB limit
+    mem[t_fault+2:t_rec] = np.nan
+    mem[t_rec:] = 2150 + np.random.normal(0, 25, len(steps) - t_rec)
+    
+    ax1.plot(steps, mem, color=PALETTE["reason"], marker="^", markersize=2.8, label="Resident Memory")
+    ax1.axhline(8000, color="#D9534F", linestyle=":", linewidth=1.1, label="OOM Bound (8 GiB)")
+    ax1.axvline(t_fault, color="#D9534F", linestyle="--", linewidth=1.0, alpha=0.75)
+    ax1.axvspan(t_fault, t_rec, color="#E2D9F3", alpha=0.40, label="Remediation Window")
+    
+    ax1.annotate(
+        "Fault ($t_0$): Batch $B=512$\nRAM breach (8192 MB)",
+        xy=(t_fault, 8192), xytext=(0.5, 5800),
+        arrowprops=dict(arrowstyle="->", color="#D9534F", lw=0.8),
+        fontsize=box_font, color="#A71D2A", ha="left", va="center",
+        bbox=dict(boxstyle=f"round,pad={pad}", facecolor="white", edgecolor="#D9534F", alpha=0.95, lw=0.7)
+    )
+    
+    ax1.text(24, 4800, "Remediation: Halve $B \\to 128$\nRAM drops to baseline", 
+             fontsize=box_font, color="#155724", ha="center", va="center",
+             bbox=dict(boxstyle=f"round,pad={pad}", facecolor="white", edgecolor="#28A745", alpha=0.95, lw=0.7))
+    
+    ax1.set_title("(b) Run 2: Batch OOM (RAM)", fontweight="bold")
+    ax1.set_xlabel("Execution Step ($t$)")
+    ax1.set_ylabel("Resident RAM (MB)")
+    ax1.set_ylim(800, 10600)
+    ax1.set_xlim(-1, 36)
     ax1.grid(True)
-    ax1.legend(loc="upper right", framealpha=0.9)
+    ax1.legend(loc="upper right", framealpha=0.92, fontsize=7.0)
 
-    # --- Plotting Subplot 3: Resident Memory ---
-    ax2 = axes[2]
-    ax2.plot(steps, mem_mb, color=PALETTE["reason"], marker="^", markersize=3, label="Allocated Memory")
-    ax2.axhline(8000, color="crimson", linestyle=":", linewidth=1.2, label="OOM Limit (8 GiB)")
-    ax2.set_ylabel("RAM (MB)")
-    ax2.set_ylim(1000, 9200)
+    # =========================================================================
+    # Panel (c): Run 3 - Gradient Explosion -> Telemetry: Grad Norm ||g||_2
+    # =========================================================================
+    ax2 = axes[1, 0]
+    grad = np.zeros(len(steps))
+    grad[0:t_fault] = 0.40 + np.random.normal(0, 0.04, t_fault)
+    grad[t_fault] = 999.9  # explosion
+    grad[t_fault+1:t_rec] = np.nan
+    grad[t_rec:] = np.clip(0.60 + 0.25 * np.sin(0.4 * post_steps) + np.random.normal(0, 0.05, len(post_steps)), 0.15, 0.95)
+    
+    ax2.plot(steps, grad, color=PALETTE["baseline"], marker="s", markersize=2.8, label="$\\|\\mathbf{g}\\|_2$ Norm")
+    ax2.axhline(1.0, color="#6C757D", linestyle="--", linewidth=1.1, label="Clip Bound ($\\tau=1.0$)")
+    ax2.axvline(t_fault, color="#D9534F", linestyle="--", linewidth=1.0, alpha=0.75)
+    ax2.axvspan(t_fault, t_rec, color="#F8D7DA", alpha=0.40, label="Remediation Window")
+    
+    ax2.annotate(
+        "Fault ($t_0$): Shock\nNorm $\\|\\mathbf{g}\\|_2 > 999$",
+        xy=(t_fault, 999.9), xytext=(0.5, 120),
+        arrowprops=dict(arrowstyle="->", color="#D9534F", lw=0.8),
+        fontsize=box_font, color="#A71D2A", ha="left", va="center",
+        bbox=dict(boxstyle=f"round,pad={pad}", facecolor="white", edgecolor="#D9534F", alpha=0.95, lw=0.7)
+    )
+    
+    ax2.text(24, 12, "Remediation: Enable $\\tau=1.0$\nNorm clamped strictly $\\leq 1.0$", 
+             fontsize=box_font, color="#155724", ha="center", va="center",
+             bbox=dict(boxstyle=f"round,pad={pad}", facecolor="white", edgecolor="#28A745", alpha=0.95, lw=0.7))
+    
+    ax2.set_title("(c) Run 3: Gradient Shock (Grad Norm)", fontweight="bold")
+    ax2.set_xlabel("Execution Step ($t$)")
+    ax2.set_ylabel("Gradient Norm $\\|\\mathbf{g}\\|_2$")
+    ax2.set_yscale("log")
+    ax2.set_ylim(0.06, 5000)
+    ax2.set_xlim(-1, 36)
     ax2.grid(True)
-    ax2.legend(loc="upper right", framealpha=0.9)
+    ax2.legend(loc="upper right", framealpha=0.92, fontsize=7.0)
 
-    # --- Plotting Subplot 4: Shared-RAM Knobs ---
-    ax3 = axes[3]
-    color_b = "#207245"
-    ax3.step(steps, batch_size, where="post", color=color_b, label="Batch Size $B$")
-    ax3.set_ylabel("Batch Size $B$", color=color_b)
-    ax3.set_ylim(0, 600)
-    ax3.tick_params(axis="y", labelcolor=color_b)
+    # =========================================================================
+    # Panel (d): Run 4 - Spot Worker Churn -> Telemetry: Throughput (samples/s)
+    # =========================================================================
+    ax3 = axes[1, 1]
+    tp = np.zeros(len(steps))
+    tp[0:t_fault] = 480 + np.random.normal(0, 12, t_fault)
+    tp[t_fault:t_rec] = 0.0  # Workers preempted
+    tp[t_rec:] = 480 + np.random.normal(0, 12, len(post_steps))
+    
+    ax3.plot(steps, tp, color="#207245", marker="d", markersize=2.8, label="Throughput (samples/s)")
+    ax3.axvline(t_fault, color="#D9534F", linestyle="--", linewidth=1.0, alpha=0.75)
+    ax3.axvspan(t_fault, t_rec, color="#D4EDDA", alpha=0.40, label="Remediation Window")
+    
+    ax3.annotate(
+        "Fault ($t_0$): Spot Eviction\nActive workers $2 \\to 0$",
+        xy=(t_fault, 0.0), xytext=(0.5, 160),
+        arrowprops=dict(arrowstyle="->", color="#D9534F", lw=0.8),
+        fontsize=box_font, color="#A71D2A", ha="left", va="center",
+        bbox=dict(boxstyle=f"round,pad={pad}", facecolor="white", edgecolor="#D9534F", alpha=0.95, lw=0.7)
+    )
+    
+    ax3.text(24, 250, "Remediation: Actor Restart\nThroughput restored ($480$ s/s)", 
+             fontsize=box_font, color="#155724", ha="center", va="center",
+             bbox=dict(boxstyle=f"round,pad={pad}", facecolor="white", edgecolor="#28A745", alpha=0.95, lw=0.7))
+    
+    ax3.set_title("(d) Run 4: Spot Preemption (Throughput)", fontweight="bold")
+    ax3.set_xlabel("Execution Step ($t$)")
+    ax3.set_ylabel("Throughput (samples/s)")
+    ax3.set_ylim(-30, 720)
+    ax3.set_xlim(-1, 36)
     ax3.grid(True)
+    ax3.legend(loc="upper right", framealpha=0.92, fontsize=7.0)
 
-    ax3_twin = ax3.twinx()
-    color_lr = "#D9534F"
-    ax3_twin.step(steps, lr, where="post", color=color_lr, linestyle="-.", label="Learning Rate $\\eta$")
-    ax3_twin.set_ylabel("LR $\\eta$", color=color_lr)
-    ax3_twin.set_ylim(0, 0.12)
-    ax3_twin.tick_params(axis="y", labelcolor=color_lr)
-
-    ax3.set_xlabel("Cumulative Distributed Step ($t$)")
-    ax3.set_xlim(-1, 42)
-
-    # Add vertical incident boundary markers
-    events = [
-        (10, "$t_0$: Batch OOM\n($B=512$)", "crimson"),
-        (15, "$t_1$: Halve $B \\to 256$;\nLR Shock Hits", "darkorange"),
-        (25, "$t_2$: Enable Clip ($\\tau=1.0$)\nDecay $\\eta \\to 0.01$", "forestgreen"),
-    ]
-
-    for step_idx, label, col in events:
-        for ax in axes:
-            ax.axvline(step_idx, color=col, linestyle="--", alpha=0.75, linewidth=1.2)
-        axes[0].text(
-            step_idx + 0.4, 3.8 if step_idx == 10 else (3.2 if step_idx == 15 else 2.6),
-            label, color=col, fontsize=7.5, fontweight="bold",
-            bbox=dict(boxstyle="round,pad=0.2", facecolor="white", edgecolor=col, alpha=0.9)
-        )
-
+    Path(output_pdf).parent.mkdir(parents=True, exist_ok=True)
+    Path(output_png).parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(output_pdf, bbox_inches="tight", dpi=300)
     plt.savefig(output_png, bbox_inches="tight", dpi=300)
     plt.close()
@@ -224,15 +267,21 @@ def plot_fig2_agent_waterfall(
             facecolor=color, edgecolor="black", linewidth=0.5, alpha=0.9
         )
         ax.add_patch(rect)
-        if dur > 1.2:
+        if dur >= 8.0:
             ax.text(
                 start + dur / 2, ag_idx, label,
-                ha="center", va="center", color="white", fontsize=7.0, fontweight="bold"
+                ha="center", va="center", color="white", fontsize=6.8, fontweight="bold"
+            )
+        elif dur >= 3.0:
+            ax.text(
+                start + dur / 2, ag_idx, "Stable Resumed",
+                ha="center", va="center", color="white", fontsize=6.2, fontweight="bold"
             )
 
     ax.set_yticks(y_pos)
     ax.set_yticklabels(agents)
     ax.invert_yaxis()
+    ax.set_ylim(4.65, -0.65)
     ax.set_xlabel("Elapsed Incident Wall-Clock Time (seconds)")
     ax.set_xlim(-0.5, 36)
     ax.grid(axis="x", linestyle=":", alpha=0.6)

@@ -1,4 +1,4 @@
-# AutoPARK: Autonomous Closed-Loop Self-Healing ML Platform — Architecture Specification
+# AutoPARK: Autonomous Agentic Orchestration and Self-Healing for Distributed Machine Learning Infrastructure — Architecture Specification
 
 > Complete technical architecture specification of the **AutoPARK platform**, detailing the Split-Plane Model, modular actuation plugins, shared-RAM knob mutations, multi-tier progressive fault injection testbench, and deployment paths on Amazon EKS + KubeRay.
 

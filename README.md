@@ -1,4 +1,4 @@
-# AutoPARK: Autonomous Closed-Loop Self-Healing ML Platform with Modular Actuation Plugins
+# AutoPARK: Autonomous Agentic Orchestration and Self-Healing for Distributed Machine Learning Infrastructure
 
 > **Architecture**: Split-Plane (In-Container Ray Workers + Claude on AWS Cognitive Orchestrator)  
 > **Core Substrate**: The **PARK Stack** (PyTorch · Arrow · Ray · Kubernetes)  

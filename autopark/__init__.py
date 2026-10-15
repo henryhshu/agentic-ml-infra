@@ -1,4 +1,4 @@
-"""AutoPARK: Autonomous Closed-Loop Self-Healing ML Platform.
+"""AutoPARK: Autonomous Agentic Orchestration and Self-Healing for Distributed Machine Learning Infrastructure.
 
 High-level Python SDK providing plug-and-play adoption for any PyTorch workload.
 """

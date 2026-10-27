@@ -6,8 +6,15 @@ runs, records host/node facts, then uploads a results bundle and a completion ma
   s3://<bucket>/<prefix>/bundle.tar.gz   results JSON + report + per-run traces + metrics + log
   s3://<bucket>/<prefix>/_SUCCESS|_FAILED  small JSON marker the listener waits for
 
+With --worker (multi-node runs, ranks >= 1) it instead runs `python -m pipeline.distributed`
+under a restart loop (a worker process that dies is restarted and rejoins the next training
+attempt), samples the same cgroup counters, and uploads them with the worker log:
+
+  s3://<bucket>/<prefix>/ranks/rank<N>.tar.gz   cluster_metrics.json + worker.log + restarts
+
 Usage (inside the pod):
     python benchmarks/eks_entrypoint.py --bucket B --prefix P -- --suite paper --repeats 5 ...
+    python benchmarks/eks_entrypoint.py --bucket B --prefix P --worker
 """
 from __future__ import annotations
 
@@ -107,13 +114,61 @@ def upload(bucket: str, key: str, path: Path | None = None, body: bytes | None =
         s3.put_object(Bucket=bucket, Key=key, Body=body or b"")
 
 
+def worker(args: argparse.Namespace) -> int:
+    """Run one DDP worker rank under a restart loop; upload its resource metrics and log."""
+    rank = int(os.environ["AUTOPARK_RANK"])
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    sampler = ResourceSampler()
+    sampler.start()
+    t0 = time.time()
+    exits: list[dict] = []
+    with open(out / "worker.log", "w", encoding="utf-8") as log:
+        while True:
+            started = time.time()
+            proc = subprocess.Popen([sys.executable, "-m", "pipeline.distributed"],
+                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
+            assert proc.stdout is not None
+            for line in proc.stdout:
+                sys.stdout.write(line)
+                log.write(line)
+            rc = proc.wait()
+            exits.append({"started": started, "exited": time.time(), "exit_code": rc})
+            if rc == 0:
+                break
+            msg = f"[eks_entrypoint] rank {rank} worker exited with {rc}; restarting\n"
+            sys.stdout.write(msg)
+            log.write(msg)
+    t1 = time.time()
+    sampler.stop()
+    metrics = {
+        "rank": rank,
+        "host": host_facts(),
+        "worker_started_at": t0,
+        "worker_finished_at": t1,
+        "process_exits": exits,
+        "sample_interval_s": sampler.interval,
+        "resource_samples": sampler.samples,
+    }
+    (out / "cluster_metrics.json").write_text(json.dumps(metrics, indent=1), encoding="utf-8")
+    bundle = Path(f"rank{rank}.tar.gz")
+    with tarfile.open(bundle, "w:gz") as tar:
+        tar.add(out, arcname=f"rank{rank}")
+    upload(args.bucket, f"{args.prefix.rstrip('/')}/ranks/rank{rank}.tar.gz", path=bundle)
+    print(f"[eks_entrypoint] rank {rank} uploaded metrics ({len(exits) - 1} restarts)", flush=True)
+    return 0
+
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--bucket", required=True)
     p.add_argument("--prefix", required=True)
     p.add_argument("--out", default="eks_out")
+    p.add_argument("--worker", action="store_true", help="run a DDP worker rank (multi-node runs)")
     p.add_argument("bench_args", nargs=argparse.REMAINDER)
     args = p.parse_args()
+    if args.worker:
+        return worker(args)
     bench_args = [a for a in args.bench_args if a != "--"]
 
     out = Path(args.out)

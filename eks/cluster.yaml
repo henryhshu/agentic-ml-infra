@@ -1,7 +1,9 @@
 # Minimal EKS cluster for reproducing the AutoPARK benchmark suite.
 #
-# One on-demand c6i.xlarge node (4 vCPU, 8 GiB) so the ~75 min sequential run is not
-# exposed to Spot reclamation; public subnets with no NAT gateway to keep idle cost low.
+# Node group `dist-cpu`: four on-demand c6i.xlarge nodes (4 vCPU, 8 GiB each) in one
+# availability zone, one PyTorch DDP rank per node (eks/dist-job.yaml). On-demand so the
+# multi-hour run is not exposed to Spot reclamation; the worker failures the benchmark
+# studies are injected deliberately. Public subnets, no NAT gateway, to keep idle cost low.
 # The benchmark pod reads code from and writes results to a single S3 prefix through
 # an IRSA role; no AWS access keys are placed in the cluster.
 #
@@ -41,17 +43,18 @@ iam:
                 s3:prefix: ["autopark-eval/*"]
 
 managedNodeGroups:
-  - name: eval-cpu
+  - name: dist-cpu
     instanceType: c6i.xlarge
     spot: false
-    minSize: 1
-    maxSize: 1
-    desiredCapacity: 1
+    availabilityZones: ["us-east-1d"]
+    minSize: 4
+    maxSize: 4
+    desiredCapacity: 4
     volumeSize: 40
     volumeType: gp3
     volumeEncrypted: true
     privateNetworking: false
     labels:
-      role: autopark-eval
+      role: autopark-dist
     tags:
       Project: autopark-eval

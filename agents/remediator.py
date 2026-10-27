@@ -146,11 +146,22 @@ class RemediatorAgent(AgentBase):
                 result['config_diff'] = {'max_grad_norm': {'old': None, 'new': 1.0}}
 
             elif action == 'restart_workers':
-                # Benchmark-only: clears the simulated preemption flag. No Ray actor or
-                # Kubernetes pod is restarted by this action.
+                # Clears the injected-crash flag. In a distributed run it also waits until every
+                # worker rank heartbeats from a live process (lost processes are restarted by their
+                # container), so the retried stage starts with the full world size.
+                from pipeline.distributed import get_context
                 setattr(config, "workers_restarted", True)
-                result['status'] = 'success'
-                result['details'] = 'Set workers_restarted flag (clears simulated preemption; no physical restart performed).'
+                ctx = get_context()
+                if ctx is None:
+                    result['status'] = 'success'
+                    result['details'] = 'Set workers_restarted flag (clears simulated preemption; no physical restart performed).'
+                else:
+                    ready = ctx.await_workers()
+                    result['status'] = 'success' if ready['ready'] else 'failed'
+                    result['details'] = (
+                        f"Waited {ready['wait_s']:.1f}s for {ctx.world_size - 1} worker ranks to heartbeat "
+                        f"(ready={ready['ready']}); cleared injected worker-crash flag."
+                    )
 
             elif action == 'retry_stage':
                 result['status'] = 'retry_requested'

@@ -159,8 +159,14 @@ def main():
         repeats=args.repeats,
     )
 
-    # Run the benchmark suite
-    suite_result = harness.run_suite(target_scenarios)
+    # Multi-node: rank 0 hosts the coordination store; workers run pipeline.distributed
+    from pipeline.distributed import init_from_env
+    dist_ctx = init_from_env()
+    try:
+        suite_result = harness.run_suite(target_scenarios)
+    finally:
+        if dist_ctx is not None:
+            dist_ctx.shutdown()
 
     # Display terminal summary
     summary_text = format_terminal_summary(suite_result)

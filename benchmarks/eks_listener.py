@@ -11,6 +11,11 @@ local-vs-EKS analysis:
         pod.log                 full container log (bootstrap + benchmark)
         analysis.json / .md     consolidated analysis (see benchmarks/eks_analysis.py)
 
+Multi-node runs (Indexed Job, one pod per rank) additionally get, per rank:
+        ranks/rank<N>/          worker cluster_metrics.json + worker.log (from S3)
+        pod-rank<N>.log         container log
+and the analysis is benchmarks/dist_analysis.py.
+
 Usage:
     python -m benchmarks.eks_listener --run-tag eks-20261027T120000Z --job autopark-bench-...
 """
@@ -57,7 +62,12 @@ def job_finished(job: dict | None) -> str | None:
     return None
 
 
-def snapshot(job_name: str, events: dict[str, dict]) -> tuple[dict | None, dict | None]:
+def pod_index(pod: dict) -> int:
+    ann = pod["metadata"].get("annotations", {})
+    return int(ann.get("batch.kubernetes.io/job-completion-index", 0))
+
+
+def snapshot(job_name: str, events: dict[str, dict]) -> tuple[dict | None, list[dict]]:
     job = kubectl_json("get", "job", job_name)
     pods = kubectl_json("get", "pods", "-l", f"job-name={job_name}")
     ev = kubectl_json("get", "events")
@@ -74,8 +84,7 @@ def snapshot(job_name: str, events: dict[str, dict]) -> tuple[dict | None, dict 
                 "last": e.get("lastTimestamp") or e.get("eventTime"),
                 "count": e.get("count"),
             }
-    pod = (pods or {}).get("items", [None])[0] if pods and pods.get("items") else None
-    return job, pod
+    return job, sorted((pods or {}).get("items", []), key=pod_index)
 
 
 def node_facts(node_name: str | None) -> dict:
@@ -147,17 +156,18 @@ def main() -> int:
     out.mkdir(parents=True, exist_ok=True)
     events: dict[str, dict] = {}
     started = time.time()
-    job = pod = None
+    job = None
+    pods: list[dict] = []
     done = None
 
     print(f"[listener] watching job {args.job}; results at s3://{args.bucket}/{prefix}/", flush=True)
     while time.time() - started < args.timeout:
         job, pod_snap = snapshot(args.job, events)
-        pod = pod_snap or pod
+        pods = pod_snap or pods
         m = marker(args.bucket, prefix)
         state = job_finished(job)
-        phase = (pod or {}).get("status", {}).get("phase")
-        print(f"[listener] {time.strftime('%H:%M:%S')} pod={phase} job={state or 'running'} marker={m[0] if m else '-'}", flush=True)
+        phases = ",".join(p.get("status", {}).get("phase", "?") for p in pods) or None
+        print(f"[listener] {time.strftime('%H:%M:%S')} pods={phases} job={state or 'running'} marker={m[0] if m else '-'}", flush=True)
         if m or state == "Failed":
             done = m
             break
@@ -165,18 +175,30 @@ def main() -> int:
     else:
         print("[listener] timed out", file=sys.stderr)
 
-    # Final snapshot and logs while the pod still exists
+    # Multi-node: rank 0 writes the marker first; wait for the worker ranks to finish uploading
+    if done and len(pods) > 1:
+        t_wait = time.time()
+        while job_finished(job) is None and time.time() - t_wait < 600:
+            time.sleep(10)
+            job, pod_snap = snapshot(args.job, events)
+            pods = pod_snap or pods
+
+    # Final snapshot and logs while the pods still exist
     job, pod_snap = snapshot(args.job, events)
-    pod = pod_snap or pod
-    if pod:
-        r = subprocess.run(["kubectl", "-n", NAMESPACE, "logs", pod["metadata"]["name"]], capture_output=True, text=True)
-        (out / "pod.log").write_text(r.stdout, encoding="utf-8")
+    pods = pod_snap or pods
+    for p in pods:
+        r = subprocess.run(["kubectl", "-n", NAMESPACE, "logs", p["metadata"]["name"]], capture_output=True, text=True)
+        name = "pod.log" if len(pods) == 1 else f"pod-rank{pod_index(p)}.log"
+        (out / name).write_text(r.stdout, encoding="utf-8")
+    pod = pods[0] if pods else None
 
     analytics = {
         "run_tag": args.run_tag,
         "job": {"name": args.job, "status": (job or {}).get("status")},
         "pod": pod_lifecycle(pod),
         "node": node_facts((pod or {}).get("spec", {}).get("nodeName")),
+        "ranks": [{"rank": pod_index(p), "pod": pod_lifecycle(p), "node": node_facts(p["spec"].get("nodeName"))}
+                  for p in pods],
         "events": sorted(events.values(), key=lambda e: e.get("first") or ""),
         "marker": done[1] if done else None,
         "marker_type": done[0] if done else None,
@@ -195,6 +217,24 @@ def main() -> int:
         tar.extractall(out, filter="data")
     bundle.unlink()
     print(f"[listener] results extracted to {out}/bundle", flush=True)
+
+    if len(pods) > 1:
+        for rank in range(1, len(pods)):
+            tgz = out / f"rank{rank}.tar.gz"
+            r = subprocess.run(["aws", "s3", "cp", "--only-show-errors",
+                                f"s3://{args.bucket}/{prefix}/ranks/rank{rank}.tar.gz", str(tgz)])
+            if r.returncode == 0:
+                (out / "ranks").mkdir(exist_ok=True)
+                with tarfile.open(tgz) as tar:
+                    tar.extractall(out / "ranks", filter="data")
+                tgz.unlink()
+            else:
+                print(f"[listener] rank {rank} metrics missing", file=sys.stderr)
+        from benchmarks.dist_analysis import analyze as analyze_dist
+
+        md = analyze_dist(out)
+        print(f"[listener] analysis written to {md}", flush=True)
+        return 0 if done[0] == "_SUCCESS" else 1
 
     from benchmarks.eks_analysis import analyze
 

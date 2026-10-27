@@ -20,10 +20,10 @@ class ClusterHealthAgent(AgentBase):
 
     def observe(self, event: dict[str, Any]) -> list[str]:
         anomalies = []
-        cluster_info = self._check_ray_status()
-        
+        cluster_info = self._check_cluster_status()
+
         worker_count = event.get('worker_count', cluster_info.get('worker_count', 0))
-        expected_workers = event.get('expected_workers', 4)
+        expected_workers = event.get('expected_workers', cluster_info.get('expected_workers', 1))
         
         if worker_count < expected_workers:
             anomalies.append('worker_shortage')
@@ -58,17 +58,17 @@ class ClusterHealthAgent(AgentBase):
             return 'reduce_batch_size'
         return None
 
-    def _check_ray_status(self) -> dict[str, Any]:
+    def _check_cluster_status(self) -> dict[str, Any]:
+        """Measured ranks (DDP heartbeats) and host memory utilisation."""
+        info: dict[str, Any] = {'worker_count': 1, 'expected_workers': 1, 'memory_usage': 0.0}
         try:
-            import ray # type: ignore
-            if ray.is_initialized():
-                return {
-                    'worker_count': len(ray.nodes()),
-                    'memory_usage': 0.5 # Mock value since real util takes more work
-                }
-        except ImportError:
-            self._log("Ray not available to check status.", level='warning')
-        except Exception as e:
-            self._log(f"Error checking ray status: {e}", level='error')
-        
-        return {'worker_count': 1, 'memory_usage': 0.0}
+            import psutil
+            info['memory_usage'] = psutil.virtual_memory().percent / 100.0
+        except Exception:
+            pass
+        from pipeline.distributed import get_context
+        ctx = get_context()
+        if ctx is not None:
+            info['worker_count'] = 1 + ctx.live_worker_count()
+            info['expected_workers'] = ctx.world_size
+        return info

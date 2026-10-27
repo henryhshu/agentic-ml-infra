@@ -376,6 +376,8 @@ class BenchmarkHarness:
             "max_retries": self.max_retries,
             "repeats": self.repeats,
             "llm_model": os.environ.get("ANTHROPIC_MODEL") or os.environ.get("CLAUDE_MODEL") or "claude-haiku-4-5-20251001",
+            "world_size": int(os.environ.get("AUTOPARK_WORLD_SIZE", "1")),
+            "dist_backend": "gloo" if int(os.environ.get("AUTOPARK_WORLD_SIZE", "1")) > 1 else None,
         }
         return BenchmarkSuiteResult(
             timestamp=datetime.datetime.now(datetime.timezone.utc).isoformat(),

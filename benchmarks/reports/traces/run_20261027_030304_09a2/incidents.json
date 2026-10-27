@@ -1,0 +1,58 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "nan_loss_detected"
+    ],
+    "raw_anomalies": [
+      "Loss exploded to NaN at epoch 1, step 1: unstable gradient trajectory with lr=0.0500 >= 0.01"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## **Primary Issue**\n**NaN Loss at Training Initialization** \u2014 Gradient explosion caused by aggressive hyperparameter configuration.\n\n---\n\n## **Root Cause Analysis**\n\nAll subagents converge on a single critical failure mode:\n\n| Factor | Issue | Impact |\n|--------|-------|--------|\n| **Learning Rate** | 0.05 (too aggressive) | Primary driver of gradient explosion |\n| **Momentum** | 0.9 (high amplification) | Exacerbates unstable updates |\n| **Gradient Control** | No clipping enabled | Allows unbounded gradient propagation |\n| **Hardware** | CPU-based training | Reduces numerical stability margin |\n\nThe model experiences explosive gradient growth on the first optimization step, immediately producing NaN loss values.\n\n---\n\n## **Recommended Actions** (Priority Order)\n\n### **",
+    "auto_remediated": true,
+    "action_taken": "enable_gradient_clipping",
+    "remediation_status": "success",
+    "remediation_details": "Enabled gradient clipping with max_norm=1.0"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "nan_loss_detected"
+    ],
+    "raw_anomalies": [
+      "Loss exploded to NaN at epoch 1, step 1: unstable gradient trajectory with lr=0.0500 >= 0.01"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## **Issue: NaN Loss Detected**\n\n### **Root Cause**\nLearning rate of **0.05 is too aggressive** for your model-dataset combination, causing gradient instability and loss explosion on the first training step. This occurs despite existing gradient clipping at 1.0, indicating the learning rate dominates the stability equation.\n\n### **Primary Recommendation** \u26a1\n**Reduce learning rate to 0.001\u20130.005** (especially for CPU training or tiny model configurations)\n\n### **Secondary Actions** (implement if primary fix insufficient)\n1. **Increase warmup steps** or implement learning rate scheduling (e.g., linear warmup, cosine annealing)\n2. **Reduce batch size** from current setting to 64 to stabilize gradient estimates\n3. **Validate gradient clipping configuration** before restarting training pipeline",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 0.05 to 0.005000000000000001"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "gradient_explosion"
+    ],
+    "raw_anomalies": [
+      "Loss stagnated in non-convex saddle at epoch 1, step 1: dead gradient flow with lr=0.005000 < 0.01"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## Primary Issue\n**Gradient Starvation (Misclassified as \"Gradient Explosion\")**\n\nThe anomaly label is incorrect. The model is experiencing **gradient flow collapse**, not explosion. The learning rate of 0.005 is insufficient to escape a saddle point in the non-convex loss landscape, causing training stagnation.\n\n## Root Cause Analysis\n- **Learning Rate Too Low:** 0.005 provides insufficient gradient signal magnitude for optimizer escape\n- **Saddle Point Entrapment:** Non-convex loss landscape with an injected `thrashing_bimodal_trap` fault creating a dead zone\n- **Gradient Clipping Masking:** `max_grad_norm=1.0` prevents actual explosions but locks the model in low-signal regime\n\n## Immediate Actions (Priority Order)\n\n| Action | Current |",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 0.005000000000000001 to 0.0005000000000000001"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "gradient_explosion"
+    ],
+    "raw_anomalies": [
+      "Loss stagnated in non-convex saddle at epoch 1, step 1: dead gradient flow with lr=0.000500 < 0.01"
+    ],
+    "diagnosis": "# **Unified Diagnosis: Gradient Stagnation (Misclassified as Explosion)**\n\n## **Executive Summary**\nThe anomaly flagged as \"gradient_explosion\" is a **false positive**. The actual failure mode is **vanishing gradients and loss stagnation** caused by critically undersized learning rate (0.0005) relative to gradient clipping thresholds.\n\n---\n\n## **Root Cause Analysis**\n\n| Factor | Issue | Impact |\n|--------|-------|--------|\n| **Learning Rate** | 0.0005 (critically low) | Insufficient step size traps model in saddle point |\n| **Gradient Clipping** | max_grad_norm=1.0 vs LR mismatch | Vanishing gradient flow despite clipping |\n| **Momentum** | 0.9 (excessive) | Reduces adaptability in early",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 0.0005000000000000001 to 5.0000000000000016e-05"
+  }
+]

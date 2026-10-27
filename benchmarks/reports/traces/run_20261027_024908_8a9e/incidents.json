@@ -1,0 +1,30 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=512"
+    ],
+    "diagnosis": "# Unified Lead ML Training Supervisor Diagnosis\n\n## Issue Summary\n**Memory Pressure during Training Stage**\n\nAll subagents converge on a single root cause: **batch size 512 exceeds CPU memory capacity** with GPU acceleration disabled (`use_gpu=False`).\n\n---\n\n## Root Cause\n- **Primary:** Oversized batch (512) on CPU-only execution across 2 Ray workers\n- **Secondary:** GPU resources not being leveraged despite availability context\n- **Impact:** Immediate OOM failure on first training attempt; persistent across retries without intervention\n\n---\n\n## Recommended Actions (Priority Order)\n\n| Action | Rationale | Implementation |\n|--------|-----------|-----------------|\n| **1. Reduce batch size** | Immediate memory relief | Set `batch_size=64\u2013128` |\n| **2. Enable GPU** | Leverage available resources | Set `use_gpu",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 512 to 256 and scaled accum_steps from 1 to 2 (invariant effective_batch_size=512)"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## Critical Issue: Memory Pressure (CPU-based Training)\n\n**Severity:** High \u2014 Training pipeline at risk of failure\n\n### Root Cause\nBatch size of 256 exceeds available CPU memory capacity. The model is configured to run on CPU (`use_gpu=False`) despite CUDA availability, creating a resource mismatch between computational demand and allocation.\n\n### Contributing Factors\n1. **Oversized batch size** (256) for CPU execution\n2. **GPU disabled** despite CUDA being available\n3. **Inefficient data loading** (num_workers=0) compounds memory pressure\n4. **Gradient accumulation** enabled but insufficient to offset batch size\n\n### Recommended Actions (Priority Order)\n\n| Action | Impact | Implementation |\n|--------|--------|-----------------|\n| **Enable GPU** (`use_gpu=True`) | Immediate relief | Switch to",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 256 to 128 and scaled accum_steps from 2 to 4 (invariant effective_batch_size=512)"
+  }
+]

@@ -31,6 +31,8 @@ class BenchmarkScenario:
         expected_agentic_outcome: Anticipated AutoPARK autonomous resolution or escalation.
         target_stage: Primary pipeline stage where the fault manifests.
         is_recoverable: True if in-memory self-healing is possible; False if safe escalation is expected.
+        expected_outcome: Outcome the agentic run is scored against: 'healed', 'escalated',
+            'exhausted', or 'passed' (fault-free run with no false-positive remediation).
     """
 
     id: str
@@ -43,6 +45,7 @@ class BenchmarkScenario:
     expected_agentic_outcome: str
     target_stage: str
     is_recoverable: bool
+    expected_outcome: str = "healed"
 
 
 # Preset catalog of benchmark scenarios
@@ -103,6 +106,7 @@ PRESET_SCENARIOS: dict[str, BenchmarkScenario] = {
         expected_agentic_outcome="Early Diagnosis: DataQualityAgent identifies schema mismatch, Claude provides root-cause diagnosis, pipeline safely halts preventing wasted training compute.",
         target_stage="data_validation",
         is_recoverable=False,
+        expected_outcome="escalated",
     ),
     "loss_plateau": BenchmarkScenario(
         id="loss_plateau",
@@ -117,6 +121,7 @@ PRESET_SCENARIOS: dict[str, BenchmarkScenario] = {
         expected_agentic_outcome="In-the-loop Diagnosis: Claude in-the-loop flags stagnant loss trajectory and negligible learning rate in real-time.",
         target_stage="training",
         is_recoverable=True,
+        expected_outcome="escalated",
     ),
     "clean_run": BenchmarkScenario(
         id="clean_run",
@@ -131,6 +136,7 @@ PRESET_SCENARIOS: dict[str, BenchmarkScenario] = {
         expected_agentic_outcome="Passes: Completes all stages with Claude in-the-loop telemetry confirming healthy convergence.",
         target_stage="evaluation",
         is_recoverable=True,
+        expected_outcome="passed",
     ),
     "compound_oom_and_explosion": BenchmarkScenario(
         id="compound_oom_and_explosion",
@@ -218,6 +224,7 @@ PRESET_SCENARIOS: dict[str, BenchmarkScenario] = {
         expected_agentic_outcome="In-the-loop Diagnosis: TrainingWatchAgent identifies accuracy stagnation and inability to converge, Claude alerts operator to data corruption.",
         target_stage="training",
         is_recoverable=False,
+        expected_outcome="escalated",
     ),
     "architecture_tensor_mismatch": BenchmarkScenario(
         id="architecture_tensor_mismatch",
@@ -232,6 +239,7 @@ PRESET_SCENARIOS: dict[str, BenchmarkScenario] = {
         expected_agentic_outcome="Safe Escalation: Supervisor and Claude diagnose structural code defect, recognize it cannot be auto-remediated, and safely escalate to engineer.",
         target_stage="training",
         is_recoverable=False,
+        expected_outcome="escalated",
     ),
     "thrashing_bimodal_trap": BenchmarkScenario(
         id="thrashing_bimodal_trap",
@@ -247,8 +255,25 @@ PRESET_SCENARIOS: dict[str, BenchmarkScenario] = {
         expected_agentic_outcome="Self-Healing Inability: Agent attempts remediation (reducing LR), which immediately triggers opposite failure (plateau/stagnation), demonstrating the autonomous control frontier.",
         target_stage="training",
         is_recoverable=False,
+        expected_outcome="exhausted",
     ),
 }
+
+
+# Scenarios reported in the paper (Levels 1-7) plus the fault-free overhead reference.
+PAPER_SUITE: list[str] = [
+    "nan_divergence",
+    "batch_oom",
+    "compound_oom_and_explosion",
+    "cascaded_lr_and_memory",
+    "delayed_stochastic_explosion",
+    "spot_worker_churn",
+    "triple_cascade_oom_lr_grad",
+    "catastrophic_label_noise",
+    "architecture_tensor_mismatch",
+    "thrashing_bimodal_trap",
+    "clean_run",
+]
 
 
 def get_scenario(scenario_id: str) -> BenchmarkScenario:

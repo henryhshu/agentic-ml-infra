@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os
+import sys
+import time
 from abc import ABC, abstractmethod
 from typing import Any, TYPE_CHECKING
 from dotenv import load_dotenv
@@ -106,6 +108,8 @@ class AgentBase(ABC):
             {"system_prompt": system_prompt, "user_message": user_message, "model": self._model},
         )
 
+        caller = sys._getframe(1).f_code.co_name
+        t_start = time.time()
         try:
             response = self._client.messages.create(
                 model=self._model,
@@ -113,6 +117,20 @@ class AgentBase(ABC):
                 system=system_prompt,
                 messages=[{"role": "user", "content": user_message}],
             )
+            t_end = time.time()
+            usage = getattr(response, "usage", None)
+            llm_calls = getattr(self.tracker, "llm_calls", None)
+            if llm_calls is not None:
+                llm_calls.append({
+                    "agent": self.name,
+                    "caller": caller,
+                    "model": self._model,
+                    "start": t_start,
+                    "end": t_end,
+                    "duration_s": t_end - t_start,
+                    "input_tokens": getattr(usage, "input_tokens", None),
+                    "output_tokens": getattr(usage, "output_tokens", None),
+                })
             text = response.content[0].text.strip()
             self._log(f"Claude analysis ({self._model}): {text}", level="info")
             return text

@@ -1,0 +1,16 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "gradient_explosion"
+    ],
+    "raw_anomalies": [
+      "Stealth gradient shock detected at step 2: grad_norm=842.1 exploded after step 1 normal loss"
+    ],
+    "diagnosis": "# **UNIFIED DIAGNOSIS: Gradient Explosion**\n\n## **Critical Issue**\nGradient explosion detected at training step 2 (norm: 842.1) caused by **uncontrolled gradient accumulation** from three compounding factors:\n\n1. **High Learning Rate (0.1)** \u2014 Excessive step size amplifies gradient magnitude\n2. **High Momentum (0.9)** \u2014 Aggressive momentum accumulation without dampening\n3. **Missing Gradient Clipping** (`max_grad_norm=None`) \u2014 No safeguard against numerical instability\n\n**Environment Factor:** CPU-based training during early iterations compounds numerical precision issues.\n\n---\n\n## **Immediate Actions (Priority Order)**\n\n| Action | Parameter | Current \u2192 Target |\n|--------|-----------|-----------------|\n| **Enable gradient clipping** | `max_grad_norm` | `None` \u2192 `1.0`",
+    "auto_remediated": true,
+    "action_taken": "enable_gradient_clipping",
+    "remediation_status": "success",
+    "remediation_details": "Enabled gradient clipping with max_norm=1.0"
+  }
+]

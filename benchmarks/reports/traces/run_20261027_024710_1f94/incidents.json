@@ -1,0 +1,58 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "nan_loss_detected"
+    ],
+    "raw_anomalies": [
+      "Loss exploded to NaN at epoch 1, step 1: unstable gradient trajectory with lr=0.0500 >= 0.01"
+    ],
+    "diagnosis": "# Unified Diagnosis: NaN Loss During Training\n\n## Root Cause\n**Learning rate (0.05) is too aggressive** for the current model architecture, batch size, and compute environment, causing gradient explosion and NaN loss at the first training step.\n\n## Contributing Factors\n- No gradient clipping enabled to prevent overflow\n- CPU-based training (less forgiving of numerical instability than GPU)\n- Incompatibility between learning rate scale and model/data configuration\n\n## Recommended Actions (Priority Order)\n\n1. **Reduce learning rate** to `0.001\u20130.005` (reduce by 10-50x)\n2. **Enable gradient clipping** with `max_grad_norm=1.0`\n3. Monitor loss trajectory in the first 5-10 steps to confirm stabilization\n\n## Expected Outcome\nStable gradient updates and normal loss progression after implementing these changes.\n\n---",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 0.05 to 0.005000000000000001"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "gradient_explosion"
+    ],
+    "raw_anomalies": [
+      "Loss stagnated in non-convex saddle at epoch 1, step 1: dead gradient flow with lr=0.005000 < 0.01"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## Anomaly: Gradient Explosion\n\n### Root Cause Analysis\n**Primary Issue:** Learning rate of 0.005 is **too low**, causing:\n- Gradient flow stagnation in non-convex saddle point\n- Model unable to escape due to bimodal trap fault injection\n- Dead gradient propagation and training collapse\n\n**Contributing Factor:** Gradient clipping disabled (`max_grad_norm: None`), leaving model vulnerable to explosive gradients during recovery attempts.\n\n---\n\n## Recommended Actions (Priority Order)\n\n1. **Increase Learning Rate:** `0.01\u20130.02`\n   - Enables sufficient gradient flow to escape saddle point\n   - Minimum threshold: `0.01`\n\n2. **Enable Gradient Clipping:** `max_grad_norm=1.0`\n   - Stabilizes updates during learning rate increase",
+    "auto_remediated": true,
+    "action_taken": "enable_gradient_clipping",
+    "remediation_status": "success",
+    "remediation_details": "Enabled gradient clipping with max_norm=1.0"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "gradient_explosion"
+    ],
+    "raw_anomalies": [
+      "Loss stagnated in non-convex saddle at epoch 1, step 1: dead gradient flow with lr=0.005000 < 0.01"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## **Anomaly Classification: FALSE POSITIVE (Gradient Explosion)**\nThe reported \"gradient_explosion\" anomaly is a **symptom of stagnation**, not true exploding gradients. The model is trapped in a saddle point with dead/insufficient gradient flow.\n\n---\n\n## **Root Cause Summary**\n**Primary Issue:** Learning rate `0.005` is critically undersized\n- Falls well below the operational threshold (~0.01)\n- Insufficient gradient signal to escape saddle point geometry\n- Compounded by `fault_injection: 'thrashing_bimodal_trap'` (intentional multi-modal trap)\n- CPU-only training limits optimization escape mechanisms\n\n**Secondary Issue:** Suboptimal optimizer configuration\n- No learning rate scheduling (warmup/annealing) to adapt during training\n- Rigid learning rate fails on non-convex",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 0.005000000000000001 to 0.0005000000000000001"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "gradient_explosion"
+    ],
+    "raw_anomalies": [
+      "Loss stagnated in non-convex saddle at epoch 1, step 1: dead gradient flow with lr=0.000500 < 0.01"
+    ],
+    "diagnosis": "# Unified Diagnosis: Gradient Explosion Anomaly\n\n## Root Cause Analysis\n**Primary Issue:** Learning rate of 0.0005 is **critically insufficient** for effective gradient propagation. This counterintuitively causes the reported \"gradient_explosion\" anomaly\u2014the system is attempting to compensate for vanishing gradients through clipping mechanisms that create artificial spikes, masking the underlying stagnation at a saddle point.\n\n**Contributing Factors:**\n- CPU-only training environment amplifies gradient signal degradation\n- High momentum (0.9) compounds the stagnation effect\n- Batch size configuration may further reduce gradient signal-to-noise ratio\n\n## Immediate Actions (Priority Order)\n\n1. **Increase Learning Rate to 0.01\u20130.02** (primary fix)\n   - Restore adequate gradient flow magnitude\n   - Address the root cause of compensation-driven spikes\n\n2",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 0.0005000000000000001 to 5.0000000000000016e-05"
+  }
+]

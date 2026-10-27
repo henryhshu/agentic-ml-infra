@@ -1,0 +1,48 @@
+[
+  {
+    "timestamp": "2026-10-27T09:42:52.888197+00:00",
+    "action": "reduce_batch_size",
+    "status": "success",
+    "details": "Reduced batch size from 256 to 128 and scaled accum_steps from 1 to 2 (invariant effective_batch_size=256)",
+    "config_diff": {
+      "batch_size": {
+        "old": 256,
+        "new": 128
+      },
+      "accum_steps": {
+        "old": 1,
+        "new": 2
+      }
+    },
+    "start": 1793094172.888145,
+    "duration_s": 3.2901763916015625e-05
+  },
+  {
+    "timestamp": "2026-10-27T09:43:01.502534+00:00",
+    "action": "reduce_learning_rate",
+    "status": "success",
+    "details": "Reduced LR from 5.0 to 0.5",
+    "config_diff": {
+      "lr": {
+        "old": 5.0,
+        "new": 0.5
+      }
+    },
+    "start": 1793094181.5025122,
+    "duration_s": 1.1682510375976562e-05
+  },
+  {
+    "timestamp": "2026-10-27T09:43:09.124004+00:00",
+    "action": "reduce_learning_rate",
+    "status": "success",
+    "details": "Reduced LR from 0.5 to 0.05",
+    "config_diff": {
+      "lr": {
+        "old": 0.5,
+        "new": 0.05
+      }
+    },
+    "start": 1793094189.123944,
+    "duration_s": 3.600120544433594e-05
+  }
+]

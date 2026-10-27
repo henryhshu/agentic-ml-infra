@@ -29,7 +29,10 @@ class ExperimentTracker:
         self.start_time = now_iso()
         self.end_time: str | None = None
         self.duration_s: float | None = None
-        
+        # Measured wall-clock timing records (epoch seconds), written to timing.json
+        self.llm_calls: list[dict[str, Any]] = []
+        self.timeline: list[dict[str, Any]] = []
+
         self._update_symlink()
 
     def _update_symlink(self):

@@ -1,0 +1,58 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "nan_loss_detected"
+    ],
+    "raw_anomalies": [
+      "Loss exploded to NaN at epoch 1, step 1: unstable gradient trajectory with lr=0.0500 >= 0.01"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## **Critical Issue: Immediate NaN Loss**\n\n**Severity:** CRITICAL \u2014 Training failed at first step\n\n---\n\n## **Root Cause Analysis**\n\nAll diagnostic agents converge on a single, clear failure mechanism:\n\n- **Learning rate 0.05 is 5-50x too aggressive** for the current model-dataset combination\n- **Gradient explosion** triggered immediately during backpropagation\n- **Amplifying factors:**\n  - High momentum (0.9) without gradient clipping\n  - Fault injection (`thrashing_bimodal_trap`) creating additional instability\n  - Missing stabilization mechanisms\n\n---\n\n## **Recommended Actions (Priority Order)**\n\n### **1. Immediate (Required)**\n- **Reduce learning rate:** 0.05 \u2192 **0.001\u20130.005**\n- **Enable gradient clipping:** `",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 0.05 to 0.005000000000000001"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "gradient_explosion"
+    ],
+    "raw_anomalies": [
+      "Loss stagnated in non-convex saddle at epoch 1, step 1: dead gradient flow with lr=0.005000 < 0.01"
+    ],
+    "diagnosis": "# \ud83d\udd34 UNIFIED DIAGNOSIS: Gradient Explosion\n\n## **Primary Root Cause**\nYour model is trapped in a **saddle point** within the non-convex loss landscape due to a **critically low learning rate (0.005)** combined with **disabled gradient clipping** (`max_grad_norm=None`). This creates a paradoxical failure mode:\n\n- **Stagnation Phase**: Insufficient learning rate prevents gradient-driven escapes from the saddle point\n- **Explosion Phase**: Once escaping (due to noise/momentum), unclipped gradients accumulate and diverge without control\n\n---\n\n## **Recommended Actions** (Priority Order)\n\n### 1. **Immediate** \u2013 Enable Gradient Clipping\n```python\nmax_grad_norm=1.0  # Activate clipping to stabilize gradient flow\n```\n\n### 2. **Immediate",
+    "auto_remediated": true,
+    "action_taken": "enable_gradient_clipping",
+    "remediation_status": "success",
+    "remediation_details": "Enabled gradient clipping with max_norm=1.0"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "gradient_explosion"
+    ],
+    "raw_anomalies": [
+      "Loss stagnated in non-convex saddle at epoch 1, step 1: dead gradient flow with lr=0.005000 < 0.01"
+    ],
+    "diagnosis": "# Unified Diagnosis: Gradient Starvation at Saddle Point\n\n## Root Cause\n**Gradient Starvation (Mislabeled as \"Gradient Explosion\")**\n\nThe anomaly label is misleading. The actual problem is **insufficient gradient signal**, not explosion. The learning rate of **0.005 is too low** to escape a non-convex saddle point, resulting in dead gradient flow and training loss stagnation. Gradient clipping (`max_grad_norm=1.0`) is functioning correctly but cannot compensate for fundamentally weak gradient propagation.\n\n## Key Findings\n- **Learning rate mismatch**: 0.005 falls below the effective escape threshold for the model architecture\n- **Optimizer limitation**: Current setup (likely SGD) lacks adaptive mechanisms to dynamically adjust gradient scaling\n- **Gradient clipping interaction**: While preventing actual explosions, the",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 0.005000000000000001 to 0.0005000000000000001"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "gradient_explosion"
+    ],
+    "raw_anomalies": [
+      "Loss stagnated in non-convex saddle at epoch 1, step 1: dead gradient flow with lr=0.000500 < 0.01"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## **Anomaly: Gradient Explosion** \u26a0\ufe0f\n**Actual Issue: Vanishing Gradients (Misidentified)**\n\n---\n\n## **Root Cause Analysis**\n\nAll subagents converge on a **critical learning rate misconfiguration**:\n\n- **Learning Rate:** 0.0005 is **2\u2013100\u00d7 too small** for your model architecture and batch size\n- **Symptom:** Gradients are effectively **dead** (vanishing), not exploding\u2014the model is trapped in a saddle point with zero effective gradient signal\n- **Mismatch:** Gradient clipping threshold (max_grad_norm=1.0) is orders of magnitude larger than actual gradient magnitudes, rendering it inert\n\n---\n\n## **Diagnosis Summary**\n\n| Component | Finding |\n|-----------|---------|\n| **Gradient",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 0.0005000000000000001 to 5.0000000000000016e-05"
+  }
+]

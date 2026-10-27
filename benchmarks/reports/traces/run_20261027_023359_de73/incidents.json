@@ -1,0 +1,44 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=512"
+    ],
+    "diagnosis": "# Unified Diagnosis: Memory Pressure During Training\n\n## Root Cause\n**Batch size of 512 exceeds available CPU memory** \u2014 The training configuration attempts to load 512 samples into CPU memory simultaneously without GPU acceleration, causing immediate out-of-memory (OOM) allocation failure.\n\n## Impact\n- Training fails to initialize\n- Data pipeline cannot process batches\n- Cluster resources are blocked\n\n## Recommended Actions (Priority Order)\n\n1. **Reduce batch_size to 32\u201364** (primary fix for CPU-only execution)\n2. **Enable gradient accumulation** with `accum_steps=4\u20138` to maintain effective batch throughput\n3. **Enable GPU acceleration** with `use_gpu=True` if hardware is available (preferred long-term solution)\n\n## Summary\nThe \"tiny\" model size is irrelevant; the constraint is **batch cardinality**, not model",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 512 to 256 and scaled accum_steps from 1 to 2 (invariant effective_batch_size=512)"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+    ],
+    "diagnosis": "# Lead ML Training Supervisor - Unified Diagnosis\n\n## Summary\n**Primary Issue:** Memory pressure during CPU-only training due to batch size exceeding available system RAM.\n\n## Root Cause Analysis\nThe training pipeline is configured for **CPU-only execution** (`use_gpu: False`) with a **batch size of 256**, which exceeds CPU memory capacity. The reported CUDA OOM errors are secondary artifacts of the fault injection testing framework rather than the primary failure mechanism.\n\n## Unified Recommendation\n\n### Immediate Actions (Priority Order)\n1. **Reduce batch size** to **32-64** for CPU-only training\n2. **Enable gradient accumulation** with `accum_steps=2-4` to maintain effective batch size (~128-256) without increasing memory footprint\n3. **Disable fault injection** (`fault_injection: compound_oom_and_explosion`) to isolate real memory constraints",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 256 to 128 and scaled accum_steps from 2 to 4 (invariant effective_batch_size=512)"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "gradient_explosion"
+    ],
+    "raw_anomalies": [
+      "Gradient explosion detected: grad_norm=999.9 exceeds stability threshold"
+    ],
+    "diagnosis": "# Unified Diagnosis: Gradient Explosion\n\n## Root Cause\n**Primary:** Aggressive learning rate (0.1) combined with high momentum (0.9) and gradient accumulation (4 steps) without gradient clipping safety mechanism (`max_grad_norm=None`), causing gradient norms to escalate uncontrollably (observed: 999.9).\n\n## Critical Issues\n1. **Learning Rate:** 0.1 is too aggressive for current model configuration\n2. **Missing Safeguard:** No gradient clipping enabled to prevent norm escalation\n3. **Compounding Factors:** High momentum (0.9) + gradient accumulation (4 steps) amplify instability\n4. **Training Environment:** CPU-based training on CIFAR-10 exacerbates convergence sensitivity\n\n## Immediate Actions (Priority Order)\n1. **Enable Gradient Clipping:** Set",
+    "auto_remediated": true,
+    "action_taken": "enable_gradient_clipping",
+    "remediation_status": "success",
+    "remediation_details": "Enabled gradient clipping with max_norm=1.0"
+  }
+]

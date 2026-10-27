@@ -1,0 +1,41 @@
+{
+  "timeline": [
+    {
+      "type": "attempt",
+      "stage": "data_validation",
+      "attempt": 0,
+      "start": 1793095422.95076,
+      "end": 1793095424.201356,
+      "duration_s": 1.250596046447754,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "data_loading",
+      "attempt": 0,
+      "start": 1793095424.20136,
+      "end": 1793095424.571006,
+      "duration_s": 0.3696460723876953,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 0,
+      "start": 1793095424.571027,
+      "end": 1793095441.203337,
+      "duration_s": 16.632309913635254,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "evaluation",
+      "attempt": 0,
+      "start": 1793095441.2040808,
+      "end": 1793095442.9363809,
+      "duration_s": 1.732300043106079,
+      "status": "success"
+    }
+  ],
+  "llm_calls": []
+}

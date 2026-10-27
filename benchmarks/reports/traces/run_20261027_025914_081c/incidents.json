@@ -1,0 +1,16 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "gradient_explosion"
+    ],
+    "raw_anomalies": [
+      "Stealth gradient shock detected at step 2: grad_norm=842.1 exploded after step 1 normal loss"
+    ],
+    "diagnosis": "# Unified Diagnosis: Gradient Explosion at Step 2\n\n## Summary\nGradient explosion detected during early training caused by **compounding hyperparameter misconfiguration** and insufficient numerical safeguards.\n\n## Root Cause\n- **Primary**: Unclipped gradients (`max_grad_norm=None`) with aggressive learning rate (0.1)\n- **Secondary**: High momentum (0.9) on CPU-based training amplifies transient numerical instability\n- **Contributing**: Possible data pipeline issues (NaN/inf values) exacerbating loss landscape volatility\n\n## Immediate Actions (Priority Order)\n1. **Enable gradient clipping**: Set `max_grad_norm=1.0`\n2. **Reduce learning rate**: Decrease from 0.1 \u2192 0.01\n3. **Validate data pipeline**: Check for NaN/inf in batch data at step",
+    "auto_remediated": true,
+    "action_taken": "enable_gradient_clipping",
+    "remediation_status": "success",
+    "remediation_details": "Enabled gradient clipping with max_norm=1.0"
+  }
+]

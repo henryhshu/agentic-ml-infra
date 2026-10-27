@@ -1,0 +1,58 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "nan_loss_detected"
+    ],
+    "raw_anomalies": [
+      "Loss exploded to NaN at epoch 1, step 1: unstable gradient trajectory with lr=0.0500 >= 0.01"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## Issue Summary\n**NaN Loss Detected** \u2013 Critical training failure at initialization due to gradient explosion.\n\n---\n\n## Root Cause\n**Aggressive Learning Rate Configuration**\n- Current learning rate (0.05) is incompatible with:\n  - Model architecture complexity\n  - Batch size settings\n  - High momentum (0.9) on CPU execution\n- Results in gradient explosion and numerical overflow at first training step\n\n---\n\n## Recommended Actions (Priority Order)\n\n1. **Reduce Learning Rate** \u2192 0.001\u20130.005 (consensus across all subagents)\n2. **Enable Gradient Clipping** \u2192 `max_grad_norm=1.0` to bound gradient norms\n3. **Consider Optimizer Tuning** \u2192 Reduce momentum or use adaptive methods (Adam) if applicable\n\n---\n\n## Expected Outcome\nTraining should",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 0.05 to 0.005000000000000001"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "gradient_explosion"
+    ],
+    "raw_anomalies": [
+      "Loss stagnated in non-convex saddle at epoch 1, step 1: dead gradient flow with lr=0.005000 < 0.01"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## **Primary Issue: Insufficient Learning Rate with Gradient Instability**\n\n### Root Cause\nThe learning rate of **0.005 is too low** to escape the saddle point in the loss landscape. This causes:\n- **Stagnant gradient flow** and insufficient optimization steps\n- **Gradient explosion anomaly** stemming from inadequate gradient normalization/clipping\n- **Training stall** exacerbated by injected fault (`thrashing_bimodal_trap`), creating a pathological optimization surface\n\n### Severity\n**HIGH** \u2014 Training convergence is blocked; model is trapped in a suboptimal region.\n\n---\n\n## **Unified Recommendations (Priority Order)**\n\n1. **Increase Learning Rate:** `lr = 0.01\u20130.02`\n   - Enables sufficient step sizes to escape saddle points\n   - Al",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 0.005000000000000001 to 0.0005000000000000001"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "gradient_explosion"
+    ],
+    "raw_anomalies": [
+      "Loss stagnated in non-convex saddle at epoch 1, step 1: dead gradient flow with lr=0.000500 < 0.01"
+    ],
+    "diagnosis": "# **UNIFIED DIAGNOSIS: Gradient Explosion Anomaly**\n\n## **Critical Finding**\nThe reported \"gradient_explosion\" anomaly is a **false positive**. The actual pathology is **gradient stagnation in a saddle point**, masked by the anomaly label.\n\n---\n\n## **Root Cause Analysis**\n\n| Factor | Impact |\n|--------|--------|\n| **Learning Rate (0.0005)** | Critically undersized; unable to escape saddle point geometry |\n| **Injected Fault** | \"thrashing_bimodal_trap\" deliberately destabilizes convergence |\n| **Optimizer State** | Momentum and adaptive learning mechanisms starved at low LR |\n| **Symptom Mismatch** | Dead gradient flow (epoch 1) contradicts explosion label |\n\n---\n\n## **Immediate Actions**\n\n### **Primary (High Priority)**",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 0.0005000000000000001 to 5.0000000000000016e-05"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "gradient_explosion"
+    ],
+    "raw_anomalies": [
+      "Loss stagnated in non-convex saddle at epoch 1, step 1: dead gradient flow with lr=0.000050 < 0.01"
+    ],
+    "diagnosis": "# \ud83d\udd34 Unified Diagnosis: Gradient Vanishing (Mislabeled as \"Explosion\")\n\n## Primary Issue\n**Vanishing gradients trapped in saddle point** \u2014 Despite the \"gradient_explosion\" anomaly flag, all subagents converge on the same root cause: the learning rate of **5e-05 is critically undersized**, causing gradient flow to stall rather than explode.\n\n### Why This Happens\n- **LR 5e-05 is 20\u2013200\u00d7 too low** for the current momentum (0.9) and batch size (128) configuration\n- Gradients become too small to escape the saddle point region\n- Optimizer stagnates; loss plateaus despite training continuation\n\n---\n\n## \ud83d\udd27 Immediate Actions (Priority Order)\n\n| Action | Target | Rationale |\n|--------|--------|-----------|",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 5.0000000000000016e-05 to 5.000000000000002e-06"
+  }
+]

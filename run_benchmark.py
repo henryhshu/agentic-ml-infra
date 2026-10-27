@@ -11,7 +11,10 @@ Usage examples:
     # Run a specific benchmark scenario (e.g., Tier 4 triple cascade)
     python run_benchmark.py --scenario triple_cascade_oom_lr_grad
 
-    # List all 14 preset benchmark scenarios across Tiers 1-7
+    # Run the paper suite (Levels 1-7 + clean_run) with 5 independent repeats
+    python run_benchmark.py --suite paper --repeats 5 --device cpu
+
+    # List all preset benchmark scenarios
     python run_benchmark.py --list
 
     # Quick benchmarking with small dataset subset on CPU/CUDA
@@ -27,7 +30,7 @@ from dotenv import load_dotenv
 # Always reload latest credentials and configuration from .env
 load_dotenv(override=True)
 
-from benchmarks.scenarios import PRESET_SCENARIOS, get_scenario, list_scenarios
+from benchmarks.scenarios import PAPER_SUITE, PRESET_SCENARIOS, get_scenario, list_scenarios
 from benchmarks.harness import BenchmarkHarness
 from benchmarks.report import format_terminal_summary, generate_markdown_report, save_json_report
 
@@ -48,6 +51,17 @@ def parse_args() -> argparse.Namespace:
         "--scenario",
         choices=list(PRESET_SCENARIOS.keys()),
         help="Run a specific preset benchmark scenario",
+    )
+    p.add_argument(
+        "--suite",
+        choices=["paper"],
+        help="Run a named scenario suite ('paper' = Levels 1-7 plus clean_run)",
+    )
+    p.add_argument(
+        "--repeats",
+        type=int,
+        default=1,
+        help="Independent repeats per scenario (default: 1)",
     )
     p.add_argument(
         "--list",
@@ -124,13 +138,15 @@ def main():
         print_scenario_list()
         sys.exit(0)
 
-    if not args.all and not args.scenario:
-        print("Error: Specify either --all or --scenario <name> (use --list to see options).")
+    if not args.all and not args.scenario and not args.suite:
+        print("Error: Specify --all, --suite paper, or --scenario <name> (use --list to see options).")
         sys.exit(1)
 
     # Determine scenarios to run
     if args.scenario:
         target_scenarios = [get_scenario(args.scenario)]
+    elif args.suite == "paper":
+        target_scenarios = [get_scenario(sid) for sid in PAPER_SUITE]
     else:
         target_scenarios = list_scenarios()
 
@@ -140,6 +156,7 @@ def main():
         subset=args.subset,
         max_retries=args.max_retries,
         device=args.device,
+        repeats=args.repeats,
     )
 
     # Run the benchmark suite

@@ -1,8 +1,7 @@
 """AutoPARK Architectural Diagrams Generator (Clean, Non-Overlapping, Publication-Quality).
 
-Generates two complementary, non-overlapping architectural diagrams at distinct granularities:
-1. Macro Architecture: Bird's-eye view of system planes, component boundaries, and decoupling bridge.
-2. Split-Plane Runtime Mechanism: Detailed step-boundary execution, async incident triage, and hot actuation flow.
+Generates the macro architecture diagram used in the paper. Every label describes behavior
+implemented in this repository (single-process pipeline, synchronous incident handling).
 """
 from __future__ import annotations
 
@@ -112,7 +111,7 @@ def plot_fig_arch_overview(
     dev_cards = [
         ("Python SDK (Standard PyTorch wrapper)", "runner = AutoParkRunner.from_loaders(model, ld)", 0.025, 0.280),
         ("Task & Data Protocols", "@register_model  |  BaseDataModule", 0.315, 0.245),
-        ("Production CLI (Launches distributed Ray cluster jobs)", "run_pipeline.py --agentic --model vit_b", 0.570, 0.405),
+        ("CLI (validate -> load -> train -> [tune] -> evaluate)", "run_pipeline.py --agentic --model tiny", 0.570, 0.405),
     ]
     for title, code_txt, cx, cw in dev_cards:
         draw_card(ax, cx, top_y + 0.008, cw, 0.065, PALETTE["card_white"], PALETTE["slate_border"], border_width=0.8, zorder=2)
@@ -131,7 +130,7 @@ def plot_fig_arch_overview(
     ax.annotate("", xy=(0.810, 0.760), xytext=(0.190, 0.760),
                 arrowprops=dict(arrowstyle="-|>", color=PALETTE["alert_border"], lw=1.6, ls="--",
                                 connectionstyle="arc3,rad=-0.12"), zorder=2)
-    ax.text(0.500, 0.815, "Async Incident Signal & Telemetry", fontsize=5.8, fontweight="bold",
+    ax.text(0.500, 0.815, "Stage exception & epoch metrics", fontsize=5.8, fontweight="bold",
             color=PALETTE["alert_header"], ha="center", va="center", zorder=3,
             bbox=dict(boxstyle="round,pad=0.25", facecolor="#FFF1F2", edgecolor="#FECDD3", lw=0.9))
 
@@ -141,28 +140,28 @@ def plot_fig_arch_overview(
     bot_y = 0.015
     bot_h = 0.740
 
-    # === COLUMN A: IN-CLUSTER EXECUTION PLANE (Ray on AWS EKS) ===
+    # === COLUMN A: EXECUTION PLANE (single process) ===
     col_a_x = 0.015
     col_a_w = 0.355
     draw_card(ax, col_a_x, bot_y, col_a_w, bot_h, PALETTE["exec_bg"], PALETTE["exec_border"], border_width=1.2, zorder=1)
     
     # Col A Banner
     draw_card(ax, col_a_x + 0.008, bot_y + bot_h - 0.038, col_a_w - 0.016, 0.030, PALETTE["exec_banner"], PALETTE["exec_border"], border_width=0.8, zorder=2)
-    ax.text(col_a_x + col_a_w/2, bot_y + bot_h - 0.023, "IN-CLUSTER EXECUTION PLANE",
+    ax.text(col_a_x + col_a_w/2, bot_y + bot_h - 0.023, "EXECUTION PLANE (SINGLE PROCESS)",
             fontsize=7.2, fontweight="bold", color=PALETTE["exec_header"], ha="center", va="center", zorder=3)
 
     a_cards = [
-        ("Distributed Training Workers",
-         "PyTorch DDP on Ray Actors (Preemptible EC2)",
-         "• High-throughput Ring AllReduce gradient sync\n• Micro-batch loop with `model.no_sync()` guard\n• Sustains >98% GPU hardware compute utilization",
+        ("PyTorch Training Stage",
+         "Single-process loop (CPU / MPS / CUDA)",
+         "• Gradient accumulation with boundary gating\n• Per-step telemetry (loss, grad norm, RSS) to JSON\n• Injected faults raise typed anomaly exceptions",
          0.495, 0.190),
-        ("Apache Arrow Zero-Copy IPC Store",
-         "Shared-Memory Plasma Buffers",
-         "• Multi-worker streaming partitions without serialization\n• Dynamic partition slice quarantine on data corruption",
+        ("Data Stages",
+         "CIFAR-10 Parquet shards read via PyArrow",
+         "• Schema and sample-decode validation\n• DataLoaders rebuilt when batch size changes",
          0.310, 0.165),
-        ("Non-Blocking Telemetry Streamer",
-         "Asynchronous Metrics & Heartbeat Queue",
-         "• Real-time loss, grad norms, and memory stats\n• Overhead <0.1ms; workers never block on control plane",
+        ("Stage Runner with Bounded Retries",
+         "PipelineRunner._run_stage_with_retry",
+         "• Catches stage exceptions (process keeps running)\n• Re-runs the failed stage with the current config",
          0.125, 0.165),
     ]
     for title, sub, bullets, cy, ch in a_cards:
@@ -173,9 +172,9 @@ def plot_fig_arch_overview(
 
     # Col A Bottom Badge
     draw_card(ax, col_a_x + 0.008, bot_y + 0.012, col_a_w - 0.016, 0.080, "#EFF6FF", "#93C5FD", border_width=0.8, zorder=2)
-    ax.text(col_a_x + col_a_w/2, bot_y + 0.060, "FAST CRITICAL PATH",
+    ax.text(col_a_x + col_a_w/2, bot_y + 0.060, "SYNCHRONOUS INCIDENT PATH",
             fontsize=5.7, fontweight="bold", color="#1E40AF", ha="center", va="center", zorder=3)
-    ax.text(col_a_x + col_a_w/2, bot_y + 0.034, "Workers execute tensor loops without LLM interference.",
+    ax.text(col_a_x + col_a_w/2, bot_y + 0.034, "Training pauses while agents handle an incident.",
             fontsize=5.1, color="#3B82F6", ha="center", va="center", zorder=3)
 
     # === COLUMN B: SHARED-RAM COMMUNICATION BRIDGE ===
@@ -190,22 +189,22 @@ def plot_fig_arch_overview(
 
     # Card 1: PipelineConfig
     draw_card(ax, col_b_x + 0.008, 0.425, col_b_w - 0.016, 0.270, PALETTE["bridge_card"], PALETTE["bridge_border"], border_width=1.1, zorder=2)
-    ax.text(col_b_x + col_b_w/2, 0.665, "SHARED-RAM", fontsize=7.2, fontweight="bold", color=PALETTE["bridge_header"], ha="center", va="center", zorder=3)
+    ax.text(col_b_x + col_b_w/2, 0.665, "IN-PROCESS", fontsize=7.2, fontweight="bold", color=PALETTE["bridge_header"], ha="center", va="center", zorder=3)
     ax.text(col_b_x + col_b_w/2, 0.638, "PipelineConfig", fontsize=6.8, fontfamily="monospace", fontweight="bold", color="#047857", ha="center", va="center", zorder=3)
     ax.text(col_b_x + col_b_w/2, 0.578, "State Vector $\\mathbf{\\Theta}_{\\text{runtime}}$:\n⟨B, $\\eta$, accum, clip⟩", fontsize=5.8, color=PALETTE["text_dark"], ha="center", va="center", zorder=3)
-    ax.text(col_b_x + col_b_w/2, 0.485, "• Atomic in-place updates\n• Fast worker sync <0.1ms", fontsize=5.3, color=PALETTE["text_muted"], ha="center", va="center", zorder=3)
+    ax.text(col_b_x + col_b_w/2, 0.485, "• Mutated in place by Remediator\n• Read at the next stage attempt", fontsize=5.3, color=PALETTE["text_muted"], ha="center", va="center", zorder=3)
 
     # Card 2: Reversion Store
     draw_card(ax, col_b_x + 0.008, 0.125, col_b_w - 0.016, 0.280, "#ECFDF5", "#A7F3D0", border_width=0.9, zorder=2)
     ax.text(col_b_x + col_b_w/2, 0.375, "Reversion Store", fontsize=6.5, fontweight="bold", color=PALETTE["bridge_header"], ha="center", va="center", zorder=3)
     ax.text(col_b_x + col_b_w/2, 0.347, "`reversion_manifest`", fontsize=5.5, fontfamily="monospace", color="#047857", ha="center", va="center", zorder=3)
-    ax.text(col_b_x + col_b_w/2, 0.270, "• Snapshots state $\\mathbf{\\Theta}_t$\n• Rollback on stall\n• Full audit trail logged", fontsize=5.3, color=PALETTE["text_muted"], ha="center", va="center", zorder=3)
-    ax.text(col_b_x + col_b_w/2, 0.165, "Zero Data Loss", fontsize=5.2, fontweight="bold", color="#059669", ha="center", va="center", zorder=3)
+    ax.text(col_b_x + col_b_w/2, 0.270, "• Records every config diff\n• One-command rollback re-run\n• Audit trail (action_log.json)", fontsize=5.3, color=PALETTE["text_muted"], ha="center", va="center", zorder=3)
+    ax.text(col_b_x + col_b_w/2, 0.165, "Manual rollback", fontsize=5.2, fontweight="bold", color="#059669", ha="center", va="center", zorder=3)
 
     # Col B Bottom Badge
     draw_card(ax, col_b_x + 0.008, bot_y + 0.012, col_b_w - 0.016, 0.080, "#D1FAE5", "#6EE7B7", border_width=0.8, zorder=2)
-    ax.text(col_b_x + col_b_w/2, bot_y + 0.060, "IPC BRIDGE", fontsize=5.7, fontweight="bold", color="#065F46", ha="center", va="center", zorder=3)
-    ax.text(col_b_x + col_b_w/2, bot_y + 0.034, "Removes Cold Reboots", fontsize=5.1, color="#047857", ha="center", va="center", zorder=3)
+    ax.text(col_b_x + col_b_w/2, bot_y + 0.060, "IN-PROCESS STATE", fontsize=5.7, fontweight="bold", color="#065F46", ha="center", va="center", zorder=3)
+    ax.text(col_b_x + col_b_w/2, bot_y + 0.034, "No container restart", fontsize=5.1, color="#047857", ha="center", va="center", zorder=3)
 
     # Gutter 1 (x: 0.370 to 0.395): Worker query to Shared-RAM
     ax.annotate("", xy=(col_b_x, 0.540), xytext=(col_a_x + col_a_w, 0.540),
@@ -218,21 +217,21 @@ def plot_fig_arch_overview(
     
     # Col C Banner
     draw_card(ax, col_c_x + 0.008, bot_y + bot_h - 0.038, col_c_w - 0.016, 0.030, PALETTE["cog_banner"], PALETTE["cog_border"], border_width=0.8, zorder=2)
-    ax.text(col_c_x + col_c_w/2, bot_y + bot_h - 0.023, "AGENT CONTROL PLANE (OUT-OF-BAND)",
+    ax.text(col_c_x + col_c_w/2, bot_y + bot_h - 0.023, "AGENT CONTROL PLANE",
             fontsize=7.2, fontweight="bold", color=PALETTE["cog_header"], ha="center", va="center", zorder=3)
 
     c_cards = [
-        ("1. Local Invariant Evaluators",
-         "• Checks for NaN loss, OOM spike rates, and 2-min node preemption\n• Wakes LLM supervisor strictly upon anomaly",
+        ("1. Local Detectors",
+         "• Typed stage exceptions (NaN, OOM, grad norm, preemption)\n• Per-epoch checks: accuracy floor, plateau, grad norm",
          PALETTE["alert_bg"], PALETTE["alert_border"], 0.565, 0.125),
         ("2. Multi-Agent Supervisory Fleet",
-         "• Supervisor coordinates TrainingWatch, ClusterHealth, & DataQuality\n• Queries Claude Haiku via HTTPS upon anomaly",
+         "• Supervisor routes to TrainingWatch, ClusterHealth, DataQuality\n• Claude Haiku 4.5 per incident, plus one call per epoch",
          PALETTE["cog_card"], PALETTE["cog_border"], 0.415, 0.125),
-        ("3. Deterministic Safety Gate",
-         "• Typed schemas strictly blocks raw bash/shell strings\n• Bounded knob guardrails (1<=B<=1024) & finite budget (K<=4)",
+        ("3. Action Allow-List",
+         "• Claude's reply must name an approved action\n• Per-stage retry budget (max_retries = 3)",
          PALETTE["safety_bg"], PALETTE["safety_border"], 0.265, 0.125),
-        ("4. Modular Actuation Plugins",
-         "• In-Memory Tuner, Preemption Migrator, Quarantine, AST Patcher",
+        ("4. Remediation Actions",
+         "• LR x0.1, batch /2 (accum x2), enable clipping, retry stage",
          PALETTE["bridge_bg"], PALETTE["bridge_border"], 0.135, 0.105),
     ]
     for title, bullets, bg, bd, cy, ch in c_cards:
@@ -244,16 +243,16 @@ def plot_fig_arch_overview(
 
     # Col C Bottom Badge
     draw_card(ax, col_c_x + 0.008, bot_y + 0.012, col_c_w - 0.016, 0.080, "#F5F3FF", "#DDD6FE", border_width=0.8, zorder=2)
-    ax.text(col_c_x + col_c_w/2, bot_y + 0.060, "ASYNCHRONOUS AGENT PATH: 10 TO 30 SECONDS",
+    ax.text(col_c_x + col_c_w/2, bot_y + 0.060, "INCIDENT HANDLING IS MEASURED (TABLE 2)",
             fontsize=5.7, fontweight="bold", color="#6D28D9", ha="center", va="center", zorder=3)
-    ax.text(col_c_x + col_c_w/2, bot_y + 0.034, "Runs strictly out-of-band; zero impact on worker training throughput.",
+    ax.text(col_c_x + col_c_w/2, bot_y + 0.034, "Claude calls run inline with the pipeline.",
             fontsize=5.1, color="#7C3AED", ha="center", va="center", zorder=3)
 
     # Gutter 2 (x: 0.580 to 0.645): Actuation Plugin -> Shared-RAM PipelineConfig
     ax.annotate("", xy=(col_b_x + col_b_w, 0.495), xytext=(col_c_x, 0.188),
                 arrowprops=dict(arrowstyle="-|>", color="#059669", lw=1.6,
                                 connectionstyle="arc3,rad=-0.16"), zorder=2)
-    ax.text(0.6125, 0.335, "Hot In-Memory\nMutation (1.1s)", fontsize=5.3, fontweight="bold",
+    ax.text(0.6125, 0.335, "In-place config\nmutation", fontsize=5.3, fontweight="bold",
             color="#047857", ha="center", va="center", zorder=3,
             bbox=dict(boxstyle="round,pad=0.20", facecolor="#ECFDF5", edgecolor="#A7F3D0", lw=0.9))
 
@@ -263,136 +262,5 @@ def plot_fig_arch_overview(
     print(f"Refined Macro-Architecture saved to {output_pdf} and {output_png}")
 
 
-def plot_fig_split_plane(
-    output_pdf: Path | str = "paper/figures/fig_split_plane.pdf",
-    output_png: Path | str = "benchmarks/figures/fig_split_plane.png",
-) -> None:
-    """Diagram 2: Split-Plane Runtime Mechanism (Step-Boundary Actuation Flow)."""
-    fig, ax = plt.subplots(figsize=(11.0, 4.6), dpi=300)
-    ax.set_xlim(0, 1.0)
-    ax.set_ylim(0, 1.0)
-    ax.axis("off")
-
-    # Outer container
-    draw_card(ax, 0.015, 0.130, 0.970, 0.855, "#F8FAFC", "#64748B", border_width=1.2, zorder=1)
-    
-    # Outer Title Banner
-    draw_card(ax, 0.025, 0.940, 0.950, 0.036, "#E2E8F0", "#94A3B8", border_width=0.8, zorder=2)
-    ax.text(0.500, 0.958, "SPLIT-PLANE CLOSED-LOOP RUNTIME MECHANISM: STEP-BOUNDARY ACTUATION FLOW",
-            fontsize=7.3, fontweight="bold", color="#0F172A", ha="center", va="center", zorder=3)
-
-    phases = [
-        ("PHASE 1: LINE-RATE TRAINING",
-         "DDP Step (s) [Microseconds]",
-         PALETTE["exec_bg"], PALETTE["exec_border"],
-         [
-             ("Micro-Batch Loop",
-              "with model.no_sync():\n    loss = model(inputs)\n    loss.backward()",
-              "Accumulates local gradients;\nsuppresses redundant NCCL AllReduce"),
-             ("Step Boundary (s % k == 0)",
-              "loss.backward()\noptimizer.step()\noptimizer.zero_grad()",
-              "Synchronized Ring AllReduce;\ngradient parity mathematically preserved"),
-         ],
-         "Throughput: >98% GPU Util",
-         0.025, 0.228),
-
-        ("PHASE 2: INCIDENT DETECTION",
-         "Sub-Second Trigger (T_det = 1.0s)",
-         PALETTE["alert_bg"], PALETTE["alert_border"],
-         [
-             ("Local Invariants Evaluator",
-              "dMemory/dt > tau (OOM Spike)\nLoss == NaN / Inf\nNode Preemption (2-min notice)",
-              "Lightweight daemon rule checks;\nwakes LLM only when threshold breaches"),
-             ("Non-Blocking Offload",
-              "Enqueue incident envelope\nCheckpoint actor state locally",
-              "Decoupled from training loop;\nworkers never block waiting on LLM"),
-         ],
-         "Zero Critical-Path Stalls",
-         0.269, 0.228),
-
-        ("PHASE 3: COGNITIVE TRIAGE",
-         "Out-of-Band Reasoning (~12s)",
-         PALETTE["cog_bg"], PALETTE["cog_border"],
-         [
-             ("Multi-Agent Diagnosis",
-              "Supervisor + Expert Fleet\nClaude Haiku 4.5 via anthropic[aws]",
-              "Parses traces & cluster topology;\nsynthesizes structured operational plan"),
-             ("Deterministic Safety Gate",
-              "Validate Pydantic Schema\nEnforce Bounds (1 <= B <= 1024)\nCap Budget (K <= 4 attempts)",
-              "Non-negotiable policy filter;\nblocks hallucinated or unsafe actions"),
-         ],
-         "Safety: Non-Negotiable Gate",
-         0.513, 0.228),
-
-        ("PHASE 4: HOT ACTUATION",
-         "Zero-Restart Resumption (s+1)",
-         PALETTE["bridge_bg"], PALETTE["bridge_border"],
-         [
-             ("Shared-RAM Knob Mutation",
-              "Plugin writes directly to RAM:\nPipelineConfig.mutate(B/2, lr=0.01)",
-              "Physical actuation T_act = 1.1s;\n0 container reboots, 0 CUDA init waste"),
-             ("Step-Boundary Sync (<0.1ms)",
-              "Worker queries at step s+1:\nif config.has_mutation():\n    apply_runtime_knobs()",
-              "Pulls new knobs from shared RAM;\nseamlessly resumes line-rate training"),
-         ],
-         "Recovery: 0 Pod Reboots",
-         0.757, 0.228),
-    ]
-
-    for p_title, p_sub, p_bg, p_bd, p_cards, p_badge, px, pw in phases:
-        py = 0.145
-        ph = 0.780
-        # Phase card
-        draw_card(ax, px, py, pw, ph, p_bg, p_bd, border_width=1.1, zorder=2)
-        
-        # Phase header
-        draw_card(ax, px + 0.006, py + ph - 0.058, pw - 0.012, 0.050, PALETTE["card_white"], p_bd, border_width=0.8, zorder=3)
-        ax.text(px + pw/2, py + ph - 0.024, p_title, fontsize=6.0, fontweight="bold", color=p_bd, ha="center", va="center", zorder=4)
-        ax.text(px + pw/2, py + ph - 0.044, p_sub, fontsize=5.1, fontfamily="monospace", color=PALETTE["text_muted"], ha="center", va="center", zorder=4)
-
-        # 2 Internal Cards
-        for c_idx, (c_name, c_code, c_note) in enumerate(p_cards):
-            cy = py + 0.120 + (1 - c_idx) * 0.290
-            ch = 0.270
-            draw_card(ax, px + 0.008, cy, pw - 0.016, ch, PALETTE["card_white"], p_bd, border_width=0.7, zorder=3)
-            ax.text(px + 0.014, cy + ch - 0.022, c_name, fontsize=6.3, fontweight="bold", color=PALETTE["slate_header"], va="center", zorder=4)
-            ax.text(px + 0.014, cy + ch - 0.075, c_code, fontsize=5.3, fontfamily="monospace", color="#1E293B", va="center", zorder=4)
-            ax.text(px + 0.014, cy + 0.038, c_note, fontsize=5.1, color=PALETTE["text_muted"], va="center", zorder=4)
-
-        # Bottom badge
-        draw_card(ax, px + 0.008, py + 0.015, pw - 0.016, 0.080, PALETTE["card_white"], p_bd, border_width=0.8, zorder=3)
-        ax.text(px + pw/2, py + 0.055, p_badge, fontsize=5.7, fontweight="bold", color=p_bd, ha="center", va="center", zorder=4)
-
-        # Arrow to next phase
-        if px < 0.700:
-            ax.annotate("", xy=(px + pw + 0.011, py + ph/2), xytext=(px + pw - 0.002, py + ph/2),
-                        arrowprops=dict(arrowstyle="-|>", color=p_bd, lw=1.6))
-
-    # -------------------------------------------------------------------------
-    # BOTTOM: SUMMARY COMPARISON BANNER (Full Width)
-    # -------------------------------------------------------------------------
-    bar_y = 0.015
-    bar_h = 0.098
-    draw_card(ax, 0.015, bar_y, 0.970, bar_h, "#0F172A", "#334155", border_width=1.0)
-    
-    # Left AutoPARK
-    draw_card(ax, 0.025, bar_y + 0.010, 0.465, bar_h - 0.020, "#1E293B", "#34D399", border_width=0.8, zorder=2)
-    ax.text(0.035, bar_y + bar_h - 0.032, "AUTOPARK IN-MEMORY HEALING (HOT SYNC)", fontsize=6.3, fontweight="bold", color="#34D399", va="center", zorder=3)
-    ax.text(0.035, bar_y + 0.030, "Shared-RAM mutation -> Step sync -> MTTR 14-31s -> 0 pod reboots -> 0 GPU idle waste",
-            fontsize=5.2, color="#F8FAFC", va="center", zorder=3)
-
-    # Right Classical Baseline
-    draw_card(ax, 0.510, bar_y + 0.010, 0.465, bar_h - 0.020, "#1E293B", "#F87171", border_width=0.8, zorder=2)
-    ax.text(0.520, bar_y + bar_h - 0.032, "CONVENTIONAL SRE RESTARTS (COLD SYNC)", fontsize=6.3, fontweight="bold", color="#F87171", va="center", zorder=3)
-    ax.text(0.520, bar_y + 0.030, "Gang crash -> 15-45 min triage -> Cold pod init -> Loss of CUDA context -> Re-crashes on same config",
-            fontsize=5.2, color="#F8FAFC", va="center", zorder=3)
-
-    fig.savefig(output_pdf, bbox_inches="tight", dpi=300)
-    fig.savefig(output_png, bbox_inches="tight", dpi=300)
-    plt.close(fig)
-    print(f"Refined Split-Plane Mechanism saved to {output_pdf} and {output_png}")
-
-
 if __name__ == "__main__":
     plot_fig_arch_overview()
-    plot_fig_split_plane()

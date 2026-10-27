@@ -1,0 +1,16 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "worker_shortage"
+    ],
+    "raw_anomalies": [
+      "Ray cluster worker shortage: worker node preempted by EC2 Spot interruption during distributed training"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## **Primary Issue**\n**Worker Shortage Due to EC2 Spot Preemption**\n\nAn EC2 Spot instance interruption terminated a Ray worker node during distributed training, reducing the cluster below minimum capacity (2 workers) and causing training pipeline stall.\n\n---\n\n## **Recommended Actions (Priority Order)**\n\n### **Immediate (Highest Priority)**\n1. **Increase Ray worker redundancy**: Scale `ray_workers` from 2 \u2192 4-6 to maintain minimum capacity during preemptions\n2. **Enable Spot interruption handling**: Implement graceful shutdown logic with checkpoint/restart mechanisms\n\n### **Short-term Alternatives**\n3. **Switch to On-Demand instances** for critical training stages to eliminate preemption risk\n4. **Increase retry logic**: Raise `max_retries` beyond 3 to handle",
+    "auto_remediated": true,
+    "action_taken": "restart_workers",
+    "remediation_status": "success",
+    "remediation_details": "Set workers_restarted flag (clears simulated preemption; no physical restart performed)."
+  }
+]

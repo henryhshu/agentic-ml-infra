@@ -1,0 +1,58 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "corrupt_data"
+    ],
+    "raw_anomalies": [
+      "Model failed to converge: test accuracy 0.1026 is at or below random guessing threshold (0.15). Suspected label corruption or representational collapse."
+    ],
+    "diagnosis": "# \ud83d\udd34 UNIFIED DIAGNOSIS: Corrupt Data (Training Stage)\n\n## Root Cause\n**Intentional fault injection** via `fault_injection: 'catastrophic_label_noise'` parameter is corrupting training labels, causing representational collapse and random-level accuracy (~10.26% on 10-class CIFAR-10).\n\n## Impact Summary\n- **Model Performance:** Collapsed to near-random accuracy (1/10 classes)\n- **Training Failure Mode:** Label corruption prevents meaningful feature learning\n- **Data Integrity:** CIFAR-10 labels deliberately corrupted during pipeline execution\n\n---\n\n## Recommended Actions (Priority Order)\n\n### **Option A: Disable Fault Injection (Primary)**\n```yaml\nfault_injection: null  # or 'none'\n```\nThen:\n1. Run validation pass on clean labels\n2. Retrain model",
+    "auto_remediated": false,
+    "action_taken": null,
+    "remediation_status": "escalated",
+    "remediation_details": ""
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "corrupt_data"
+    ],
+    "raw_anomalies": [
+      "Model failed to converge: test accuracy 0.0984 is at or below random guessing threshold (0.15). Suspected label corruption or representational collapse."
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## **Primary Issue: Intentional Catastrophic Label Noise Injection**\n\n**Severity:** Critical  \n**Stage:** Training (Pre-Validation)  \n**Impact:** Complete training failure with representational collapse\n\n---\n\n## **Diagnosis Summary**\n\nThe training pipeline is experiencing catastrophic failure due to **deliberately injected label corruption** via the `fault_injection: 'catastrophic_label_noise'` configuration. This is causing:\n\n- **Loss Plateau:** ~2.3 (random baseline for 10-class problem)\n- **Accuracy:** ~9.84% (vs. 10% random guessing)\n- **Root Cause:** Corrupted training labels preventing the model from learning meaningful representations\n\n---\n\n## **Immediate Actions Required**\n\n### **1. Disable Fault Injection (Primary)**\n```\nfault_injection: null",
+    "auto_remediated": false,
+    "action_taken": null,
+    "remediation_status": "escalated",
+    "remediation_details": ""
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "corrupt_data"
+    ],
+    "raw_anomalies": [
+      "Model failed to converge: test accuracy 0.1476 is at or below random guessing threshold (0.15). Suspected label corruption or representational collapse."
+    ],
+    "diagnosis": "# **UNIFIED DIAGNOSIS: Catastrophic Label Noise Corruption**\n\n## **Critical Issue**\nTraining has stalled due to **intentional catastrophic label noise injection** (`fault_injection: 'catastrophic_label_noise'`), causing complete representational collapse and random-chance performance (10% accuracy, loss \u2248 2.3).\n\n## **Root Cause**\nThe training configuration is deliberately corrupting labels, forcing the model to learn noise instead of meaningful features. This is the *primary* anomaly\u2014not a system failure, but misconfiguration preventing valid model training.\n\n## **Evidence**\n- Loss plateaued at cross-entropy baseline (2.3)\n- Accuracy stuck at random guessing (~10-15%)\n- Representational collapse confirmed across all diagnostic layers\n- Persists across 3 retry attempts (noise issue, not transient)\n\n## **Immediate",
+    "auto_remediated": false,
+    "action_taken": null,
+    "remediation_status": "escalated",
+    "remediation_details": ""
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "corrupt_data"
+    ],
+    "raw_anomalies": [
+      "Model failed to converge: test accuracy 0.1008 is at or below random guessing threshold (0.15). Suspected label corruption or representational collapse."
+    ],
+    "diagnosis": "# Unified Diagnosis: Corrupt Data Anomaly During Training\n\n## Root Cause\n**Intentional catastrophic label noise injection** via the `fault_injection: 'catastrophic_label_noise'` configuration is the primary cause of training failure. This is compounded by suboptimal hyperparameters (learning rate 0.1, insufficient epochs 3) that prevent the model from recovering meaningful patterns even from partially corrupted data.\n\n## Impact Summary\n- **Loss Behavior:** Flat losses near 2.3 (random 10-class entropy baseline)\n- **Accuracy:** Oscillates around 0.1 (random guessing threshold)\n- **Model State:** Representational collapse\u2014no meaningful feature learning occurring\n\n## Recommended Actions (Priority Order)\n\n### Immediate (Production Safety)\n1. **Disable fault injection:** Set `fault_injection: null` to remove label corruption",
+    "auto_remediated": false,
+    "action_taken": null,
+    "remediation_status": "escalated",
+    "remediation_details": ""
+  }
+]

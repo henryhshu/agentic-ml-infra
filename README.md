@@ -14,29 +14,17 @@ Traditional machine learning infrastructure relies on **passive observability** 
 **AutoPARK** bridges this gap by introducing **closed-loop autonomous self-healing with modular actuation plugins**:
 
 1. **Active Actuation ("Agents with Hands")**: Rather than merely reporting errors, AutoPARK agents hold extensible actuation tools that reach across runtime memory, dataset partitions, cluster health, and codebase definitions.
-2. **Split-Plane Architecture**: Decouples deterministic high-throughput execution (in-container Ray/Kubernetes workers) from high-level cognitive reasoning (cloud-hosted LLMs).
-3. **Zero Cold-Boot Overhead**: Anomaly remediation occurs directly in shared RAM (`PipelineConfig`), re-instantiating DataLoaders and adjusting optimizers in **15–30 seconds** without requiring Kubernetes pod evictions or container cold reboots.
-4. **The Self-Healing Frontier**: Empirically maps the exact boundary where autonomous in-memory self-healing succeeds, where non-remediable structural/statistical defects safely escalate to engineers, and where dynamical optimization traps reach control limits.
+2. **Agent / Execution Separation**: Deterministic detectors run inside the pipeline; Claude (cloud-hosted) is called only to diagnose incidents and choose an allow-listed action, plus one short analysis per epoch.
+3. **In-Process Remediation**: The Remediator mutates the live `PipelineConfig` and the failed stage re-runs in the same process (no container restart; the stage itself restarts from its beginning).
+4. **Measured, Not Claimed**: Every MTTR number below is derived from wall-clock instrumentation of stage attempts, Claude calls, and remediations (`timing.json`). All benchmark faults are injected in software.
 
 ```text
-               ┌────────────────────────────────────────────────────────┐
-               │              AUTOPARK CONTROL ARCHITECTURE             │
-               └────────────────────────────────────────────────────────┘
-                                           │
-         ┌─────────────────────────────────┴─────────────────────────────────┐
-         ▼                                                                   ▼
-┌─────────────────────────────────┐                         ┌─────────────────────────────────┐
-│     AUTONOMOUSLY REMEDIABLE     │                         │         SAFE ESCALATION         │
-│       (Levels 1, 2, 3, 4)       │                         │          (Levels 5 & 6)         │
-├─────────────────────────────────┤                         ├─────────────────────────────────┤
-│ • Batch OOMs                    │                         │ • Statistical Silent Traps      │
-│ • Runaway Learning Rates (NaN)  │                         │   (90% Catastrophic Noise)      │
-│ • Gradient Explosions           │                         │ • Structural Code Defect        │
-│ • EC2 Spot Node Preemptions     │                         │   (Tensor Shape Mismatch)       │
-└─────────────────────────────────┘                         └─────────────────────────────────┘
-         ▲                                                                   ▲
-         │                                                                   │
- [In-RAM Hyperparameter Space]                                 [Safe Operator Triage Space]
+Measured on a 7-level software fault-injection testbench (5 repeats per scenario):
+  Levels 1–3  configuration faults        → healed 28/30 runs, median MTTR 7.9–23.6 s
+  Level 4     triple cascade               → exhausted 5/5 (needs 5 attempts; budget allows 4)
+  Levels 5–6  label noise / shape defect   → escalated 10/10
+  Level 7     bimodal LR trap              → exhausted 5/5 (as designed)
+  No fault    clean run                    → passed 5/5, +23% wall time from per-epoch LLM monitoring
 ```
 
 ---
@@ -57,10 +45,11 @@ python run_pipeline.py --model tiny --epochs 5 --subset 500 --agentic --no-tune
 pytest tests/ -v
 
 # 5. Run an automated benchmark scenario (e.g. Level 1 Batch OOM)
-python run_benchmark.py --scenario batch_oom --subset 500 --epochs 1 --device cpu
+python run_benchmark.py --scenario batch_oom --subset 5000 --epochs 3 --device cpu
 
-# 6. Run the complete 7-level benchmark suite
-python run_benchmark.py --all --subset 500 --epochs 1 --device cpu
+# 6. Reproduce the paper results (Levels 1–7 + clean_run, 5 repeats, live Claude calls)
+python run_benchmark.py --suite paper --repeats 5 --subset 5000 --epochs 3 --device cpu
+python -m benchmarks.plot_analytical_graphs   # figures from the latest results JSON
 
 # 7. Run custom dataset & architecture (e.g. Synthetic Vision with MLP)
 python run_pipeline.py --dataset synthetic --model mlp --epochs 1
@@ -103,7 +92,7 @@ AWS_REGION=us-east-1
 HF_TOKEN=hf_...
 ```
 
-*Note: Default reasoning model is `claude-haiku-4-5-20251001` for cost-efficient, sub-second cognitive triage.*
+*Note: Default reasoning model is `claude-haiku-4-5-20251001` for cost-efficient triage; measured Claude call latency is 0.6–2.9 s per call (five calls per remediated incident).*
 
 ---
 
@@ -149,57 +138,29 @@ When `--agentic` is enabled, `PipelineRunner` initializes a specialized agent fl
 
 ---
 
-## 🧪 The 7-Level Fault Injection Matrix & Benchmarks
+## 🧪 The 7-Level Fault Injection Testbench & Measured Results
 
-The AutoPARK testbench evaluates platform efficacy across escalating levels of failure difficulty, ranging from isolated hyperparameter issues to structural code bugs and dynamical optimization paradoxes:
+All faults are **injected in software** by `pipeline/training.py` (see `benchmarks/scenarios.py`): injected OOM, NaN, gradient-explosion, preemption, and shape errors are exceptions raised while a configuration condition holds (e.g. simulated OOM while `batch_size >= 256`). Label noise (Level 5) is real data corruption. `restart_workers` clears the simulated-preemption flag; it does not restart any physical worker.
 
-```text
-Autonomous In-Memory Self-Healing (Levels 1–4)
-│
-├── Level 1: Basic Single-Fault (NaN Loss, Batch OOM)
-│     └── [HEALED: 100% Resolved in 14.2s – 16.6s via LR & Batch Size mutations]
-│
-├── Level 2: Multi-Fault Cascades (Compound OOM + Gradient Shock)
-│     └── [HEALED: 100% Resolved in 24.9s via joint Batch halving + Grad clipping]
-│
-├── Level 3: Non-Deterministic & Infra Faults (Mid-Epoch Delayed Shock, Spot Churn)
-│     └── [HEALED: 100% Resolved in 9.4s – 17.0s via dynamic clipping & actor migration]
-│
-└── Level 4: Cascaded Multi-Step Instability (OOM → Runaway LR → Grad Explosion)
-      └── [HEALED: 100% Resolved in 31.0s via 4 sequential in-RAM config mutations]
-      │
-Safe Diagnostic Escalation (Levels 5–6)
-│
-├── Level 5: Semantic Data Corruption (90% Catastrophic Label Noise)
-│     └── [ESCALATE: Caught at epoch boundary via Accuracy Floor; Arrow partition quarantined]
-│
-└── Level 6: Structural Model Bug (PyTorch Tensor Dimension Mismatch)
-      └── [ESCALATE: Claude synthesizes exact AST code diff; staged for engineer review]
-      │
-Dynamical Control Limits (Level 7)
-│
-└── Level 7: Adversarial Bimodal Optimization Paradox
-      └── [EXHAUST: LR >= 0.01 causes NaN; LR < 0.01 stalls; retry budget K=4 halts cyclic thrashing]
-```
+### Measured results (5 repeats/scenario, single Apple Silicon machine, CPU)
 
-### Empirical Benchmark Results on AWS EKS (2 × Spot `c6i.xlarge` Nodes)
+Workload: TinyCNN (57k params), CIFAR-10 5,000-image subset, 3 epochs, `max_retries=3`, Claude Haiku 4.5 via Claude Platform on AWS. Source: [`benchmarks/reports/benchmark_results_2026-10-27T10-12-25.325632_00-00.json`](benchmarks/reports/benchmark_results_2026-10-27T10-12-25.325632_00-00.json); per-run traces in [`benchmarks/reports/traces/`](benchmarks/reports/traces/). MTTR = $T_{\text{det}} + T_{\text{reason}} + T_{\text{act}} + T_{\text{recover}} + T_{\text{other}}$ (definitions in [`benchmarks/harness.py`](benchmarks/harness.py)); for unrecovered runs it is time to termination.
 
-Live test results evaluated against the `park-ml-cluster` running PyTorch 2.3 and KubeRay 1.1.0 on AWS EKS. Mean Time to Recovery ($\text{MTTR} = T_{\text{det}} + T_{\text{reason}} + T_{\text{act}}$) measures total elapsed time from fault injection ($t_0$) to operational recovery or safe escalation, partitioned into anomaly detection ($T_{\text{det}}$), LLM reasoning ($T_{\text{reason}}$), and actuation ($T_{\text{act}}$):
+| Level | Scenario | Agentic outcome | $T_{\text{det}}$ s | $T_{\text{reason}}$ s | MTTR median [min–max] s | Baseline | Agentic wall s |
+|---|---|---|---|---|---|---|---|
+| 1 | `nan_divergence` | healed 5/5 | 0.13 | 14.8 | 15.1 [14.3–15.8] | failed 5/5 (2.0 s) | 39.1 |
+| 1 | `batch_oom` | healed 5/5 | 0.01 | 15.7 | 15.9 [14.9–17.1] | failed 5/5 (1.8 s) | 40.1 |
+| 2 | `compound_oom_and_explosion` | healed 5/5 | 0.14 | 23.4 | 23.6 [22.0–23.7] | failed 5/5 (1.7 s) | 47.0 |
+| 2 | `cascaded_lr_and_memory` | healed 3/5, exhausted 2/5 | 0.15 | 23.3 | 23.5 [22.2–31.0] | failed 5/5 (1.7 s) | 45.6 |
+| 3 | `delayed_stochastic_explosion` | healed 5/5 | 0.19 | 8.0 | 8.3 [7.6–8.5] | failed 5/5 (2.6 s) | 31.7 |
+| 3 | `spot_worker_churn` | healed 5/5 | 0.00 | 7.8 | 7.9 [7.0–9.4] | failed 5/5 (1.7 s) | 32.1 |
+| 4 | `triple_cascade_oom_lr_grad` | exhausted 5/5 | 0.28 | 29.2 | 29.5 [29.0–31.9] | failed 5/5 (1.7 s) | 31.2 |
+| 5 | `catastrophic_label_noise` | escalated 5/5 | 35.91 | 30.0 | 64.6 [64.2–78.2] | silent success 5/5 (19.5 s, acc 0.10–0.15) | 66.4 |
+| 6 | `architecture_tensor_mismatch` | escalated 5/5 | 0.02 | 29.2 | 29.3 [28.0–29.7] | failed 5/5 (1.8 s) | 30.9 |
+| 7 | `thrashing_bimodal_trap` | exhausted 5/5 | 0.26 | 31.2 | 31.5 [30.6–36.8] | failed 5/5 (1.9 s) | 33.1 |
+| – | `clean_run` | passed 5/5 | – | – | – | success 5/5 (19.8 s) | 24.3 |
 
-| Level | Scenario ID | Pathology | Baseline Status | AutoPARK MTTR ($T_{\text{det}} + T_{\text{reason}} + T_{\text{act}}$) | Result | Final Resolution Mechanism |
-|---|---|---|---|---|---|---|
-| **Level 1** | `nan_divergence` | Excessive LR (`5.0`) &rarr; NaN loss | ❌ Crashed (3/3 retries) | ✅ **16.6s** ($1.2\text{s} + 14.1\text{s} + 1.3\text{s}$) | 🏆 **Healed** | Shared-RAM LR decay ($\times 0.1$) + grad clip enable |
-| **Level 1** | `batch_oom` | Oversized batch (`512`) &rarr; OOM | ❌ Crashed (3/3 retries) | ✅ **14.2s** ($1.0\text{s} + 12.1\text{s} + 1.1\text{s}$) | 🏆 **Healed** | In-memory batch size halving ($128 \to 64$) |
-| **Level 2** | `compound_oom_and_explosion` | Memory OOM + gradient explosion | ❌ Crashed (4/4 retries) | ✅ **24.9s** ($1.5\text{s} + 21.8\text{s} + 1.6\text{s}$) | 🏆 **Healed** | Atomic joint batch halving + LR reduction |
-| **Level 2** | `cascaded_lr_and_memory` | Batch OOM (`256`) + Runaway LR (`5.0`) | ❌ Crashed (4/4 retries) | ✅ **28.4s** ($1.8\text{s} + 24.8\text{s} + 1.8\text{s}$) | 🏆 **Healed** | Gradient clip enforcement + micro-batch reduction |
-| **Level 3** | `delayed_stochastic_explosion` | Step 1 normal (2.30), Step 2 spike (842.1) | ❌ Crashed (3/3 retries) | ✅ **9.4s** ($1.1\text{s} + 7.2\text{s} + 1.1\text{s}$) | 🏆 **Healed** | Step-15 loss slope trigger; dynamic LR damping |
-| **Level 3** | `spot_worker_churn` | AWS Spot preemption (`workers=0`) | ❌ Crashed (3/3 retries) | ✅ **17.0s** ($1.9\text{s} + 13.8\text{s} + 1.3\text{s}$) | 🏆 **Healed** | Ray actor checkpoint + migration to surviving node |
-| **Level 4** | `triple_cascade_oom_lr_grad` | Memory OOM &rarr; Runaway LR &rarr; Grad shock | ❌ Crashed (4/4 retries) | ✅ **31.0s** ($2.4\text{s} + 26.5\text{s} + 2.1\text{s}$) | 🏆 **Healed** | 4-step sequential mutation ($B \to \tau_{\text{clip}} \to \eta \to k_{\text{accum}}$) |
-| **Level 5** | `catastrophic_label_noise` | 90% label noise (loss ~2.3, acc ~8%) | ⚠️ Silent Waste (2.9s) | 🛡️ **36.3s** ($3.2\text{s} + 31.5\text{s} + 1.6\text{s}$) | 🛡️ **Escalate** | Accuracy floor violation ($<45\%$); partition quarantine |
-| **Level 6** | `architecture_tensor_mismatch` | Layer mismatch (`128×512` vs `1024×10`) | ❌ Crashed (3/3 retries) | 🛡️ **27.8s** ($0.8\text{s} + 25.8\text{s} + 1.2\text{s}$) | 🛡️ **Escalate** | AST shape diagnosis; synthesized exact code diff |
-| **Level 7** | `thrashing_bimodal_trap` | $\eta \ge 0.01 \implies \text{NaN}$; $\eta < 0.01 \implies \text{Saddle}$ | ❌ Crashed (3/3 retries) | ⚠️ **30.5s** ($1.4\text{s} + 27.2\text{s} + 1.9\text{s}$) | ⚠️ **Exhaust** | Cyclic thrashing detected; retry budget limit ($K=4$) hit |
-
----
+Key observations: Claude reasoning is >96% of MTTR for every exception-type fault; actuation is sub-millisecond. Level 4 fails because its repair needs four remediations (five attempts) but the budget allows four attempts. Escalation does not yet halt the retry loop, which is why Level 5 takes 64.6 s to terminate (first escalation at ~21 s). There is no rule-based remediation baseline yet.
 
 ## 🔄 Reversion & Rollback Manifest: Full Auditability & Rapid Rollback
 
@@ -310,20 +271,21 @@ agentic-ml-infra/
 │   └── plugins/               # Modular Actuation Plugins ("Agents with Hands")
 │       └── ast_patcher.py     # ASTCodeSynthesizer — BatchNorm->GroupNorm & dimension repair
 │
-├── tests/                     # Unit Tests & Mathematical Parity Testbench (28 tests)
+├── tests/                     # Unit Tests & Mathematical Parity Testbench (32 tests)
 │   ├── conftest.py            # Pytest configuration & environment hooks
 │   ├── test_abstractions.py   # Unit tests for DataModule, Model Registry, and AutoParkRunner SDK
 │   ├── test_ast_patcher.py    # Unit tests & <50ms AST synthesis performance benchmark
 │   ├── test_accumulation_parity.py # Exact mathematical parity proofs for Accumulation Guard
 │   ├── test_remediation_safeguards.py # Parameter envelope bounds, retry budgets & safeguard invariants
-│   └── test_reversion_manifest.py  # Unit tests for 4-pillar Reversion & Rollback Manifests
+│   ├── test_reversion_manifest.py  # Unit tests for 4-pillar Reversion & Rollback Manifests
+│   └── test_benchmark_timing.py    # MTTR decomposition & outcome classification tests
 │
 ├── benchmarks/                # Fault Injection Benchmark Framework
 │   ├── scenarios.py           # Catalog of 14 preset scenarios across Levels 1–7
 │   ├── harness.py             # BenchmarkHarness — paired Baseline vs. AutoPARK evaluation
 │   ├── report.py              # Markdown & JSON telemetry report generator
-│   ├── plot_analytical_graphs.py # Publication plotting: radar chart, MTTR breakdown & loss traces
-│   ├── plot_architecture_diagrams.py # Architectural diagram generation (Fig 1 control architecture)
+│   ├── plot_analytical_graphs.py # Figures rendered only from measured results JSON + run traces
+│   ├── plot_architecture_diagrams.py # Architecture diagram (paper Fig. 1)
 │   ├── figures/               # High-resolution benchmark vector charts and PDF diagrams
 │   └── reports/               # Persisted benchmark reports and execution runs
 │
@@ -335,7 +297,7 @@ agentic-ml-infra/
 │
 ├── models/                    # Neural Network Backbones
 │   ├── resnet.py              # ResNet18 adapted for CIFAR-10 (~11M params)
-│   └── tiny_cnn.py            # TinyCNN for rapid smoke testing (~40K params)
+│   └── tiny_cnn.py            # TinyCNN for rapid smoke testing (~57K params)
 │
 ├── aws/                       # Production AWS Cloud Deployment
 │   ├── README.md              # Complete AWS EKS & KubeRay deployment guide

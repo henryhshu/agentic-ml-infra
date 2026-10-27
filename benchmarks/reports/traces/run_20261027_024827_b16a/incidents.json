@@ -1,0 +1,30 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "nan_loss_detected"
+    ],
+    "raw_anomalies": [
+      "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=5.0"
+    ],
+    "diagnosis": "# Unified Diagnosis Report\n\n## **Critical Issue: NaN Loss Due to Excessive Learning Rate**\n\n### **Root Cause**\nThe training process is failing immediately at the first step due to a **learning rate of 5.0**, which is 50-500x higher than appropriate for SGD with momentum on CIFAR-10. This causes gradient updates to be catastrophically large, resulting in loss divergence and NaN/Inf values that halt training.\n\n### **Severity**\n\ud83d\udd34 **CRITICAL** \u2013 Training cannot proceed beyond step 1 without intervention.\n\n---\n\n## **Recommended Actions (Priority Order)**\n\n1. **Reduce Learning Rate** \u2192 Set `lr=0.01` (or `0.001-0.1` range for SGD+momentum on CIFAR-10)\n2. **Enable Gradient Clipping** \u2192 Set `max_grad_norm",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 5.0 to 0.5"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "nan_loss_detected"
+    ],
+    "raw_anomalies": [
+      "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=0.5"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## **Critical Issue: Training Divergence with NaN Loss**\n\n### Root Cause\n**Learning rate of 0.5 is excessively high** for the current training configuration (CPU, batch size 128, optimizer type), causing immediate loss explosion and NaN values at the first training step.\n\n### Contributing Factors\n- **Batch size 128 on CPU** amplifies gradient magnitude, making high learning rates unstable\n- **Potential numerical instability** in loss computation without gradient clipping\n- **Unverified input data normalization** may propagate NaN values through the pipeline\n\n---\n\n## **Recommended Actions (Priority Order)**\n\n1. **Reduce learning rate** to `0.01\u20130.05` (10-50x reduction from current 0.5)\n2. **Enable gradient clipping** with `max_grad_norm=1",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 0.5 to 0.05"
+  }
+]

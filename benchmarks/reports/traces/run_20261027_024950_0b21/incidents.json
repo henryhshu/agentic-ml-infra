@@ -1,0 +1,44 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=512"
+    ],
+    "diagnosis": "# Unified Training Diagnosis: Memory Pressure\n\n## Summary\n**Critical Issue:** Out-of-memory (OOM) failure during training due to batch_size=512 on CPU-only execution.\n\n## Root Cause\nThe model is attempting to process a batch size of 512 using only system RAM (`use_gpu=False`), which exceeds available memory capacity. This configuration forces all computation onto CPU memory without GPU acceleration, creating an immediate resource bottleneck.\n\n## Immediate Actions (Priority: HIGH)\n\n1. **Reduce Batch Size**\n   - Lower `batch_size` from 512 to 32\u201364\n   - This is the most direct mitigation\n\n2. **Enable Gradient Accumulation**\n   - Set `accum_steps=4\u20138` to maintain effective batch size\n   - Achieves computational equivalence with lower memory footprint\n\n3. **Optimize",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 512 to 256 and scaled accum_steps from 1 to 2 (invariant effective_batch_size=512)"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+    ],
+    "diagnosis": "# **Unified ML Training Diagnosis**\n\n## **Primary Issue: CPU Memory Exhaustion During Distributed Training**\n\n**Severity:** Critical | **Stage:** Training | **Anomaly Type:** Memory Pressure\n\n---\n\n## **Root Cause Analysis**\n\nThe training pipeline is experiencing **out-of-memory failure** caused by incompatible resource configuration, not GPU limitations:\n\n- **Batch size (256)** is too large for CPU-only distributed training across 2 Ray workers\n- **Asynchronous data loading disabled** (`num_workers=0`) forces synchronous batch materialization, concentrating memory load on single worker\n- The CUDA error message is a **false signal**\u2014actual bottleneck is CPU RAM exhaustion\n\n---\n\n## **Immediate Actions (Priority Order)**\n\n| Action | Target | Expected Impact |\n|--------|--------|-----------------|\n| **Reduce batch_size**",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 256 to 128 and scaled accum_steps from 2 to 4 (invariant effective_batch_size=512)"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "gradient_explosion"
+    ],
+    "raw_anomalies": [
+      "Gradient explosion detected: grad_norm=999.9 exceeds stability threshold"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis: Gradient Explosion\n\n## Critical Issue\n**Gradient Explosion** (norm=999.9) during training - immediate intervention required to prevent divergence.\n\n## Root Cause Analysis\nThe gradient explosion results from a **compounding optimization configuration**:\n\n1. **Aggressive Learning Rate (0.1)** - Primary driver of instability\n2. **High Momentum (0.9)** - Amplifies accumulated gradient effects across update steps\n3. **Gradient Accumulation (4 steps)** - Further magnifies effective update magnitude\n4. **Missing Gradient Clipping** (`max_grad_norm=None`) - No stabilization safeguard\n5. **CPU-Only Execution** - Reduces numerical precision during backpropagation\n\n## Recommended Actions (Priority Order)\n\n### Immediate (Required)\n- **Reduce learning rate**: `0",
+    "auto_remediated": true,
+    "action_taken": "enable_gradient_clipping",
+    "remediation_status": "success",
+    "remediation_details": "Enabled gradient clipping with max_norm=1.0"
+  }
+]

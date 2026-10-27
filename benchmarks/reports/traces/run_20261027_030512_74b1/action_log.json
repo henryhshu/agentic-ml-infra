@@ -1,0 +1,38 @@
+[
+  {
+    "timestamp": "2026-10-27T10:05:21.464089+00:00",
+    "action": "reduce_batch_size",
+    "status": "success",
+    "details": "Reduced batch size from 512 to 256 and scaled accum_steps from 1 to 2 (invariant effective_batch_size=512)",
+    "config_diff": {
+      "batch_size": {
+        "old": 512,
+        "new": 256
+      },
+      "accum_steps": {
+        "old": 1,
+        "new": 2
+      }
+    },
+    "start": 1793095521.4640698,
+    "duration_s": 1.0967254638671875e-05
+  },
+  {
+    "timestamp": "2026-10-27T10:05:29.109919+00:00",
+    "action": "reduce_batch_size",
+    "status": "success",
+    "details": "Reduced batch size from 256 to 128 and scaled accum_steps from 2 to 4 (invariant effective_batch_size=512)",
+    "config_diff": {
+      "batch_size": {
+        "old": 256,
+        "new": 128
+      },
+      "accum_steps": {
+        "old": 2,
+        "new": 4
+      }
+    },
+    "start": 1793095529.109865,
+    "duration_s": 3.1948089599609375e-05
+  }
+]

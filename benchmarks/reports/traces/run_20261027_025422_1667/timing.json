@@ -1,0 +1,276 @@
+{
+  "timeline": [
+    {
+      "type": "attempt",
+      "stage": "data_validation",
+      "attempt": 0,
+      "start": 1793094862.781431,
+      "end": 1793094863.98278,
+      "duration_s": 1.2013490200042725,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "data_loading",
+      "attempt": 0,
+      "start": 1793094863.982796,
+      "end": 1793094864.350035,
+      "duration_s": 0.36723899841308594,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 0,
+      "start": 1793094864.3500512,
+      "end": 1793094864.3514209,
+      "duration_s": 0.0013697147369384766,
+      "status": "failed",
+      "error": "Internal PyTorch Architecture Defect: mat1 and mat2 shapes cannot be multiplied (128x512 and 1024x10). Linear projection layer in model architecture has dimension mismatch."
+    },
+    {
+      "type": "handle",
+      "stage": "training",
+      "attempt": 0,
+      "start": 1793094864.351424,
+      "end": 1793094871.934728,
+      "duration_s": 7.583303928375244,
+      "anomalies": [
+        "Internal PyTorch Architecture Defect: mat1 and mat2 shapes cannot be multiplied (128x512 and 1024x10). Linear projection layer in model architecture has dimension mismatch."
+      ],
+      "auto_remediated": false,
+      "action": null
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 1,
+      "start": 1793094871.9347289,
+      "end": 1793094871.9369721,
+      "duration_s": 0.0022432804107666016,
+      "status": "failed",
+      "error": "Internal PyTorch Architecture Defect: mat1 and mat2 shapes cannot be multiplied (128x512 and 1024x10). Linear projection layer in model architecture has dimension mismatch."
+    },
+    {
+      "type": "handle",
+      "stage": "training",
+      "attempt": 1,
+      "start": 1793094871.936977,
+      "end": 1793094878.857109,
+      "duration_s": 6.920132160186768,
+      "anomalies": [
+        "Internal PyTorch Architecture Defect: mat1 and mat2 shapes cannot be multiplied (128x512 and 1024x10). Linear projection layer in model architecture has dimension mismatch."
+      ],
+      "auto_remediated": false,
+      "action": null
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 2,
+      "start": 1793094878.857111,
+      "end": 1793094878.8603258,
+      "duration_s": 0.0032148361206054688,
+      "status": "failed",
+      "error": "Internal PyTorch Architecture Defect: mat1 and mat2 shapes cannot be multiplied (128x512 and 1024x10). Linear projection layer in model architecture has dimension mismatch."
+    },
+    {
+      "type": "handle",
+      "stage": "training",
+      "attempt": 2,
+      "start": 1793094878.860333,
+      "end": 1793094886.6084428,
+      "duration_s": 7.748109817504883,
+      "anomalies": [
+        "Internal PyTorch Architecture Defect: mat1 and mat2 shapes cannot be multiplied (128x512 and 1024x10). Linear projection layer in model architecture has dimension mismatch."
+      ],
+      "auto_remediated": false,
+      "action": null
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 3,
+      "start": 1793094886.608449,
+      "end": 1793094886.612653,
+      "duration_s": 0.0042040348052978516,
+      "status": "failed",
+      "error": "Internal PyTorch Architecture Defect: mat1 and mat2 shapes cannot be multiplied (128x512 and 1024x10). Linear projection layer in model architecture has dimension mismatch."
+    },
+    {
+      "type": "handle",
+      "stage": "training",
+      "attempt": 3,
+      "start": 1793094886.612659,
+      "end": 1793094894.00988,
+      "duration_s": 7.397221088409424,
+      "anomalies": [
+        "Internal PyTorch Architecture Defect: mat1 and mat2 shapes cannot be multiplied (128x512 and 1024x10). Linear projection layer in model architecture has dimension mismatch."
+      ],
+      "auto_remediated": false,
+      "action": null
+    }
+  ],
+  "llm_calls": [
+    {
+      "agent": "training_watch",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793094864.351454,
+      "end": 1793094866.235484,
+      "duration_s": 1.8840298652648926,
+      "input_tokens": 472,
+      "output_tokens": 129
+    },
+    {
+      "agent": "cluster_health",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793094866.2357812,
+      "end": 1793094867.485088,
+      "duration_s": 1.2493069171905518,
+      "input_tokens": 410,
+      "output_tokens": 51
+    },
+    {
+      "agent": "data_quality",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793094867.485125,
+      "end": 1793094868.971898,
+      "duration_s": 1.4867730140686035,
+      "input_tokens": 406,
+      "output_tokens": 61
+    },
+    {
+      "agent": "supervisor",
+      "caller": "handle_anomaly",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793094868.972352,
+      "end": 1793094871.934699,
+      "duration_s": 2.9623470306396484,
+      "input_tokens": 356,
+      "output_tokens": 200
+    },
+    {
+      "agent": "training_watch",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793094871.937012,
+      "end": 1793094874.112565,
+      "duration_s": 2.1755530834198,
+      "input_tokens": 472,
+      "output_tokens": 128
+    },
+    {
+      "agent": "cluster_health",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793094874.112596,
+      "end": 1793094875.344821,
+      "duration_s": 1.232224941253662,
+      "input_tokens": 410,
+      "output_tokens": 48
+    },
+    {
+      "agent": "data_quality",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793094875.344887,
+      "end": 1793094876.6046872,
+      "duration_s": 1.2598001956939697,
+      "input_tokens": 406,
+      "output_tokens": 47
+    },
+    {
+      "agent": "supervisor",
+      "caller": "handle_anomaly",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793094876.6047091,
+      "end": 1793094878.857059,
+      "duration_s": 2.252349853515625,
+      "input_tokens": 338,
+      "output_tokens": 200
+    },
+    {
+      "agent": "training_watch",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793094878.860372,
+      "end": 1793094880.846548,
+      "duration_s": 1.9861760139465332,
+      "input_tokens": 472,
+      "output_tokens": 140
+    },
+    {
+      "agent": "cluster_health",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793094880.846653,
+      "end": 1793094882.447776,
+      "duration_s": 1.6011230945587158,
+      "input_tokens": 410,
+      "output_tokens": 71
+    },
+    {
+      "agent": "data_quality",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793094882.4479291,
+      "end": 1793094883.941519,
+      "duration_s": 1.4935898780822754,
+      "input_tokens": 406,
+      "output_tokens": 63
+    },
+    {
+      "agent": "supervisor",
+      "caller": "handle_anomaly",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793094883.9415438,
+      "end": 1793094886.60796,
+      "duration_s": 2.6664161682128906,
+      "input_tokens": 389,
+      "output_tokens": 200
+    },
+    {
+      "agent": "training_watch",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793094886.6127129,
+      "end": 1793094888.614591,
+      "duration_s": 2.001878023147583,
+      "input_tokens": 472,
+      "output_tokens": 136
+    },
+    {
+      "agent": "cluster_health",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793094888.614773,
+      "end": 1793094890.089597,
+      "duration_s": 1.4748239517211914,
+      "input_tokens": 410,
+      "output_tokens": 63
+    },
+    {
+      "agent": "data_quality",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793094890.089665,
+      "end": 1793094891.5353642,
+      "duration_s": 1.4456992149353027,
+      "input_tokens": 406,
+      "output_tokens": 55
+    },
+    {
+      "agent": "supervisor",
+      "caller": "handle_anomaly",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793094891.5354939,
+      "end": 1793094894.009749,
+      "duration_s": 2.474255084991455,
+      "input_tokens": 369,
+      "output_tokens": 200
+    }
+  ]
+}

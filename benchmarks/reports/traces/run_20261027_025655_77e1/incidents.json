@@ -1,0 +1,30 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=512"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## **Primary Issue: Memory Pressure During Training**\n\n**Severity:** Critical  \n**Stage:** Training  \n**Root Cause:** Batch size of 512 exceeds available CPU memory capacity during forward pass execution.\n\n---\n\n## **Key Findings**\n\n| Component | Finding |\n|-----------|---------|\n| **Batch Configuration** | 512 exceeds CPU RAM capacity for current model/data setup |\n| **Execution Mode** | CPU-only (`use_gpu=False`, `device='cpu'`) |\n| **Failure Point** | Memory allocation during forward pass |\n| **Risk Level** | Recurring OOM failures; training pipeline collapse imminent |\n\n---\n\n## **Recommended Actions (Priority Order)**\n\n1. **Immediate:** Reduce `batch_size` to **64\u2013128**\n   - Aligns batch size with available",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 512 to 256 and scaled accum_steps from 1 to 2 (invariant effective_batch_size=512)"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+    ],
+    "diagnosis": "# Unified Diagnostic Report: Memory Pressure During Training\n\n## Executive Summary\nMemory pressure is **confirmed as the root cause** of training anomalies. The issue is **CPU-side memory saturation** during batch assembly, not GPU OOM (which is a configuration artifact). The problem stems from aggressive batch sizing (256) combined with serial data loading (num_workers=0) on CPU-only training.\n\n---\n\n## Root Cause Analysis\n\n| Factor | Impact | Severity |\n|--------|--------|----------|\n| **batch_size=256 on CPU** | Peak memory allocation during batch assembly | **HIGH** |\n| **num_workers=0** | Zero parallelization; data loading blocks compute | **HIGH** |\n| **accumulation_steps=2** | Additional gradient buffer overhead | **MEDIUM** |\n| **CPU-only execution** | No GPU memory offloading available | **",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 256 to 128 and scaled accum_steps from 2 to 4 (invariant effective_batch_size=512)"
+  }
+]

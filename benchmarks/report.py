@@ -1,43 +1,41 @@
-"""Report generator for the Agentic ML Benchmarking Suite."""
+"""Report generator for the Agentic ML Benchmarking Suite.
+
+Every number in the generated reports is read from measured run data in
+`BenchmarkSuiteResult`; see benchmarks/harness.py for the timing definitions.
+"""
 from __future__ import annotations
 
 import json
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
-from benchmarks.harness import BenchmarkSuiteResult, ScenarioBenchmarkResult
+from benchmarks.harness import BenchmarkSuiteResult
+
+
+def _med(stat: dict[str, float] | None, fmt: str = "{:.2f}") -> str:
+    return fmt.format(stat["median"]) if stat else "–"
+
+
+def _range(stat: dict[str, float] | None) -> str:
+    return f"{stat['median']:.1f} [{stat['min']:.1f}–{stat['max']:.1f}]" if stat else "–"
+
+
+def _outcomes(row: dict[str, Any]) -> str:
+    return ", ".join(f"{k}×{v}" for k, v in sorted(row["outcomes"].items()))
 
 
 def format_terminal_summary(suite: BenchmarkSuiteResult) -> str:
-    """Format an ANSI terminal summary table of benchmark results."""
-    lines: list[str] = []
-    w = 80
-    lines.append("\n" + "=" * w)
-    lines.append("  🏆 AGENTIC ML BENCHMARK RESULTS & EFFICACY SUMMARY")
-    lines.append("=" * w)
-    lines.append(f"  • Total Scenarios:           {suite.total_scenarios}")
-    lines.append(f"  • Successfully Addressed:    {suite.self_healed_count}/{suite.total_scenarios} ({suite.self_healing_rate}%)")
-    lines.append(f"  • Estimated Compute Saved:   {suite.total_compute_saved_s:.1f}s")
-    lines.append(f"  • Baseline Cumulative Time:  {suite.total_baseline_duration_s:.1f}s")
-    lines.append(f"  • Agentic Cumulative Time:   {suite.total_agentic_duration_s:.1f}s")
+    """Format a terminal summary table of benchmark results."""
+    w = 110
+    lines = ["\n" + "=" * w, "  AGENTIC ML BENCHMARK RESULTS (measured)", "=" * w]
+    lines.append(f"  {'Scenario':<30} {'Expected':<10} {'Match':<6} {'Outcomes':<26} {'MTTR med [min–max] s':<22} {'Baseline s':<10}")
     lines.append("-" * w)
-    lines.append(f"  {'Scenario':<25} {'Baseline':<12} {'Agentic':<12} {'Remediated':<14} {'Result':<12}")
-    lines.append("-" * w)
-
-    for r in suite.scenario_results:
-        sc_name = r.scenario.id[:24]
-        base_s = r.baseline.status.upper()
-        agent_s = r.agentic.status.upper()
-        actions = ", ".join(act.get("action", "") for act in r.agentic.remediations_applied) or "None"
-        if len(actions) > 13:
-            actions = actions[:11] + ".."
-
-        outcome = "✅ RESOLVED" if r.self_healed else "❌ FAILED"
-        if not r.scenario.is_recoverable:
-            outcome = "🛡️ DIAGNOSED" if r.self_healed else "❌ MISSED"
-
-        lines.append(f"  {sc_name:<25} {base_s:<12} {agent_s:<12} {actions:<14} {outcome:<12}")
-
+    for row in suite.aggregates:
+        lines.append(
+            f"  {row['id'][:29]:<30} {row['expected_outcome']:<10} {row['matches_expected']}/{row['n']:<4} "
+            f"{_outcomes(row)[:25]:<26} {_range(row['mttr_s']):<22} {_med(row['baseline_duration_s'], '{:.1f}'):<10}"
+        )
     lines.append("=" * w + "\n")
     return "\n".join(lines)
 
@@ -46,7 +44,7 @@ def generate_markdown_report(
     suite: BenchmarkSuiteResult,
     output_path: Path | str | None = None,
 ) -> Path:
-    """Generate a comprehensive Markdown benchmark report."""
+    """Generate a Markdown benchmark report from measured results."""
     if output_path is None:
         reports_dir = Path("benchmarks/reports")
         reports_dir.mkdir(parents=True, exist_ok=True)
@@ -56,85 +54,50 @@ def generate_markdown_report(
         out_file = Path(output_path)
         out_file.parent.mkdir(parents=True, exist_ok=True)
 
+    env = suite.environment
     lines: list[str] = [
-        "# Agentic ML Infrastructure — Benchmark & Efficacy Report",
+        "# AutoPARK Benchmark Report (measured)",
         "",
-        f"> **Generated at**: `{suite.timestamp}`  ",
-        f"> **Platform Stack**: PyTorch + Apache Arrow + Ray + Claude on AWS (`anthropic[aws]`)  ",
-        f"> **Self-Healing Success Rate**: **`{suite.self_healing_rate}%`** ({suite.self_healed_count}/{suite.total_scenarios} scenarios addressed)  ",
-        f"> **Compute Saved**: `{suite.total_compute_saved_s:.1f}s`  ",
+        f"- **Generated at**: `{suite.timestamp}`",
+        f"- **Environment**: {env['platform']} · Python {env['python']} · torch {env['torch']} · device `{env['device']}`",
+        f"- **Workload**: model `{env['model']}`, {env['epochs']} epochs, CIFAR-10 subset {env['subset']}, max_retries={env['max_retries']}",
+        f"- **Agent LLM**: `{env['llm_model']}`",
+        f"- **Repeats per scenario**: {env['repeats']}",
         "",
-        "---",
+        "All faults are injected in software by `pipeline/training.py` (see `benchmarks/scenarios.py`).",
+        "Timing components are measured from wall-clock timestamps; definitions are in `benchmarks/harness.py`.",
         "",
-        "## Executive Summary",
+        "## Outcomes",
         "",
-        "| Metric | Standard Baseline | Agentic Pipeline (Claude on AWS) | Delta / Efficacy |",
-        "|---|---|---|---|",
-        f"| **Autonomous Resolution** | 0 / {suite.total_scenarios} (0%) | **{suite.self_healed_count} / {suite.total_scenarios} ({suite.self_healing_rate}%)** | **+{suite.self_healing_rate}%** |",
-        f"| **Cumulative Execution Time** | `{suite.total_baseline_duration_s:.1f}s` | `{suite.total_agentic_duration_s:.1f}s` | `+{suite.total_compute_saved_s:.1f}s` compute saved |",
-        f"| **In-the-loop Diagnostics** | 0 (Manual triage needed) | **100% telemetry coverage** | Full root-cause insight |",
-        f"| **Wasted Retries** | Static retry loops | **Dynamic config mutation** | Zero blind retries |",
-        "",
-        "---",
-        "",
-        "## Scenario Breakdown",
-        "",
-        "| Scenario ID | Category | Baseline Status | Agentic Status | Autonomous Action | Verdict |",
-        "|---|---|---|---|---|---|",
+        "| Scenario | Expected | Matches | Observed outcomes | Baseline (success/failed) | Baseline wall s (median) | Agentic wall s (median) |",
+        "|---|---|---|---|---|---|---|",
     ]
-
-    for r in suite.scenario_results:
-        verdict = "✅ **Self-Healed**" if r.self_healed and r.scenario.is_recoverable else ("🛡️ **Diagnosed Early**" if r.self_healed else "❌ Failed")
-        actions = ", ".join(f"`{act.get('action')}`" for act in r.agentic.remediations_applied) or "*None*"
+    for row in suite.aggregates:
+        bs = row["baseline_status"]
         lines.append(
-            f"| `{r.scenario.id}` | {r.scenario.category} | `{r.baseline.status}` ({r.baseline.retries_used} retries) | `{r.agentic.status}` | {actions} | {verdict} |"
+            f"| `{row['id']}` | {row['expected_outcome']} | {row['matches_expected']}/{row['n']} | {_outcomes(row)} "
+            f"| {bs['success']}/{bs['failed']} | {_med(row['baseline_duration_s'], '{:.1f}')} | {_med(row['agentic_duration_s'], '{:.1f}')} |"
         )
 
-    lines.extend([
+    lines += [
         "",
-        "---",
+        "## MTTR decomposition (median seconds over runs with an incident)",
         "",
-        "## Detailed Scenario Analysis",
-        "",
-    ])
+        "| Scenario | T_det | T_reason | T_act | T_handle_other | T_recover | residual | MTTR median [min–max] | LLM calls | in/out tokens |",
+        "|---|---|---|---|---|---|---|---|---|---|",
+    ]
+    for row in suite.aggregates:
+        lines.append(
+            f"| `{row['id']}` | {_med(row['t_det'])} | {_med(row['t_reason'])} | {_med(row['t_act'], '{:.4f}')} "
+            f"| {_med(row['t_handle_other'])} | {_med(row['t_recover'])} | {_med(row['residual'])} | {_range(row['mttr_s'])} "
+            f"| {_med(row['llm_calls'], '{:.0f}')} | {_med(row['input_tokens'], '{:.0f}')}/{_med(row['output_tokens'], '{:.0f}')} |"
+        )
 
-    for i, r in enumerate(suite.scenario_results, start=1):
-        lines.extend([
-            f"### {i}. {r.scenario.title} (`{r.scenario.id}`)",
-            f"- **Category**: `{r.scenario.category}`",
-            f"- **Description**: {r.scenario.description}",
-            f"- **Expected Baseline**: {r.scenario.expected_baseline_outcome}",
-            f"- **Expected Agentic**: {r.scenario.expected_agentic_outcome}",
-            "",
-            "**Execution Comparison**:",
-            f"- **Standard Baseline**: Status = `{r.baseline.status.upper()}`, Duration = `{r.baseline.duration_s}s`, Error = `{r.baseline.error_message or 'None'}`",
-            f"- **Agentic Pipeline**: Status = `{r.agentic.status.upper()}`, Duration = `{r.agentic.duration_s}s`, Remediations = `{len(r.agentic.remediations_applied)}`",
-            "",
-        ])
+    lines += ["", "## Remediation sequences per run", ""]
+    for row in suite.aggregates:
+        lines.append(f"- `{row['id']}`: " + "; ".join(" → ".join(a) or "(none)" for a in row["actions_per_run"]))
 
-        if r.agentic.remediations_applied:
-            lines.append("**Remediation Audit Log**:")
-            for act in r.agentic.remediations_applied:
-                lines.append(f"- Action: `{act.get('action')}` &rarr; Status: `{act.get('status')}` ({act.get('details')})")
-            lines.append("")
-
-        if r.agentic.claude_diagnoses:
-            lines.append("**Claude In-The-Loop Diagnoses**:")
-            for diag in r.agentic.claude_diagnoses:
-                lines.append(f"> 🤖 *{diag}*")
-            lines.append("")
-
-    lines.extend([
-        "---",
-        "",
-        "## Benchmark Standard Methodology",
-        "",
-        "1. **Baseline Protocol**: Runs standard ML training loop with fixed retries (`max_retries=3`). Faults lead to identical static retries and wasted compute.",
-        "2. **Agentic Protocol**: Evaluates real-time anomaly detection by `TrainingWatchAgent`, `DataQualityAgent`, and `ClusterHealthAgent`, routed via `SupervisorAgent` to Claude on AWS (`claude-haiku-4-5-20251001`), with automated parameter mutations executed by `RemediatorAgent`.",
-        "3. **Standard Scoring**: Efficacy is measured by self-healing rate, wasted compute avoided, and resolution of injected defects without human intervention.",
-    ])
-
-    out_file.write_text("\n".join(lines), encoding="utf-8")
+    out_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return out_file
 
 
@@ -142,7 +105,7 @@ def save_json_report(
     suite: BenchmarkSuiteResult,
     output_path: Path | str | None = None,
 ) -> Path:
-    """Save raw benchmark results as structured JSON."""
+    """Save raw per-run results and aggregates as structured JSON."""
     if output_path is None:
         reports_dir = Path("benchmarks/reports")
         reports_dir.mkdir(parents=True, exist_ok=True)
@@ -153,40 +116,22 @@ def save_json_report(
         out_file.parent.mkdir(parents=True, exist_ok=True)
 
     data: dict[str, Any] = {
+        "schema_version": 2,
         "timestamp": suite.timestamp,
-        "total_scenarios": suite.total_scenarios,
-        "recoverable_scenarios": suite.recoverable_scenarios,
-        "self_healed_count": suite.self_healed_count,
-        "self_healing_rate": suite.self_healing_rate,
-        "total_compute_saved_s": suite.total_compute_saved_s,
-        "total_baseline_duration_s": suite.total_baseline_duration_s,
-        "total_agentic_duration_s": suite.total_agentic_duration_s,
-        "scenarios": [
+        "environment": suite.environment,
+        "aggregates": suite.aggregates,
+        "runs": [
             {
                 "id": r.scenario.id,
-                "title": r.scenario.title,
-                "category": r.scenario.category,
-                "is_recoverable": r.scenario.is_recoverable,
-                "self_healed": r.self_healed,
-                "compute_saved_s": r.compute_saved_s,
-                "baseline": {
-                    "status": r.baseline.status,
-                    "duration_s": r.baseline.duration_s,
-                    "retries": r.baseline.retries_used,
-                    "error": r.baseline.error_message,
-                },
-                "agentic": {
-                    "status": r.agentic.status,
-                    "duration_s": r.agentic.duration_s,
-                    "retries": r.agentic.retries_used,
-                    "remediations": r.agentic.remediations_applied,
-                    "incidents": r.agentic.incidents,
-                    "claude_diagnoses": r.agentic.claude_diagnoses,
-                },
+                "repeat": r.repeat,
+                "expected_outcome": r.scenario.expected_outcome,
+                "outcome": r.outcome,
+                "outcome_matches_expected": r.outcome_matches_expected,
+                "baseline": asdict(r.baseline),
+                "agentic": asdict(r.agentic),
             }
             for r in suite.scenario_results
         ],
     }
-
-    out_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    out_file.write_text(json.dumps(data, indent=2, default=str), encoding="utf-8")
     return out_file

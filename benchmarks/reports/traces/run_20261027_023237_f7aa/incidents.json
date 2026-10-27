@@ -1,0 +1,30 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "nan_loss_detected"
+    ],
+    "raw_anomalies": [
+      "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=5.0"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## **Severity:** CRITICAL\n\n## **Issue Summary**\nTraining has failed at initialization due to **learning rate misconfiguration causing gradient explosion and immediate loss divergence to NaN**.\n\n---\n\n## **Root Cause Analysis**\n- **Primary Issue:** Learning rate set to 5.0 is 500-1000x too high for CIFAR-10 on CPU\n- **Mechanism:** Oversized learning rate \u2192 uncontrolled gradient updates \u2192 numerical overflow \u2192 NaN loss at first optimization step\n- **Impact:** Training pipeline cannot proceed; model is untrainable in current state\n\n---\n\n## **Immediate Actions Required**\n\n| Action | Priority | Details |\n|--------|----------|---------|\n| **Reduce Learning Rate** | P0 | Set `lr = 0.001` to `0.01` (reduce by 500-5000",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 5.0 to 0.5"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "nan_loss_detected"
+    ],
+    "raw_anomalies": [
+      "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=0.5"
+    ],
+    "diagnosis": "# \ud83d\udd34 Unified Diagnosis: NaN Loss Detection\n\n## Root Cause\n**Critical hyperparameter misconfiguration:** Learning rate of `0.5` is drastically excessive for the current model and optimizer setup, causing immediate loss divergence to NaN at the first training step due to unstable gradient updates.\n\n## Severity\n**CRITICAL** \u2013 Training pipeline cannot proceed; immediate intervention required.\n\n---\n\n## Recommended Actions (Priority Order)\n\n### 1. **Immediate Fix** (Required)\n- **Reduce learning rate** to `0.01-0.05` range (consensus across all subagents)\n- **Enable gradient clipping** with `max_grad_norm=1.0` to prevent gradient explosion\n\n### 2. **Secondary Optimization** (Recommended)\n- Reduce `momentum` to `0.8` if using SGD optimizer\n- Consider even",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 0.5 to 0.05"
+  }
+]

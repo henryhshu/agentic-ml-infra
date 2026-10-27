@@ -148,7 +148,7 @@ class TrainingStage:
         if self.config.fault_injection in (
             "batch_oom", "memory_pressure", "compound_oom_and_explosion", "cascaded_lr_and_memory", "triple_cascade_oom_lr_grad"
         ) and self.config.batch_size >= 256:
-            self._record_step_telemetry(0, 1, None, None, event="memory_oom", memory_override=8192.0)
+            self._record_step_telemetry(0, 1, None, None, event="injected_oom")
             raise _TrainingAnomalyError(
                 "memory_pressure",
                 f"Simulated CUDA Out of Memory: failed to allocate memory for batch_size={self.config.batch_size}",
@@ -157,7 +157,7 @@ class TrainingStage:
 
         # ── Fault injection: Simulated Spot Node Preemption / Worker Task Failure ──
         if self.config.fault_injection == "spot_worker_churn" and not getattr(self.config, "workers_restarted", False):
-            self._record_step_telemetry(0, 1, None, None, event="spot_interruption")
+            self._record_step_telemetry(0, 1, None, None, event="injected_spot_interruption")
             raise _TrainingAnomalyError(
                 "worker_shortage",
                 "Ray cluster worker shortage: worker node preempted by EC2 Spot interruption during distributed training",
@@ -195,14 +195,14 @@ class TrainingStage:
                 # ── Fault injection: Tier 7 Thrashing Bimodal Trap (Control Frontier) ──
                 if self.config.fault_injection == "thrashing_bimodal_trap":
                     if self.config.lr >= 0.01:
-                        self._record_step_telemetry(step, epoch_num, loss=99.9, grad_norm=1500.0, event="nan_explosion")
+                        self._record_step_telemetry(step, epoch_num, loss=round(loss.item(), 5), grad_norm=None, event="injected_nan")
                         raise _TrainingAnomalyError(
                             "nan_loss",
                             f"Loss exploded to NaN at epoch {epoch_num}, step {step}: unstable gradient trajectory with lr={self.config.lr:.4f} >= 0.01",
                             {"epoch": epoch_num, "step": step, "lr": self.config.lr, "loss": float("nan")},
                         )
                     else:
-                        self._record_step_telemetry(step, epoch_num, loss=2.30, grad_norm=0.0001, event="loss_plateau")
+                        self._record_step_telemetry(step, epoch_num, loss=round(loss.item(), 5), grad_norm=None, event="injected_plateau")
                         raise _TrainingAnomalyError(
                             "loss_plateau",
                             f"Loss stagnated in non-convex saddle at epoch {epoch_num}, step {step}: dead gradient flow with lr={self.config.lr:.6f} < 0.01",
@@ -213,7 +213,7 @@ class TrainingStage:
                 if self.config.fault_injection in (
                     "nan_divergence", "nan_loss", "cascaded_lr_and_memory", "triple_cascade_oom_lr_grad"
                 ) and self.config.lr >= 0.5:
-                    self._record_step_telemetry(step, epoch_num, loss=99.9, grad_norm=2500.0, event="nan_loss")
+                    self._record_step_telemetry(step, epoch_num, loss=round(loss.item(), 5), grad_norm=None, event="injected_nan")
                     raise _TrainingAnomalyError(
                         "nan_loss",
                         f"NaN/Inf loss detected at epoch {epoch_num}, step {step}: divergent loss with excessive lr={self.config.lr}",
@@ -222,7 +222,7 @@ class TrainingStage:
 
                 # ── NaN/Inf detection (fast-fail) ──
                 if math.isnan(loss.item()) or math.isinf(loss.item()):
-                    self._record_step_telemetry(step, epoch_num, loss=99.9, grad_norm=2000.0, event="nan_loss")
+                    self._record_step_telemetry(step, epoch_num, loss=loss.item(), grad_norm=None, event="nan_loss")
                     raise _TrainingAnomalyError(
                         "nan_loss",
                         f"NaN/Inf loss detected at epoch {epoch_num}, step {step}",
@@ -252,8 +252,9 @@ class TrainingStage:
                 if self.config.fault_injection in (
                     "gradient_explosion", "compound_oom_and_explosion", "triple_cascade_oom_lr_grad"
                 ) and self.config.max_grad_norm is None and step == 1:
-                    total_norm = 999.9
-                    self._record_step_telemetry(step, epoch_num, loss=round(loss.item(), 5), grad_norm=total_norm, event="gradient_explosion")
+                    measured_norm = total_norm
+                    total_norm = 999.9  # injected fault signature reported to the agents
+                    self._record_step_telemetry(step, epoch_num, loss=round(loss.item(), 5), grad_norm=round(measured_norm, 4), event="injected_gradient_explosion")
                     raise _TrainingAnomalyError(
                         "gradient_explosion",
                         f"Gradient explosion detected: grad_norm={total_norm:.1f} exceeds stability threshold",
@@ -262,8 +263,9 @@ class TrainingStage:
 
                 # ── Complex Fault injection: Delayed Mid-Epoch Gradient Shock (step 2 explosion) ──
                 if self.config.fault_injection == "delayed_stochastic_explosion" and self.config.max_grad_norm is None and step == 2:
-                    total_norm = 842.1
-                    self._record_step_telemetry(step, epoch_num, loss=round(loss.item(), 5), grad_norm=total_norm, event="gradient_explosion")
+                    measured_norm = total_norm
+                    total_norm = 842.1  # injected fault signature reported to the agents
+                    self._record_step_telemetry(step, epoch_num, loss=round(loss.item(), 5), grad_norm=round(measured_norm, 4), event="injected_gradient_explosion")
                     raise _TrainingAnomalyError(
                         "gradient_explosion",
                         f"Stealth gradient shock detected at step 2: grad_norm={total_norm:.1f} exploded after step 1 normal loss",
@@ -421,18 +423,14 @@ class TrainingStage:
         grad_norm: float | None,
         event: str = "step",
         details: dict | None = None,
-        memory_override: float | None = None,
     ) -> None:
-        """Record high-frequency step telemetry for analytical visualization."""
-        rss_mb = 0.0
-        if memory_override is not None:
-            rss_mb = memory_override
-        else:
-            try:
-                import psutil
-                rss_mb = round(psutil.Process().memory_info().rss / (1024 * 1024), 2)
-            except Exception:
-                rss_mb = 128.0 + (self.config.batch_size * 1.5)
+        """Record high-frequency step telemetry (measured values only) for analysis."""
+        rss_mb = None
+        try:
+            import psutil
+            rss_mb = round(psutil.Process().memory_info().rss / (1024 * 1024), 2)
+        except Exception:
+            pass
 
         point = {
             "timestamp": time.time(),

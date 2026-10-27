@@ -1,0 +1,16 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "gradient_explosion"
+    ],
+    "raw_anomalies": [
+      "Stealth gradient shock detected at step 2: grad_norm=842.1 exploded after step 1 normal loss"
+    ],
+    "diagnosis": "# UNIFIED DIAGNOSIS: Gradient Explosion\n\n## Root Cause\n**Primary:** Aggressive learning rate (0.1) combined with absence of gradient clipping (`max_grad_norm=None`)\n\n**Contributing Factors:**\n- High momentum (0.9) amplifying unstable updates\n- Zero weight decay providing no regularization\n- Small dataset subset exacerbating parameter volatility\n\n## Evidence\n- Gradient norm explosion to 842.1 at step 2\n- Unstable updates from first training step onward\n\n## Recommended Corrective Actions\n\n| Priority | Action | Parameter | Target Value |\n|----------|--------|-----------|---------------|\n| **P0** | Reduce learning rate | `lr` | 0.01 |\n| **P0** | Enable gradient clipping | `max_grad_norm` | 1.0 |\n| **P1** |",
+    "auto_remediated": true,
+    "action_taken": "enable_gradient_clipping",
+    "remediation_status": "success",
+    "remediation_details": "Enabled gradient clipping with max_norm=1.0"
+  }
+]

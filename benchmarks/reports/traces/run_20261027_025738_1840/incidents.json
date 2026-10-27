@@ -1,0 +1,44 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=512"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## Critical Issue: Memory Pressure During Training\n\n**Severity:** HIGH | **Stage:** Training | **Root Cause:** Batch size misconfiguration with inadequate resource allocation\n\n---\n\n## Synthesized Diagnosis\n\nTraining is failing due to **batch_size=512 exceeding available memory capacity**. The setup exhibits a critical resource mismatch:\n\n- **Primary Issue:** Batch size of 512 is incompatible with current compute resources (CPU-based execution despite GPU availability)\n- **Secondary Issue:** Pipeline lacks dynamic batch sizing and memory profiling mechanisms\n- **Contributing Factor:** Compound fault injection scenario amplifying memory pressure anomalies\n\n---\n\n## Immediate Actions (Priority Order)\n\n1. **Reduce batch_size** to 32\u201364\n2. **Increase gradient accumulation steps** to 8\u201316 (maintains effective batch size ~512)",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 512 to 256 and scaled accum_steps from 1 to 2 (invariant effective_batch_size=512)"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## Primary Issue\n**Memory Pressure on CPU-Only Training**\n\nThe training failure is caused by a CPU memory bottleneck, not GPU exhaustion. With `batch_size=256`, `num_workers=0`, and `use_gpu=False`, the system is attempting to load and process an oversized batch entirely in system RAM without parallel data loading optimization.\n\n## Root Cause Chain\n1. **Batch Size Mismatch**: 256 exceeds available CPU memory capacity for your system\n2. **Serial Data Loading**: `num_workers=0` forces synchronous I/O, preventing background batch preparation\n3. **CPU-Only Compute**: `use_gpu=False` eliminates GPU acceleration, concentrating all memory pressure on RAM\n\n## Immediate Remediation (Priority Order)\n\n| Action | Impact | Effort |\n|--------|--------|--------|",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 256 to 128 and scaled accum_steps from 2 to 4 (invariant effective_batch_size=512)"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "gradient_explosion"
+    ],
+    "raw_anomalies": [
+      "Gradient explosion detected: grad_norm=999.9 exceeds stability threshold"
+    ],
+    "diagnosis": "# **UNIFIED DIAGNOSIS: Gradient Explosion**\n\n## **Root Cause**\nAggressive hyperparameter configuration causing unstable gradient updates:\n- **Learning rate (0.1)**: Excessively high for current model architecture\n- **Momentum (0.9)**: Amplifies accumulated gradients without stabilization\n- **Gradient accumulation (4 steps)**: Compounds instability across batches\n- **Missing safeguard**: No gradient clipping (`max_grad_norm=None`) to bound gradient norms\n\n**Current state:** Gradient norms reaching 999.9, far exceeding safe thresholds (~1.0), causing training divergence.\n\n---\n\n## **Immediate Actions (Priority: CRITICAL)**\n\n1. **Enable gradient clipping:**\n   ```\n   max_grad_norm=1.0\n   ```\n\n2. **Reduce learning rate:**",
+    "auto_remediated": true,
+    "action_taken": "enable_gradient_clipping",
+    "remediation_status": "success",
+    "remediation_details": "Enabled gradient clipping with max_norm=1.0"
+  }
+]

@@ -1,0 +1,145 @@
+{
+  "timeline": [
+    {
+      "type": "attempt",
+      "stage": "data_validation",
+      "attempt": 0,
+      "start": 1793094247.657057,
+      "end": 1793094248.8622248,
+      "duration_s": 1.2051677703857422,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "data_loading",
+      "attempt": 0,
+      "start": 1793094248.862239,
+      "end": 1793094249.274517,
+      "duration_s": 0.4122781753540039,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 0,
+      "start": 1793094249.274533,
+      "end": 1793094249.27632,
+      "duration_s": 0.001786947250366211,
+      "status": "failed",
+      "error": "Ray cluster worker shortage: worker node preempted by EC2 Spot interruption during distributed training"
+    },
+    {
+      "type": "handle",
+      "stage": "training",
+      "attempt": 0,
+      "start": 1793094249.276324,
+      "end": 1793094258.522699,
+      "duration_s": 9.24637508392334,
+      "anomalies": [
+        "worker_shortage"
+      ],
+      "auto_remediated": true,
+      "action": "restart_workers"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 1,
+      "start": 1793094258.522708,
+      "end": 1793094278.096351,
+      "duration_s": 19.57364296913147,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "evaluation",
+      "attempt": 0,
+      "start": 1793094278.100339,
+      "end": 1793094279.7599301,
+      "duration_s": 1.6595911979675293,
+      "status": "success"
+    }
+  ],
+  "llm_calls": [
+    {
+      "agent": "training_watch",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793094249.27635,
+      "end": 1793094252.112597,
+      "duration_s": 2.836246967315674,
+      "input_tokens": 405,
+      "output_tokens": 104
+    },
+    {
+      "agent": "cluster_health",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793094252.112813,
+      "end": 1793094253.245903,
+      "duration_s": 1.1330900192260742,
+      "input_tokens": 344,
+      "output_tokens": 41
+    },
+    {
+      "agent": "data_quality",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793094253.2461,
+      "end": 1793094255.3195698,
+      "duration_s": 2.073469877243042,
+      "input_tokens": 340,
+      "output_tokens": 54
+    },
+    {
+      "agent": "supervisor",
+      "caller": "handle_anomaly",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793094255.3197,
+      "end": 1793094257.7902899,
+      "duration_s": 2.4705898761749268,
+      "input_tokens": 272,
+      "output_tokens": 200
+    },
+    {
+      "agent": "remediator",
+      "caller": "recommend_action",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793094257.7923641,
+      "end": 1793094258.522439,
+      "duration_s": 0.7300748825073242,
+      "input_tokens": 613,
+      "output_tokens": 6
+    },
+    {
+      "agent": "training_watch",
+      "caller": "analyze_epoch",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793094263.7928162,
+      "end": 1793094265.1193888,
+      "duration_s": 1.3265726566314697,
+      "input_tokens": 107,
+      "output_tokens": 61
+    },
+    {
+      "agent": "training_watch",
+      "caller": "analyze_epoch",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793094270.3569942,
+      "end": 1793094271.7148979,
+      "duration_s": 1.3579037189483643,
+      "input_tokens": 107,
+      "output_tokens": 68
+    },
+    {
+      "agent": "training_watch",
+      "caller": "analyze_epoch",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793094276.9677289,
+      "end": 1793094278.0860338,
+      "duration_s": 1.118304967880249,
+      "input_tokens": 102,
+      "output_tokens": 37
+    }
+  ]
+}

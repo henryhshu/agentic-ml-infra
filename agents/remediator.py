@@ -7,6 +7,7 @@ and stage retries) with strict safety checks and complete audit logging.
 from __future__ import annotations
 
 import json
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, TYPE_CHECKING
@@ -60,6 +61,7 @@ class RemediatorAgent(AgentBase):
 
         self._log(f"Executing action: {action}", level='info')
 
+        t_start = time.time()
         try:
             if action == 'reduce_learning_rate':
                 old_lr = config.lr
@@ -144,9 +146,11 @@ class RemediatorAgent(AgentBase):
                 result['config_diff'] = {'max_grad_norm': {'old': None, 'new': 1.0}}
 
             elif action == 'restart_workers':
+                # Benchmark-only: clears the simulated preemption flag. No Ray actor or
+                # Kubernetes pod is restarted by this action.
                 setattr(config, "workers_restarted", True)
                 result['status'] = 'success'
-                result['details'] = 'Ray worker nodes successfully restarted and health-checked.'
+                result['details'] = 'Set workers_restarted flag (clears simulated preemption; no physical restart performed).'
 
             elif action == 'retry_stage':
                 result['status'] = 'retry_requested'
@@ -161,6 +165,8 @@ class RemediatorAgent(AgentBase):
             result['details'] = f"Actuation failed for action '{action}': {exc}"
             self._log(f"Exception during {action}: {exc}", level='error')
 
+        result['start'] = t_start
+        result['duration_s'] = time.time() - t_start
         log_level = 'success' if result['status'] in ('success', 'retry_requested', 'logged', 'skipped') else 'error'
         self._log(f"Action '{action}' → {result['status']}: {result['details']}", level=log_level)
         self._record(action, result)
@@ -174,6 +180,8 @@ class RemediatorAgent(AgentBase):
             'status': result['status'],
             'details': result['details'],
             'config_diff': result.get('config_diff', {}),
+            'start': result.get('start'),
+            'duration_s': result.get('duration_s'),
         })
 
     def save_audit_log(self) -> None:

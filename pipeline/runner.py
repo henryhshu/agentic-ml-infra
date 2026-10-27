@@ -151,6 +151,7 @@ class PipelineRunner:
         self.tracker.end_time = now_iso()
         self.tracker.status = pipeline_status
         self.tracker.save_summary()
+        self._save_timing()
 
         # Save agent artifacts
         if self.supervisor is not None:
@@ -263,6 +264,7 @@ class PipelineRunner:
         last_error = None
 
         for attempt in range(retries + 1):
+            t_attempt = time.time()
             try:
                 if attempt > 0:
                     print(f"  🔄 Retry {attempt}/{retries} for {stage_name}...")
@@ -285,6 +287,7 @@ class PipelineRunner:
                         ))
 
                 result = stage_fn()
+                self._record_timeline("attempt", stage_name, attempt, t_attempt, status="success")
 
                 # If agentic, let agents observe the successful completion
                 if self.supervisor is not None:
@@ -299,6 +302,9 @@ class PipelineRunner:
 
             except Exception as exc:
                 last_error = exc
+                self._record_timeline(
+                    "attempt", stage_name, attempt, t_attempt, status="failed", error=str(exc)[:300]
+                )
                 self.tracker.log_event(
                     stage_name, "error",
                     f"Stage failed (attempt {attempt + 1}): {exc}",
@@ -306,6 +312,8 @@ class PipelineRunner:
 
                 # If agentic, let agents diagnose and potentially remediate
                 if self.supervisor is not None:
+                    t_handle = time.time()
+                    n_incidents = len(self.supervisor.incidents)
                     anomalies = [str(exc)]
                     context = {
                         "stage": stage_name,
@@ -321,12 +329,37 @@ class PipelineRunner:
                         self.tracker.log_event(
                             stage_name, "error", f"Supervisor anomaly handling failed: {ag_exc}"
                         )
+                    new_incidents = self.supervisor.incidents[n_incidents:]
+                    incident = new_incidents[-1] if new_incidents else {}
+                    self._record_timeline(
+                        "handle", stage_name, attempt, t_handle,
+                        anomalies=incident.get("anomalies", []),
+                        auto_remediated=bool(incident.get("auto_remediated")),
+                        action=incident.get("action_taken"),
+                    )
 
                 if attempt >= retries:
                     print(f"  ❌ Stage {stage_name} failed after {retries + 1} attempts")
                     raise
 
         return None  # Unreachable but satisfies type checker
+
+    def _record_timeline(self, kind: str, stage: str, attempt: int, start: float, **fields) -> None:
+        """Append a measured [start, end] interval to the run timeline (epoch seconds)."""
+        end = time.time()
+        self.tracker.timeline.append({
+            "type": kind, "stage": stage, "attempt": attempt,
+            "start": start, "end": end, "duration_s": end - start, **fields,
+        })
+
+    def _save_timing(self) -> None:
+        """Persist measured timeline and LLM call records to timing.json."""
+        import json
+        path = Path(self.tracker.run_dir) / "timing.json"
+        path.write_text(json.dumps({
+            "timeline": self.tracker.timeline,
+            "llm_calls": self.tracker.llm_calls,
+        }, indent=2), encoding="utf-8")
 
     # ── Stage implementations ──
 

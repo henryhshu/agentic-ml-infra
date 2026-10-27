@@ -1,0 +1,58 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "nan_loss_detected"
+    ],
+    "raw_anomalies": [
+      "Loss exploded to NaN at epoch 1, step 1: unstable gradient trajectory with lr=0.0500 >= 0.01"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## **Critical Issue: NaN Loss - Gradient Explosion**\n\n### Root Cause\nAll subagents concur: **Learning rate of 0.05 is critically too high** for your model/dataset combination, causing immediate gradient explosion and NaN loss at the first training step.\n\n### Severity\n\ud83d\udd34 **CRITICAL** \u2013 Training is non-functional; immediate action required.\n\n---\n\n## **Recommended Actions (Priority Order)**\n\n1. **Reduce Learning Rate** \u2192 `0.001-0.005` (consensus across all diagnostics)\n2. **Enable Gradient Clipping** \u2192 `max_grad_norm=1.0` (stabilizes gradient trajectory)\n3. **Verify Implementation** \u2192 Re-run training to confirm NaN loss resolution\n\n---\n\n## **Implementation**\n```python\n# Example fix\noptimizer_config = {",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 0.05 to 0.005000000000000001"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "gradient_explosion"
+    ],
+    "raw_anomalies": [
+      "Loss stagnated in non-convex saddle at epoch 1, step 1: dead gradient flow with lr=0.005000 < 0.01"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## Critical Issue\n**Saddle Point Entrapment with Inadequate Gradient Signal**\n\nThe reported \"gradient_explosion\" anomaly is a **mislabel**. The actual problem is **dead/vanishing gradient flow** caused by a learning rate of 0.005 that is too conservative for the current model architecture and batch size (128).\n\n---\n\n## Root Cause Analysis\n\n| Factor | Impact |\n|--------|--------|\n| **Learning Rate (0.005)** | Too low \u2192 insufficient per-step parameter updates \u2192 model stagnates in saddle point |\n| **Batch Size (128)** | May reduce per-sample gradient variance, compounding the low learning rate effect |\n| **Gradient Flow** | Near-zero updates despite non-zero gradients (vanishing, not exploding) |\n\n---\n\n## Recommended Actions (Priority Order",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 0.005000000000000001 to 0.0005000000000000001"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "gradient_explosion"
+    ],
+    "raw_anomalies": [
+      "Loss stagnated in non-convex saddle at epoch 1, step 1: dead gradient flow with lr=0.000500 < 0.01"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## **Primary Issue: Gradient Starvation (Mislabeled as \"Gradient Explosion\")**\n\nThe anomaly label is **misleading**. The actual critical problem is **vanishing gradients due to severely undersized learning rate (0.0005)**, not explosion.\n\n### Root Cause Analysis\n- **Learning rate 0.0005** is 20-200x too small for your non-convex loss landscape\n- Combined with **momentum coefficient (0.9)**, this creates a compounding stagnation effect\n- Model is trapped in a **saddle point at epoch 1** with insufficient gradient signal to escape\n- The \"gradient_explosion\" flag likely reflects prior fault injection testing, not current state\n\n---\n\n## **Immediate Actions (Priority Order)**\n\n1. **Increase Learning Rate to 0.01\u20130.05**\n   -",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 0.0005000000000000001 to 5.0000000000000016e-05"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "gradient_explosion"
+    ],
+    "raw_anomalies": [
+      "Loss stagnated in non-convex saddle at epoch 1, step 1: dead gradient flow with lr=0.000050 < 0.01"
+    ],
+    "diagnosis": "# Unified Diagnosis: Gradient Starvation (Mislabeled as \"Explosion\")\n\n## Executive Summary\nThe anomaly label **\"gradient_explosion\" is a false positive**. The actual critical issue is **gradient starvation** caused by severe learning rate misconfiguration.\n\n---\n\n## Root Cause Analysis\n\n| Component | Finding |\n|-----------|---------|\n| **Learning Rate** | 5e-5 is **50\u2013200x too low** (current threshold: 0.01 minimum) |\n| **Gradient Flow** | Vanishingly small updates \u2192 optimizer trapped in saddle point \u2192 dead gradient flow |\n| **Loss Behavior** | Stagnation despite training, not explosion |\n| **Fault Injection** | Mode \"thrashing_bimodal_trap\" may be artificially suppressing gradients |\n\n---\n\n## Recommended Actions (Priority",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 5.0000000000000016e-05 to 5.000000000000002e-06"
+  }
+]

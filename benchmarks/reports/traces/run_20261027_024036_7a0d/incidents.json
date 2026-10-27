@@ -1,0 +1,30 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "nan_loss_detected"
+    ],
+    "raw_anomalies": [
+      "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=5.0"
+    ],
+    "diagnosis": "# **Unified ML Training Diagnosis**\n\n## **Critical Issue: NaN Loss Detection**\n\n### **Root Cause**\nLearning rate of **5.0 is excessively high**, causing immediate numerical instability and loss divergence to NaN at the first training step. This is a classic gradient explosion problem.\n\n### **Severity**\n\ud83d\udd34 **Critical** \u2013 Training is non-functional and will not converge.\n\n---\n\n## **Recommended Actions (Priority Order)**\n\n1. **Immediately reduce learning rate** to **0.01** (starting point)\n   - Consensus range from diagnostics: 0.001\u20130.1\n   - Start conservative and adjust upward if convergence is slow\n\n2. **Enable gradient clipping** as a safety measure:\n   - Set `max_grad_norm=1.0` to prevent explosive gradients\n\n3. **Verify input data",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 5.0 to 0.5"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "nan_loss_detected"
+    ],
+    "raw_anomalies": [
+      "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=0.5"
+    ],
+    "diagnosis": "# Unified Diagnosis Report\n\n## Issue Summary\n**NaN loss detected at training initiation**\n\n## Root Cause\nThe learning rate of **0.5 is critically high** for the model architecture and dataset, causing immediate loss divergence and NaN values on the first training step. This results in explosive gradient updates that destabilize the training pipeline.\n\n## Severity\n\ud83d\udd34 **Critical** \u2014 Training cannot proceed; immediate intervention required.\n\n## Recommended Actions (Priority Order)\n\n1. **Reduce learning rate** to `0.01\u20130.05` (10x reduction minimum)\n2. **Enable gradient clipping** with `max_grad_norm=1.0` to prevent unbounded gradient propagation\n3. **Restart training** with adjusted hyperparameters\n\n## Implementation\n```python\n# Update training config\nlearning_rate = 0.01  # or 0.05",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 0.5 to 0.05"
+  }
+]

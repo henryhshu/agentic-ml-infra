@@ -1,0 +1,30 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=512"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## Issue Summary\n**Memory pressure** during training caused by **batch size (512) exceeding CPU-only device capacity**\n\n---\n\n## Root Cause Analysis\n\n**Primary Issue:** Batch size of 512 is incompatible with CPU-only training (`use_gpu=False`), resulting in memory exhaustion.\n\n**Contributing Factors:**\n- No adaptive batch sizing or pre-training memory validation\n- Configuration mismatch: GPU capability available but not enabled\n- Data pipeline lacks memory constraint checks\n\n---\n\n## Recommended Actions\n\n### Immediate (Priority 1)\n1. **Reduce batch size** to 64\u2013128 for CPU-only execution\n2. **Enable GPU acceleration** if CUDA is available (address `use_gpu=False` configuration)\n\n### Short-term (Priority 2)\n3. **Implement gradient accumulation** with adjusted `acc",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 512 to 256 and scaled accum_steps from 1 to 2 (invariant effective_batch_size=512)"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis: Memory Pressure\n\n## **Root Cause**\nBatch size of 256 is incompatible with current resource configuration:\n- **CPU-only execution** (use_gpu=False) with no GPU acceleration\n- **Synchronous data loading** (num_workers=0) causing full batches to load into memory before processing\n- **No gradient accumulation** to amortize memory across multiple steps\n- **Mismatch between model size and hardware**: Even a \"tiny\" model cannot sustain batch_size=256 on CPU\n\n## **Critical Issue**\nOut-of-Memory (OOM) failures are imminent and will cause repeated training crashes and instability.\n\n---\n\n## **Recommended Actions (Priority Order)**\n\n| Priority | Action | Expected Impact |\n|----------|--------|-----------------|\n| **P0** | Reduce batch_size to **64",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 256 to 128 and scaled accum_steps from 2 to 4 (invariant effective_batch_size=512)"
+  }
+]

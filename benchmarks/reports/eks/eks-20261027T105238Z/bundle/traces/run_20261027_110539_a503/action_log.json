@@ -1,0 +1,11 @@
+[
+  {
+    "timestamp": "2026-10-27T11:05:48.730817+00:00",
+    "action": "restart_workers",
+    "status": "success",
+    "details": "Set workers_restarted flag (clears simulated preemption; no physical restart performed).",
+    "config_diff": {},
+    "start": 1793099148.7308042,
+    "duration_s": 3.337860107421875e-06
+  }
+]

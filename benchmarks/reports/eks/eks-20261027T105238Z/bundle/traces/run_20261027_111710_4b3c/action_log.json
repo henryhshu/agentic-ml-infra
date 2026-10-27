@@ -1,0 +1,58 @@
+[
+  {
+    "timestamp": "2026-10-27T11:17:19.864774+00:00",
+    "action": "reduce_learning_rate",
+    "status": "success",
+    "details": "Reduced LR from 0.05 to 0.005000000000000001",
+    "config_diff": {
+      "lr": {
+        "old": 0.05,
+        "new": 0.005000000000000001
+      }
+    },
+    "start": 1793099839.864759,
+    "duration_s": 7.867813110351562e-06
+  },
+  {
+    "timestamp": "2026-10-27T11:17:25.654943+00:00",
+    "action": "enable_gradient_clipping",
+    "status": "success",
+    "details": "Enabled gradient clipping with max_norm=1.0",
+    "config_diff": {
+      "max_grad_norm": {
+        "old": null,
+        "new": 1.0
+      }
+    },
+    "start": 1793099845.6549306,
+    "duration_s": 2.6226043701171875e-06
+  },
+  {
+    "timestamp": "2026-10-27T11:17:32.052662+00:00",
+    "action": "reduce_learning_rate",
+    "status": "success",
+    "details": "Reduced LR from 0.005000000000000001 to 0.0005000000000000001",
+    "config_diff": {
+      "lr": {
+        "old": 0.005000000000000001,
+        "new": 0.0005000000000000001
+      }
+    },
+    "start": 1793099852.0526464,
+    "duration_s": 8.344650268554688e-06
+  },
+  {
+    "timestamp": "2026-10-27T11:17:39.466100+00:00",
+    "action": "reduce_learning_rate",
+    "status": "success",
+    "details": "Reduced LR from 0.0005000000000000001 to 5.0000000000000016e-05",
+    "config_diff": {
+      "lr": {
+        "old": 0.0005000000000000001,
+        "new": 5.0000000000000016e-05
+      }
+    },
+    "start": 1793099859.4660714,
+    "duration_s": 1.811981201171875e-05
+  }
+]

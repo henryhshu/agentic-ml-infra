@@ -1,0 +1,30 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "nan_loss_detected"
+    ],
+    "raw_anomalies": [
+      "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=5.0"
+    ],
+    "diagnosis": "# **UNIFIED DIAGNOSIS: NaN Loss Detection**\n\n## **Critical Issue**\nTraining diverged immediately due to **learning rate misconfiguration (5.0)**, causing numerical instability and NaN loss at epoch 1.\n\n## **Root Cause**\nThe learning rate of **5.0 is 50-500x higher** than the standard range for SGD-based optimizers on CIFAR-10, resulting in:\n- Exploding gradients\n- Loss divergence \n- NaN propagation\n\n## **Recommended Actions (Priority Order)**\n\n| Action | Details |\n|--------|---------|\n| **1. Reduce Learning Rate** | Set to **0.01\u20130.1** (conservative: start at 0.01) |\n| **2. Enable Gradient Clipping** | Set `max_grad_norm=1.0` to prevent gradient explosion |",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 5.0 to 0.5"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "nan_loss_detected"
+    ],
+    "raw_anomalies": [
+      "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=0.5"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## Critical Issue: NaN Loss Detection\n\n**Severity:** Critical | **Stage:** Training Initialization\n\n### Root Cause\nExcessive learning rate (0.5) is causing immediate loss divergence and numerical instability, resulting in NaN values at the first training step. This is a hyperparameter misconfiguration issue, not a data or infrastructure problem.\n\n### Immediate Actions Required\n\n1. **Reduce Learning Rate**\n   - Change `lr` from 0.5 \u2192 **0.01 or 0.001**\n   - Start with 0.01 and adjust downward if training remains unstable\n\n2. **Enable Gradient Clipping**\n   - Set `max_grad_norm=1.0` to prevent gradient explosion\n   - This prevents numerical overflow during backpropagation\n\n### Implementation Priority\n- **High:** Fix learning rate (blocking",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 0.5 to 0.05"
+  }
+]

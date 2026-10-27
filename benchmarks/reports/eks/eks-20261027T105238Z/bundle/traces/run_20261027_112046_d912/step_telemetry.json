@@ -1,0 +1,54 @@
+[
+  {
+    "timestamp": 1793100049.658426,
+    "epoch": 1,
+    "step": 0,
+    "loss": null,
+    "grad_norm": null,
+    "memory_mb": 2850.43,
+    "lr": 5.0,
+    "batch_size": 256,
+    "max_grad_norm": null,
+    "event": "injected_oom",
+    "details": {}
+  },
+  {
+    "timestamp": 1793100049.6607065,
+    "epoch": 1,
+    "step": 0,
+    "loss": null,
+    "grad_norm": null,
+    "memory_mb": 2850.43,
+    "lr": 5.0,
+    "batch_size": 256,
+    "max_grad_norm": null,
+    "event": "injected_oom",
+    "details": {}
+  },
+  {
+    "timestamp": 1793100049.6636004,
+    "epoch": 1,
+    "step": 0,
+    "loss": null,
+    "grad_norm": null,
+    "memory_mb": 2850.43,
+    "lr": 5.0,
+    "batch_size": 256,
+    "max_grad_norm": null,
+    "event": "injected_oom",
+    "details": {}
+  },
+  {
+    "timestamp": 1793100049.666098,
+    "epoch": 1,
+    "step": 0,
+    "loss": null,
+    "grad_norm": null,
+    "memory_mb": 2850.43,
+    "lr": 5.0,
+    "batch_size": 256,
+    "max_grad_norm": null,
+    "event": "injected_oom",
+    "details": {}
+  }
+]

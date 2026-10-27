@@ -1,0 +1,316 @@
+{
+  "timeline": [
+    {
+      "type": "attempt",
+      "stage": "data_validation",
+      "attempt": 0,
+      "start": 1793100679.7511292,
+      "end": 1793100681.9930816,
+      "duration_s": 2.241952419281006,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "data_loading",
+      "attempt": 0,
+      "start": 1793100681.9931092,
+      "end": 1793100682.3718374,
+      "duration_s": 0.37872815132141113,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 0,
+      "start": 1793100682.3718748,
+      "end": 1793100682.374461,
+      "duration_s": 0.0025861263275146484,
+      "status": "failed",
+      "error": "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+    },
+    {
+      "type": "handle",
+      "stage": "training",
+      "attempt": 0,
+      "start": 1793100682.3744733,
+      "end": 1793100687.981988,
+      "duration_s": 5.6075146198272705,
+      "anomalies": [
+        "memory_pressure"
+      ],
+      "auto_remediated": true,
+      "action": "reduce_batch_size"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 1,
+      "start": 1793100687.9819915,
+      "end": 1793100688.066063,
+      "duration_s": 0.08407139778137207,
+      "status": "failed",
+      "error": "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=5.0"
+    },
+    {
+      "type": "handle",
+      "stage": "training",
+      "attempt": 1,
+      "start": 1793100688.066084,
+      "end": 1793100694.351804,
+      "duration_s": 6.285720109939575,
+      "anomalies": [
+        "nan_loss_detected"
+      ],
+      "auto_remediated": true,
+      "action": "reduce_learning_rate"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 2,
+      "start": 1793100694.3518062,
+      "end": 1793100694.4301221,
+      "duration_s": 0.07831597328186035,
+      "status": "failed",
+      "error": "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=0.5"
+    },
+    {
+      "type": "handle",
+      "stage": "training",
+      "attempt": 2,
+      "start": 1793100694.4301407,
+      "end": 1793100699.9929194,
+      "duration_s": 5.56277871131897,
+      "anomalies": [
+        "nan_loss_detected"
+      ],
+      "auto_remediated": true,
+      "action": "reduce_learning_rate"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 3,
+      "start": 1793100699.992922,
+      "end": 1793100700.1158414,
+      "duration_s": 0.12291932106018066,
+      "status": "failed",
+      "error": "Gradient explosion detected: grad_norm=999.9 exceeds stability threshold"
+    },
+    {
+      "type": "handle",
+      "stage": "training",
+      "attempt": 3,
+      "start": 1793100700.1158633,
+      "end": 1793100705.7653823,
+      "duration_s": 5.649518966674805,
+      "anomalies": [
+        "gradient_explosion"
+      ],
+      "auto_remediated": true,
+      "action": "enable_gradient_clipping"
+    }
+  ],
+  "llm_calls": [
+    {
+      "agent": "training_watch",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793100682.3745422,
+      "end": 1793100683.7645402,
+      "duration_s": 1.389997959136963,
+      "input_tokens": 408,
+      "output_tokens": 116
+    },
+    {
+      "agent": "cluster_health",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793100683.7646239,
+      "end": 1793100684.5767014,
+      "duration_s": 0.812077522277832,
+      "input_tokens": 347,
+      "output_tokens": 37
+    },
+    {
+      "agent": "data_quality",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793100684.5767734,
+      "end": 1793100685.5418775,
+      "duration_s": 0.9651041030883789,
+      "input_tokens": 343,
+      "output_tokens": 51
+    },
+    {
+      "agent": "supervisor",
+      "caller": "handle_anomaly",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793100685.5419307,
+      "end": 1793100687.568088,
+      "duration_s": 2.0261573791503906,
+      "input_tokens": 277,
+      "output_tokens": 200
+    },
+    {
+      "agent": "remediator",
+      "caller": "recommend_action",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793100687.5681803,
+      "end": 1793100687.9818726,
+      "duration_s": 0.4136922359466553,
+      "input_tokens": 616,
+      "output_tokens": 8
+    },
+    {
+      "agent": "training_watch",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793100688.0661647,
+      "end": 1793100689.5191464,
+      "duration_s": 1.45298171043396,
+      "input_tokens": 416,
+      "output_tokens": 109
+    },
+    {
+      "agent": "cluster_health",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793100689.5192285,
+      "end": 1793100690.55151,
+      "duration_s": 1.0322816371917725,
+      "input_tokens": 355,
+      "output_tokens": 65
+    },
+    {
+      "agent": "data_quality",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793100690.5516276,
+      "end": 1793100691.5997074,
+      "duration_s": 1.0480797290802002,
+      "input_tokens": 351,
+      "output_tokens": 55
+    },
+    {
+      "agent": "supervisor",
+      "caller": "handle_anomaly",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793100691.5997603,
+      "end": 1793100693.8665812,
+      "duration_s": 2.2668209075927734,
+      "input_tokens": 304,
+      "output_tokens": 200
+    },
+    {
+      "agent": "remediator",
+      "caller": "recommend_action",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793100693.8666565,
+      "end": 1793100694.3517163,
+      "duration_s": 0.4850597381591797,
+      "input_tokens": 622,
+      "output_tokens": 8
+    },
+    {
+      "agent": "training_watch",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793100694.4302175,
+      "end": 1793100695.5850987,
+      "duration_s": 1.154881238937378,
+      "input_tokens": 416,
+      "output_tokens": 89
+    },
+    {
+      "agent": "cluster_health",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793100695.585182,
+      "end": 1793100696.2888803,
+      "duration_s": 0.7036983966827393,
+      "input_tokens": 355,
+      "output_tokens": 39
+    },
+    {
+      "agent": "data_quality",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793100696.2889528,
+      "end": 1793100697.4183424,
+      "duration_s": 1.1293895244598389,
+      "input_tokens": 351,
+      "output_tokens": 62
+    },
+    {
+      "agent": "supervisor",
+      "caller": "handle_anomaly",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793100697.4184103,
+      "end": 1793100699.5401473,
+      "duration_s": 2.121737003326416,
+      "input_tokens": 265,
+      "output_tokens": 200
+    },
+    {
+      "agent": "remediator",
+      "caller": "recommend_action",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793100699.540264,
+      "end": 1793100699.9928238,
+      "duration_s": 0.4525599479675293,
+      "input_tokens": 622,
+      "output_tokens": 8
+    },
+    {
+      "agent": "training_watch",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793100700.1159482,
+      "end": 1793100701.4201353,
+      "duration_s": 1.3041870594024658,
+      "input_tokens": 405,
+      "output_tokens": 119
+    },
+    {
+      "agent": "cluster_health",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793100701.4202237,
+      "end": 1793100702.4052932,
+      "duration_s": 0.9850695133209229,
+      "input_tokens": 344,
+      "output_tokens": 60
+    },
+    {
+      "agent": "data_quality",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793100702.4053655,
+      "end": 1793100703.4747992,
+      "duration_s": 1.0694336891174316,
+      "input_tokens": 340,
+      "output_tokens": 70
+    },
+    {
+      "agent": "supervisor",
+      "caller": "handle_anomaly",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793100703.4748585,
+      "end": 1793100705.3855865,
+      "duration_s": 1.9107279777526855,
+      "input_tokens": 322,
+      "output_tokens": 200
+    },
+    {
+      "agent": "remediator",
+      "caller": "recommend_action",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793100705.385661,
+      "end": 1793100705.7652953,
+      "duration_s": 0.37963438034057617,
+      "input_tokens": 613,
+      "output_tokens": 9
+    }
+  ]
+}

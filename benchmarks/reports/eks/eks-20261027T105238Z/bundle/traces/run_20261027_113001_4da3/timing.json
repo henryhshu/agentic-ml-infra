@@ -1,0 +1,145 @@
+{
+  "timeline": [
+    {
+      "type": "attempt",
+      "stage": "data_validation",
+      "attempt": 0,
+      "start": 1793100602.0257936,
+      "end": 1793100604.3831234,
+      "duration_s": 2.357329845428467,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "data_loading",
+      "attempt": 0,
+      "start": 1793100604.3831687,
+      "end": 1793100604.7833216,
+      "duration_s": 0.40015292167663574,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 0,
+      "start": 1793100604.7833579,
+      "end": 1793100605.0290973,
+      "duration_s": 0.24573945999145508,
+      "status": "failed",
+      "error": "Stealth gradient shock detected at step 2: grad_norm=842.1 exploded after step 1 normal loss"
+    },
+    {
+      "type": "handle",
+      "stage": "training",
+      "attempt": 0,
+      "start": 1793100605.0291116,
+      "end": 1793100611.7557535,
+      "duration_s": 6.726641893386841,
+      "anomalies": [
+        "gradient_explosion"
+      ],
+      "auto_remediated": true,
+      "action": "enable_gradient_clipping"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 1,
+      "start": 1793100611.7557569,
+      "end": 1793100636.7543654,
+      "duration_s": 24.998608589172363,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "evaluation",
+      "attempt": 0,
+      "start": 1793100636.7554967,
+      "end": 1793100638.9899764,
+      "duration_s": 2.2344796657562256,
+      "status": "success"
+    }
+  ],
+  "llm_calls": [
+    {
+      "agent": "training_watch",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793100605.0291772,
+      "end": 1793100606.61341,
+      "duration_s": 1.5842328071594238,
+      "input_tokens": 413,
+      "output_tokens": 130
+    },
+    {
+      "agent": "cluster_health",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793100606.6134965,
+      "end": 1793100607.5487845,
+      "duration_s": 0.9352879524230957,
+      "input_tokens": 352,
+      "output_tokens": 54
+    },
+    {
+      "agent": "data_quality",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793100607.5488558,
+      "end": 1793100608.8619637,
+      "duration_s": 1.313107967376709,
+      "input_tokens": 348,
+      "output_tokens": 72
+    },
+    {
+      "agent": "supervisor",
+      "caller": "handle_anomaly",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793100608.8620203,
+      "end": 1793100611.1567037,
+      "duration_s": 2.2946834564208984,
+      "input_tokens": 329,
+      "output_tokens": 200
+    },
+    {
+      "agent": "remediator",
+      "caller": "recommend_action",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793100611.1567845,
+      "end": 1793100611.7556453,
+      "duration_s": 0.5988607406616211,
+      "input_tokens": 621,
+      "output_tokens": 9
+    },
+    {
+      "agent": "training_watch",
+      "caller": "analyze_epoch",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793100618.7650821,
+      "end": 1793100620.1353424,
+      "duration_s": 1.370260238647461,
+      "input_tokens": 107,
+      "output_tokens": 86
+    },
+    {
+      "agent": "training_watch",
+      "caller": "analyze_epoch",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793100627.1410549,
+      "end": 1793100628.2873962,
+      "duration_s": 1.146341323852539,
+      "input_tokens": 107,
+      "output_tokens": 60
+    },
+    {
+      "agent": "training_watch",
+      "caller": "analyze_epoch",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793100635.283309,
+      "end": 1793100636.751684,
+      "duration_s": 1.4683749675750732,
+      "input_tokens": 102,
+      "output_tokens": 66
+    }
+  ]
+}

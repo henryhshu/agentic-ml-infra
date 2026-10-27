@@ -1,0 +1,63 @@
+{
+  "timeline": [
+    {
+      "type": "attempt",
+      "stage": "data_validation",
+      "attempt": 0,
+      "start": 1793099590.9252858,
+      "end": 1793099593.1960125,
+      "duration_s": 2.2707266807556152,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "data_loading",
+      "attempt": 0,
+      "start": 1793099593.1960196,
+      "end": 1793099593.5815377,
+      "duration_s": 0.38551807403564453,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 0,
+      "start": 1793099593.581546,
+      "end": 1793099593.7921705,
+      "duration_s": 0.21062445640563965,
+      "status": "failed",
+      "error": "Stealth gradient shock detected at step 2: grad_norm=842.1 exploded after step 1 normal loss"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 1,
+      "start": 1793099593.792186,
+      "end": 1793099594.002408,
+      "duration_s": 0.2102220058441162,
+      "status": "failed",
+      "error": "Stealth gradient shock detected at step 2: grad_norm=842.1 exploded after step 1 normal loss"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 2,
+      "start": 1793099594.0024257,
+      "end": 1793099594.2136896,
+      "duration_s": 0.21126389503479004,
+      "status": "failed",
+      "error": "Stealth gradient shock detected at step 2: grad_norm=842.1 exploded after step 1 normal loss"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 3,
+      "start": 1793099594.2137074,
+      "end": 1793099594.425234,
+      "duration_s": 0.21152663230895996,
+      "status": "failed",
+      "error": "Stealth gradient shock detected at step 2: grad_norm=842.1 exploded after step 1 normal loss"
+    }
+  ],
+  "llm_calls": []
+}

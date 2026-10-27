@@ -1,0 +1,62 @@
+[
+  {
+    "timestamp": "2026-10-27T11:23:05.310590+00:00",
+    "action": "reduce_batch_size",
+    "status": "success",
+    "details": "Reduced batch size from 256 to 128 and scaled accum_steps from 1 to 2 (invariant effective_batch_size=256)",
+    "config_diff": {
+      "batch_size": {
+        "old": 256,
+        "new": 128
+      },
+      "accum_steps": {
+        "old": 1,
+        "new": 2
+      }
+    },
+    "start": 1793100185.3105757,
+    "duration_s": 7.152557373046875e-06
+  },
+  {
+    "timestamp": "2026-10-27T11:23:11.845760+00:00",
+    "action": "reduce_learning_rate",
+    "status": "success",
+    "details": "Reduced LR from 5.0 to 0.5",
+    "config_diff": {
+      "lr": {
+        "old": 5.0,
+        "new": 0.5
+      }
+    },
+    "start": 1793100191.845743,
+    "duration_s": 9.059906005859375e-06
+  },
+  {
+    "timestamp": "2026-10-27T11:23:17.504951+00:00",
+    "action": "reduce_learning_rate",
+    "status": "success",
+    "details": "Reduced LR from 0.5 to 0.05",
+    "config_diff": {
+      "lr": {
+        "old": 0.5,
+        "new": 0.05
+      }
+    },
+    "start": 1793100197.5049312,
+    "duration_s": 1.0728836059570312e-05
+  },
+  {
+    "timestamp": "2026-10-27T11:23:23.633269+00:00",
+    "action": "enable_gradient_clipping",
+    "status": "success",
+    "details": "Enabled gradient clipping with max_norm=1.0",
+    "config_diff": {
+      "max_grad_norm": {
+        "old": null,
+        "new": 1.0
+      }
+    },
+    "start": 1793100203.6332593,
+    "duration_s": 1.9073486328125e-06
+  }
+]

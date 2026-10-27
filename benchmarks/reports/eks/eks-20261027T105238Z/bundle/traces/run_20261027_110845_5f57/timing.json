@@ -1,0 +1,63 @@
+{
+  "timeline": [
+    {
+      "type": "attempt",
+      "stage": "data_validation",
+      "attempt": 0,
+      "start": 1793099325.2559443,
+      "end": 1793099327.6782417,
+      "duration_s": 2.422297477722168,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "data_loading",
+      "attempt": 0,
+      "start": 1793099327.67825,
+      "end": 1793099328.0745008,
+      "duration_s": 0.39625072479248047,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 0,
+      "start": 1793099328.0745096,
+      "end": 1793099328.144436,
+      "duration_s": 0.06992626190185547,
+      "status": "failed",
+      "error": "Loss exploded to NaN at epoch 1, step 1: unstable gradient trajectory with lr=0.0500 >= 0.01"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 1,
+      "start": 1793099328.144453,
+      "end": 1793099328.2153254,
+      "duration_s": 0.07087230682373047,
+      "status": "failed",
+      "error": "Loss exploded to NaN at epoch 1, step 1: unstable gradient trajectory with lr=0.0500 >= 0.01"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 2,
+      "start": 1793099328.215347,
+      "end": 1793099328.286096,
+      "duration_s": 0.07074904441833496,
+      "status": "failed",
+      "error": "Loss exploded to NaN at epoch 1, step 1: unstable gradient trajectory with lr=0.0500 >= 0.01"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 3,
+      "start": 1793099328.2861145,
+      "end": 1793099328.356865,
+      "duration_s": 0.07075047492980957,
+      "status": "failed",
+      "error": "Loss exploded to NaN at epoch 1, step 1: unstable gradient trajectory with lr=0.0500 >= 0.01"
+    }
+  ],
+  "llm_calls": []
+}

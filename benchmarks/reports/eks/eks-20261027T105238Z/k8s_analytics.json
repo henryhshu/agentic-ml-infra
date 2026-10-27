@@ -1,0 +1,160 @@
+{
+  "run_tag": "eks-20261027T105238Z",
+  "job": {
+    "name": "autopark-bench-eks-20261027t105238z",
+    "status": {
+      "completionTime": "2026-10-27T11:35:18Z",
+      "conditions": [
+        {
+          "lastProbeTime": "2026-10-27T11:35:18Z",
+          "lastTransitionTime": "2026-10-27T11:35:18Z",
+          "message": "Reached expected number of succeeded pods",
+          "reason": "CompletionsReached",
+          "status": "True",
+          "type": "SuccessCriteriaMet"
+        },
+        {
+          "lastProbeTime": "2026-10-27T11:35:18Z",
+          "lastTransitionTime": "2026-10-27T11:35:18Z",
+          "message": "Reached expected number of succeeded pods",
+          "reason": "CompletionsReached",
+          "status": "True",
+          "type": "Complete"
+        }
+      ],
+      "ready": 0,
+      "startTime": "2026-10-27T10:52:43Z",
+      "succeeded": 1,
+      "terminating": 0,
+      "uncountedTerminatedPods": {}
+    }
+  },
+  "pod": {
+    "name": "autopark-bench-eks-20261027t105238z-gz8d5",
+    "node": "ip-192-168-50-175.ec2.internal",
+    "created": "2026-10-27T10:52:43Z",
+    "scheduled": "2026-10-27T10:52:43Z",
+    "initialized": "2026-10-27T10:52:43Z",
+    "ready": "2026-10-27T11:35:16Z",
+    "container_started": "2026-10-27T10:52:45Z",
+    "container_finished": "2026-10-27T11:35:16Z",
+    "exit_code": 0,
+    "termination_reason": "Completed",
+    "restart_count": 0,
+    "image": "public.ecr.aws/docker/library/python:3.11.15-slim",
+    "image_id": "public.ecr.aws/docker/library/python@sha256:90744cff8f32887f075c47d747a173ff333e9e98801667af93c357fa9f5e28ff",
+    "qos_class": "Burstable",
+    "resources": {
+      "limits": {
+        "memory": "6Gi"
+      },
+      "requests": {
+        "cpu": "3",
+        "memory": "5Gi"
+      }
+    }
+  },
+  "node": {
+    "name": "ip-192-168-50-175.ec2.internal",
+    "instance_type": "c6i.xlarge",
+    "zone": "us-east-1d",
+    "capacity_type": "ON_DEMAND",
+    "nodegroup": "eval-cpu",
+    "kubelet_version": "v1.34.12-eks-39aca56",
+    "os_image": "Amazon Linux 2023.12.20261021",
+    "kernel": "6.12.111-136.204.amzn2023.x86_64",
+    "container_runtime": "containerd://2.3.5+unknown",
+    "architecture": "amd64",
+    "capacity": {
+      "cpu": "4",
+      "ephemeral-storage": "41865196Ki",
+      "hugepages-1Gi": "0",
+      "hugepages-2Mi": "0",
+      "memory": "7964660Ki",
+      "pods": "58"
+    },
+    "allocatable": {
+      "cpu": "3920m",
+      "ephemeral-storage": "37509222746",
+      "hugepages-1Gi": "0",
+      "hugepages-2Mi": "0",
+      "memory": "6947828Ki",
+      "pods": "58"
+    }
+  },
+  "events": [
+    {
+      "object": "Pod/autopark-bench-eks-20261027t105238z-gz8d5",
+      "reason": "Scheduled",
+      "message": "Successfully assigned autopark/autopark-bench-eks-20261027t105238z-gz8d5 to ip-192-168-50-175.ec2.internal",
+      "type": "Normal",
+      "first": "2026-10-27T10:52:43Z",
+      "last": "2026-10-27T10:52:43Z",
+      "count": 1
+    },
+    {
+      "object": "Pod/autopark-bench-eks-20261027t105238z-gz8d5",
+      "reason": "Pulling",
+      "message": "Pulling image \"public.ecr.aws/docker/library/python:3.11.15-slim\"",
+      "type": "Normal",
+      "first": "2026-10-27T10:52:43Z",
+      "last": "2026-10-27T10:52:43Z",
+      "count": 1
+    },
+    {
+      "object": "Job/autopark-bench-eks-20261027t105238z",
+      "reason": "SuccessfulCreate",
+      "message": "Created pod: autopark-bench-eks-20261027t105238z-gz8d5",
+      "type": "Normal",
+      "first": "2026-10-27T10:52:43Z",
+      "last": "2026-10-27T10:52:43Z",
+      "count": 1
+    },
+    {
+      "object": "Pod/autopark-bench-eks-20261027t105238z-gz8d5",
+      "reason": "Pulled",
+      "message": "Successfully pulled image \"public.ecr.aws/docker/library/python:3.11.15-slim\" in 1.472s (1.472s including waiting). Image size: 45538343 bytes.",
+      "type": "Normal",
+      "first": "2026-10-27T10:52:45Z",
+      "last": "2026-10-27T10:52:45Z",
+      "count": 1
+    },
+    {
+      "object": "Pod/autopark-bench-eks-20261027t105238z-gz8d5",
+      "reason": "Created",
+      "message": "Created container: benchmark",
+      "type": "Normal",
+      "first": "2026-10-27T10:52:45Z",
+      "last": "2026-10-27T10:52:45Z",
+      "count": 1
+    },
+    {
+      "object": "Pod/autopark-bench-eks-20261027t105238z-gz8d5",
+      "reason": "Started",
+      "message": "Started container benchmark",
+      "type": "Normal",
+      "first": "2026-10-27T10:52:45Z",
+      "last": "2026-10-27T10:52:45Z",
+      "count": 1
+    },
+    {
+      "object": "Job/autopark-bench-eks-20261027t105238z",
+      "reason": "Completed",
+      "message": "Job completed",
+      "type": "Normal",
+      "first": "2026-10-27T11:35:18Z",
+      "last": "2026-10-27T11:35:18Z",
+      "count": 1
+    }
+  ],
+  "marker": {
+    "exit_code": 0,
+    "finished_at": 1793100914.2659402,
+    "duration_s": 2505.6865153312683,
+    "trace_files": 430,
+    "pod": "autopark-bench-eks-20261027t105238z-gz8d5",
+    "node": "ip-192-168-50-175.ec2.internal"
+  },
+  "marker_type": "_SUCCESS",
+  "listener_wait_s": 2560.7791271209717
+}

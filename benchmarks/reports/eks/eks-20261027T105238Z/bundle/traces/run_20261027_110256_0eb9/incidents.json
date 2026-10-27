@@ -1,0 +1,30 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=512"
+    ],
+    "diagnosis": "# Unified Diagnosis: Memory Pressure During Training\n\n## Primary Issue\n**Batch size (512) is incompatible with CPU-only execution.** This creates immediate memory allocation failure at training initialization.\n\n## Root Cause Analysis\n- **Configuration Mismatch:** `use_gpu=False` with batch_size=512 exceeds available CPU memory capacity\n- **Compounding Factor:** Zero data workers (`num_workers=0`) prevents any memory optimization through parallelization\n- **Impact:** Consistent allocation failures with resource waste on retry attempts\n\n## Recommended Actions (Priority Order)\n\n1. **Immediate (Critical):** Reduce batch_size to 32\u201364 for CPU-only training\n2. **Secondary:** Enable GPU support (`use_gpu=True`) if hardware available\n3. **Optimization:** Implement gradient accumulation (`accum_steps=4`) to maintain effective batch size while",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 512 to 256 and scaled accum_steps from 1 to 2 (invariant effective_batch_size=512)"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+    ],
+    "diagnosis": "# **Unified ML Training Diagnosis**\n\n## **Primary Issue: Memory Pressure (CPU Training)**\n\n**Root Cause:**\nTraining is configured for CPU execution (`use_gpu: False`) with a batch size of 256, which exceeds available RAM capacity. This configuration creates an out-of-memory (OOM) condition that risks training failures and data pipeline bottlenecks.\n\n---\n\n## **Recommended Actions** (Priority Order)\n\n### **Option 1: Optimize for Current CPU Setup** \u2b50 (Immediate)\n- **Reduce batch_size:** 256 \u2192 **32\u201364**\n- **Increase gradient accumulation:** Enable with `accum_steps: 4\u20138`\n- **Effect:** Maintains effective batch size while reducing per-step memory footprint\n- **Trade-off:** Slightly longer training duration; minimal impact on convergence\n\n### **Option",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 256 to 128 and scaled accum_steps from 2 to 4 (invariant effective_batch_size=512)"
+  }
+]

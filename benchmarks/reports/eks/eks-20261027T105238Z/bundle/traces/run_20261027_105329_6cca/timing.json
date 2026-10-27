@@ -1,0 +1,63 @@
+{
+  "timeline": [
+    {
+      "type": "attempt",
+      "stage": "data_validation",
+      "attempt": 0,
+      "start": 1793098409.68732,
+      "end": 1793098413.6075866,
+      "duration_s": 3.920266628265381,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "data_loading",
+      "attempt": 0,
+      "start": 1793098413.6076076,
+      "end": 1793098414.022006,
+      "duration_s": 0.4143984317779541,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 0,
+      "start": 1793098414.022016,
+      "end": 1793098414.118467,
+      "duration_s": 0.0964510440826416,
+      "status": "failed",
+      "error": "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=5.0"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 1,
+      "start": 1793098414.1184826,
+      "end": 1793098414.195702,
+      "duration_s": 0.07721948623657227,
+      "status": "failed",
+      "error": "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=5.0"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 2,
+      "start": 1793098414.1957188,
+      "end": 1793098414.26515,
+      "duration_s": 0.06943130493164062,
+      "status": "failed",
+      "error": "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=5.0"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 3,
+      "start": 1793098414.2651675,
+      "end": 1793098414.3352187,
+      "duration_s": 0.07005119323730469,
+      "status": "failed",
+      "error": "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=5.0"
+    }
+  ],
+  "llm_calls": []
+}

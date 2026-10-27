@@ -1,0 +1,63 @@
+{
+  "timeline": [
+    {
+      "type": "attempt",
+      "stage": "data_validation",
+      "attempt": 0,
+      "start": 1793100299.1609697,
+      "end": 1793100301.450115,
+      "duration_s": 2.2891452312469482,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "data_loading",
+      "attempt": 0,
+      "start": 1793100301.450125,
+      "end": 1793100301.8352387,
+      "duration_s": 0.3851137161254883,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 0,
+      "start": 1793100301.835247,
+      "end": 1793100301.8373723,
+      "duration_s": 0.002125263214111328,
+      "status": "failed",
+      "error": "Internal PyTorch Architecture Defect: mat1 and mat2 shapes cannot be multiplied (128x512 and 1024x10). Linear projection layer in model architecture has dimension mismatch."
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 1,
+      "start": 1793100301.8373845,
+      "end": 1793100301.8401048,
+      "duration_s": 0.002720355987548828,
+      "status": "failed",
+      "error": "Internal PyTorch Architecture Defect: mat1 and mat2 shapes cannot be multiplied (128x512 and 1024x10). Linear projection layer in model architecture has dimension mismatch."
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 2,
+      "start": 1793100301.8401167,
+      "end": 1793100301.8423216,
+      "duration_s": 0.00220489501953125,
+      "status": "failed",
+      "error": "Internal PyTorch Architecture Defect: mat1 and mat2 shapes cannot be multiplied (128x512 and 1024x10). Linear projection layer in model architecture has dimension mismatch."
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 3,
+      "start": 1793100301.8423345,
+      "end": 1793100301.844479,
+      "duration_s": 0.0021445751190185547,
+      "status": "failed",
+      "error": "Internal PyTorch Architecture Defect: mat1 and mat2 shapes cannot be multiplied (128x512 and 1024x10). Linear projection layer in model architecture has dimension mismatch."
+    }
+  ],
+  "llm_calls": []
+}

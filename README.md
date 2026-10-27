@@ -162,6 +162,25 @@ Workload: TinyCNN (57k params), CIFAR-10 5,000-image subset, 3 epochs, `max_retr
 
 Key observations: Claude reasoning is >96% of MTTR for every exception-type fault; actuation is sub-millisecond. Level 4 fails because its repair needs four remediations (five attempts) but the budget allows four attempts. Escalation does not yet halt the retry loop, which is why Level 5 takes 64.6 s to terminate (first escalation at ~21 s). There is no rule-based remediation baseline yet.
 
+### Replication on Amazon EKS
+
+The full suite was re-run as a Kubernetes Job on EKS (`us-east-1`, Kubernetes 1.34, one on-demand `c6i.xlarge`, same commit, pinned dependencies, 5 repeats). Full analysis: [`benchmarks/reports/eks/eks-20261027T105238Z/analysis.md`](benchmarks/reports/eks/eks-20261027T105238Z/analysis.md).
+
+- **Outcomes replicate**: identical outcome counts in 10/11 scenarios; Levels 1–3 healed 29/30 (local 28/30).
+- **MTTR 16–22% lower on EKS** for every exception-type scenario, driven by in-region Claude latency (median call 1.17 s vs 1.45 s), even though training was slower (0.105 vs 0.096 s/step).
+- **Cluster analytics**: image pull 2.0 s, bootstrap 43.6 s, suite 41.8 min; container used a median 1.62 cores while training and 0.00 cores while waiting on Claude; process RSS peak 3.96 GiB (cgroup peak 5.4 GiB incl. page cache, limit 6 GiB); no CPU throttling.
+- Fault-free monitoring overhead: +13% on EKS vs +23% locally.
+
+Reproduce (requires `eksctl`, `kubectl`, AWS CLI, and `.env` with the Claude Platform on AWS workspace key):
+
+```bash
+eksctl create cluster -f eks/cluster.yaml          # ~20 min; 1 on-demand c6i.xlarge, no NAT gateway
+eks/launch.sh                                      # uploads `git archive HEAD`, creates secret, applies Job
+python -m benchmarks.eks_listener --run-tag <RUN_TAG> --job <JOB>   # waits, fetches, analyzes
+python -m benchmarks.plot_analytical_graphs <local_results.json> --compare benchmarks/reports/eks/<RUN_TAG>/bundle/results.json
+eksctl delete cluster -f eks/cluster.yaml --wait   # stop all charges
+```
+
 ## 🔄 Reversion & Rollback Manifest: Full Auditability & Rapid Rollback
 
 When an autonomous remediation agent intervenes in a training pipeline, engineers must have complete visibility and immediate reversion capability. AutoPARK automatically generates a **Reversion and Rollback Manifest** (`reversion_manifest.json` and human-readable `reversion_manifest.md`) in each run directory.

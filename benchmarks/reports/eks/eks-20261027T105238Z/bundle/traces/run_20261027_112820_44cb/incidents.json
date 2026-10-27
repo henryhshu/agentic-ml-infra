@@ -1,0 +1,44 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=512"
+    ],
+    "diagnosis": "# UNIFIED DIAGNOSIS: Memory Pressure Anomaly\n\n## Root Cause\n**Batch size (512) misconfiguration on CPU device** \u2014 The training configuration specifies a CPU device (`use_gpu=False`) with a batch size far exceeding CPU memory capacity. This creates an immediate out-of-memory failure during training initialization.\n\n## Primary Issue\n- **Device-Batch Mismatch:** Batch size of 512 is appropriate for GPU training but catastrophically oversized for CPU execution\n- **No GPU Acceleration:** GPU capability is disabled, forcing all computation onto limited CPU memory\n- **Model Scale Irrelevant:** Even \"tiny\" models cannot mitigate this fundamental resource constraint\n\n## Recommended Actions (Priority Order)\n\n1. **Immediate (Quickest Resolution)**\n   - Reduce `batch_size` to **32\u201364** for CPU training\n   - Verify available system memory",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 512 to 256 and scaled accum_steps from 1 to 2 (invariant effective_batch_size=512)"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis Report\n\n## Executive Summary\n**Critical Issue:** Memory pressure causing training instability due to configuration-hardware mismatch.\n\n---\n\n## Root Cause Analysis\n\n**Primary Problem:** Batch size of 256 is incompatible with available system memory in CPU-only training mode (`use_gpu=False`).\n\n**Contributing Factors:**\n1. **Oversized batch size** (256) relative to CPU memory capacity\n2. **Synchronous data loading** (`num_workers=0`) creates memory bottlenecks\n3. **Insufficient gradient accumulation** to offset large batch requirements\n\n---\n\n## Recommended Actions (Priority Order)\n\n| Action | Target | Expected Impact |\n|--------|--------|-----------------|\n| **Reduce batch_size** | 256 \u2192 32\u201364 | Immediate memory relief |\n| **Enable async data loading** | `num",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 256 to 128 and scaled accum_steps from 2 to 4 (invariant effective_batch_size=512)"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "gradient_explosion"
+    ],
+    "raw_anomalies": [
+      "Gradient explosion detected: grad_norm=999.9 exceeds stability threshold"
+    ],
+    "diagnosis": "# **UNIFIED DIAGNOSIS: Gradient Explosion**\n\n## **Critical Issue**\nGradient explosion during training caused by **compounding optimizer and regularization misconfigurations**.\n\n## **Root Cause Analysis**\n\n| Factor | Current | Impact |\n|--------|---------|--------|\n| **Learning Rate** | 0.1 | Excessively aggressive; causes rapid divergence |\n| **Momentum** | 0.9 | High momentum amplifies accumulated gradient updates |\n| **Gradient Accumulation** | 4 steps | Compounds gradient magnitude before optimization step |\n| **Gradient Clipping** | `None` | **Critical gap** \u2013 allows unbounded gradient growth |\n\n**Mechanism:** High LR \u00d7 Strong momentum \u00d7 Accumulation \u00d7 No clipping = exponential weight update amplification \u2192 gradient explosion\n\n---\n\n## **Recommended Actions** (Priority Order)\n\n1.",
+    "auto_remediated": true,
+    "action_taken": "enable_gradient_clipping",
+    "remediation_status": "success",
+    "remediation_details": "Enabled gradient clipping with max_norm=1.0"
+  }
+]

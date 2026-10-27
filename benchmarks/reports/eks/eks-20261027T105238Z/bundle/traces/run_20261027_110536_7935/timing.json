@@ -1,0 +1,63 @@
+{
+  "timeline": [
+    {
+      "type": "attempt",
+      "stage": "data_validation",
+      "attempt": 0,
+      "start": 1793099136.9733465,
+      "end": 1793099139.112995,
+      "duration_s": 2.1396484375,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "data_loading",
+      "attempt": 0,
+      "start": 1793099139.1130054,
+      "end": 1793099139.49679,
+      "duration_s": 0.38378453254699707,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 0,
+      "start": 1793099139.4968088,
+      "end": 1793099139.500538,
+      "duration_s": 0.0037293434143066406,
+      "status": "failed",
+      "error": "Ray cluster worker shortage: worker node preempted by EC2 Spot interruption during distributed training"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 1,
+      "start": 1793099139.5005696,
+      "end": 1793099139.504611,
+      "duration_s": 0.004041433334350586,
+      "status": "failed",
+      "error": "Ray cluster worker shortage: worker node preempted by EC2 Spot interruption during distributed training"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 2,
+      "start": 1793099139.5046244,
+      "end": 1793099139.507338,
+      "duration_s": 0.0027136802673339844,
+      "status": "failed",
+      "error": "Ray cluster worker shortage: worker node preempted by EC2 Spot interruption during distributed training"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 3,
+      "start": 1793099139.5073507,
+      "end": 1793099139.5101683,
+      "duration_s": 0.0028176307678222656,
+      "status": "failed",
+      "error": "Ray cluster worker shortage: worker node preempted by EC2 Spot interruption during distributed training"
+    }
+  ],
+  "llm_calls": []
+}

@@ -1,0 +1,30 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=512"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## **Critical Issue: Memory Pressure**\n\n### Root Cause\nBatch size of **512 is incompatible with available memory** in the current configuration:\n- CPU-based training (`use_gpu: False`) has severely limited memory capacity\n- Single-threaded data loading (`num_workers: 0`) creates pipeline bottlenecks\n- Combined effect: immediate out-of-memory (OOM) failures\n\n### Immediate Actions (Priority Order)\n\n1. **Reduce batch size to 32-64** \u2190 fastest fix for CPU training\n2. **Enable GPU acceleration** (`use_gpu: True`) \u2190 unlocks 10-100x memory efficiency gain\n3. **Increase `num_workers > 0`** \u2190 parallelizes data loading to prevent stalls\n\n### Expected Outcome\nAny single action above will resolve the memory pressure. Combining",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 512 to 256 and scaled accum_steps from 1 to 2 (invariant effective_batch_size=512)"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+    ],
+    "diagnosis": "# Unified Diagnosis: Memory Pressure During Training\n\n## **Root Cause**\nBatch size of **256 exceeds available CPU memory** during training despite `use_gpu=False`. The accumulation strategy (`accum_steps=2`) is not sufficient to offset the per-step memory footprint on CPU-only execution.\n\n## **Critical Issues**\n1. **Immediate OOM Risk**: Current batch_size (256) + num_workers=0 + CPU-only mode = memory exhaustion\n2. **Ineffective Gradient Accumulation**: `accum_steps=2` alone cannot mitigate the fundamental batch size oversizing for CPU constraints\n3. **Configuration Mismatch**: `preserve_effective_batch=True` prevents automatic downscaling, locking in the oversized batch\n\n## **Recommended Actions** (Priority Order)\n\n| Action | Rationale |\n|-----",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 256 to 128 and scaled accum_steps from 2 to 4 (invariant effective_batch_size=512)"
+  }
+]

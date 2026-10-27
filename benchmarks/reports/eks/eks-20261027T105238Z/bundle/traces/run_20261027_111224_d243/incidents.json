@@ -1,0 +1,44 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## **Critical Issue: Memory Pressure During CPU Training**\n\n**Severity:** High | **Stage:** Training | **Impact:** Training stability & convergence\n\n---\n\n## **Root Cause Analysis**\n\nThe training pipeline is configured for GPU-scale batch processing (batch_size=256) but executing on CPU (use_gpu=False), creating a memory mismatch:\n\n- **Batch size 256** on CPU exceeds available memory headroom\n- **num_workers=0** eliminates parallel data loading, forcing synchronous I/O\n- **No gradient accumulation** means full batch is materialized in memory per step\n- **2 Ray workers** vulnerable to cascading failures as memory pressure intensifies across epochs\n\n---\n\n## **Recommended Priority Actions**\n\n| Action | Rationale |\n|--------|-----------|\n| **Reduce batch_size to 32\u201364",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 256 to 128 and scaled accum_steps from 1 to 2 (invariant effective_batch_size=256)"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "nan_loss_detected"
+    ],
+    "raw_anomalies": [
+      "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=5.0"
+    ],
+    "diagnosis": "# Unified Diagnosis: NaN Loss Detected\n\n## Critical Issue\n**Gradient Explosion due to Excessive Learning Rate**\n\nThe training diverged immediately at the first optimization step, producing NaN loss values. Root cause: learning rate of **5.0 is 500-5000\u00d7 too high** for your model and dataset configuration.\n\n## Contributing Factors\n1. **Extreme LR magnitude** \u2192 Unbounded gradient updates\n2. **Gradient accumulation (2 steps)** \u2192 Further amplifies update magnitude before optimizer step\n3. **No gradient clipping** \u2192 Unchecked numerical instability\n\n## Immediate Actions (Priority Order)\n\n| Action | Configuration |\n|--------|---|\n| **Reduce learning rate** | Set `lr=0.001` to `0.01` (SGD+momentum on CIFAR-10 standard) |\n| **Enable gradient clipping",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 5.0 to 0.5"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "nan_loss_detected"
+    ],
+    "raw_anomalies": [
+      "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=0.5"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis Report\n\n## **Critical Issue: NaN Loss Detected**\n\n### **Root Cause**\nTraining divergence caused by **excessively high learning rate (0.5)** combined with:\n- Momentum=0.9 amplifying gradient updates\n- CPU-only execution (no hardware acceleration)\n- Absence of gradient clipping\n- Loss explosion occurring at first optimization step\n\n---\n\n## **Immediate Actions Required**\n\n1. **Reduce Learning Rate**\n   - Current: 0.5 (unstable)\n   - Target: 0.01\u20130.05 (stable range)\n\n2. **Enable Gradient Clipping**\n   - Set `max_grad_norm=1.0` to prevent exploding gradients\n\n3. **Implement Learning Rate Scheduling** *(Optional but recommended)*\n   - Warmup strategy: ramp",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 0.5 to 0.05"
+  }
+]

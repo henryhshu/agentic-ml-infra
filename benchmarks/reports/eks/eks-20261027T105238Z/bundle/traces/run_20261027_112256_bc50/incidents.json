@@ -1,0 +1,58 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis: Memory Pressure Anomaly\n\n## Executive Summary\n**Status:** Critical Memory Constraint  \n**Stage:** Training  \n**Root Cause:** Batch size (256) incompatible with current compute allocation\n\n---\n\n## Consolidated Findings\n\n### Primary Issue\nTraining configuration uses `batch_size=256` in CPU-only mode (`use_gpu=False`), exceeding available system memory. This mismatch causes repeated out-of-memory (OOM) failures that will cascade through all 3 training epochs.\n\n### Contributing Factors\n1. **Hardware mismatch:** Large batch size on CPU without GPU acceleration\n2. **Data loading inefficiency:** Insufficient async prefetching (`num_workers` setting)\n3. **Environment anomaly:** Cascade fault injection artificially amplifies memory pressure\n\n---\n\n## Recommended Actions (Priority Order)\n\n| Action | Impact |",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 256 to 128 and scaled accum_steps from 1 to 2 (invariant effective_batch_size=256)"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "nan_loss_detected"
+    ],
+    "raw_anomalies": [
+      "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=5.0"
+    ],
+    "diagnosis": "# \ud83d\udea8 Unified Diagnosis: NaN Loss Detection\n\n## **Primary Issue**\n**Catastrophic learning rate misconfiguration** (lr=5.0) causing immediate training divergence and NaN loss at the first step.\n\n---\n\n## **Root Cause Analysis**\n\n| Factor | Impact | Severity |\n|--------|--------|----------|\n| Learning Rate (5.0) | 100-1000x too high for typical models | **CRITICAL** |\n| No Gradient Clipping | Unbounded gradient explosion | **CRITICAL** |\n| Combined Effect | Loss divergence \u2192 NaN/Inf at epoch 1 | **BLOCKING** |\n\n---\n\n## **Immediate Actions (Priority Order)**\n\n### 1. **Reduce Learning Rate** \u2b07\ufe0f\n   - **Current:** `lr = 5.0`\n   - **Target:**",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 5.0 to 0.5"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "nan_loss_detected"
+    ],
+    "raw_anomalies": [
+      "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=0.5"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## **Critical Issue: NaN Loss - Training Divergence**\n\n### Root Cause\n**Excessively high learning rate (0.5)** is causing immediate loss explosion and NaN values at the first training step. This learning rate is 10-100x too high for your model architecture, batch size, and dataset configuration.\n\n### Recommended Actions (Priority Order)\n\n1. **Reduce Learning Rate**\n   - Target range: **0.01\u20130.05**\n   - Implement gradual reduction if using schedulers\n\n2. **Enable Gradient Clipping**\n   - Set `max_grad_norm=1.0` to prevent gradient explosion\n   - Stabilizes optimization during early training steps\n\n3. **Verify Data Pipeline**\n   - Confirm data normalization is applied correctly\n   - Validate batch composition for anomalies\n\n### Expected",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 0.5 to 0.05"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "gradient_explosion"
+    ],
+    "raw_anomalies": [
+      "Gradient explosion detected: grad_norm=999.9 exceeds stability threshold"
+    ],
+    "diagnosis": "# ML Training Supervisor - Unified Diagnosis\n\n## **Critical Issue: Gradient Explosion**\n\n### Root Cause\nThe gradient norm has exploded to 999.9 due to a **compounding configuration problem**:\n- **Learning rate (0.05)** is 10-50x higher than optimal for current gradient dynamics\n- **Momentum (0.9)** amplifies parameter update magnitudes\n- **Gradient accumulation (2 steps)** compounds the effect without stabilization\n- **Gradient clipping disabled** (max_grad_norm=None) leaves no safety mechanism\n\nThis combination creates unstable parameter updates that diverge rapidly, causing training failure.\n\n---\n\n## **Recommended Actions (Priority Order)**\n\n| Action | Current | Target | Rationale |\n|--------|---------|--------|-----------|\n| **Learning Rate** | 0.05 | 0.001-",
+    "auto_remediated": true,
+    "action_taken": "enable_gradient_clipping",
+    "remediation_status": "success",
+    "remediation_details": "Enabled gradient clipping with max_norm=1.0"
+  }
+]

@@ -1,0 +1,30 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "worker_shortage"
+    ],
+    "raw_anomalies": [
+      "Ray cluster worker shortage: worker node preempted by EC2 Spot interruption during distributed training"
+    ],
+    "diagnosis": "# Unified Diagnosis: Worker Shortage During Training\n\n## Problem Summary\n**Root Cause:** EC2 Spot instance preemption terminated a Ray worker node, reducing the active cluster below the required 2-worker minimum and halting distributed training.\n\n## Impact Chain\n1. **Infrastructure Failure** \u2192 Spot instance interrupted during active training\n2. **Cluster Degradation** \u2192 Worker node terminated, dropping below `ray_workers=2` threshold\n3. **Training Halt** \u2192 Distributed job cannot proceed with insufficient workers\n4. **Pattern Risk** \u2192 Without mitigation, this will recur with Spot instances\n\n## Recommended Mitigations (Priority Order)\n\n| Priority | Solution | Trade-off |\n|----------|----------|-----------|\n| **1** | Increase `ray_workers` to 3-4 | Adds redundancy; slight cost increase |\n| **2**",
+    "auto_remediated": true,
+    "action_taken": "retry_stage",
+    "remediation_status": "retry_requested",
+    "remediation_details": "Stage will be retried with current config."
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "worker_shortage"
+    ],
+    "raw_anomalies": [
+      "Ray cluster worker shortage: worker node preempted by EC2 Spot interruption during distributed training"
+    ],
+    "diagnosis": "# Unified Training Diagnosis\n\n## Issue Summary\n**Worker Shortage** during distributed training caused by EC2 Spot instance preemption, reducing Ray cluster below operational capacity.\n\n---\n\n## Root Cause\nRay cluster operating with insufficient redundancy (2 workers) against Spot interruption events. Single preemption event drops cluster below viability threshold, halting training execution.\n\n---\n\n## Recommended Actions (Priority Order)\n\n1. **Increase Ray Worker Count** (Preferred)\n   - Scale to \u22654 workers for Spot interruption resilience\n   - Maintains cost efficiency while providing fault tolerance\n\n2. **Hybrid Instance Strategy** (If cost-critical)\n   - Reserve 1-2 On-Demand workers as fallback backbone\n   - Supplement with Spot instances for scale\n\n3. **Optimize Training Architecture** (Complementary)\n   - Reduce batch",
+    "auto_remediated": true,
+    "action_taken": "restart_workers",
+    "remediation_status": "success",
+    "remediation_details": "Set workers_restarted flag (clears simulated preemption; no physical restart performed)."
+  }
+]

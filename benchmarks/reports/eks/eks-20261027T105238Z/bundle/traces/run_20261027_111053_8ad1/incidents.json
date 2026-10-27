@@ -1,0 +1,30 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=512"
+    ],
+    "diagnosis": "# Unified Diagnosis: Memory Pressure During Training\n\n## Problem Summary\nTraining is failing due to **batch size (512) exceeding available memory capacity** in CPU-only mode (`use_gpu=False`). This is compounded by inefficient data loading (`num_workers=0`), which prevents parallelization and exacerbates memory pressure.\n\n## Root Cause\nThe model architecture and data shape require more memory than the CPU can allocate for a batch size of 512, particularly without asynchronous data loading to pipeline memory operations.\n\n## Recommended Actions (Priority Order)\n\n### **Immediate (Quick Fix)**\n1. **Reduce batch size**: 32\u201364 (reduce memory footprint by ~8\u201316x)\n2. **Enable parallel data loading**: Increase `num_workers` to 2\u20134 (prevents data loading bottlenecks and allows overlapped I/O with computation",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 512 to 256 and scaled accum_steps from 1 to 2 (invariant effective_batch_size=512)"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+    ],
+    "diagnosis": "# Unified Lead ML Training Supervisor Diagnosis\n\n## Primary Issue\n**Memory Pressure During CPU-Only Training** \u2014 Batch size (256) exceeds available system memory capacity, causing CUDA Out of Memory errors despite `use_gpu=False` configuration.\n\n## Root Cause\nMemory allocation mismatch between configured batch size and actual system capacity in CPU-only mode. The fault injection is correctly surfacing this constraint.\n\n## Immediate Actions (Priority Order)\n\n1. **Reduce Batch Size**: Decrease from 256 \u2192 64-128\n   - Most direct solution with minimal code changes\n   - Maintain `num_workers=0` for CPU training\n\n2. **OR Enable Gradient Accumulation**: Set `accum_steps=4`\n   - Preserves effective batch size (256) while reducing per-iteration memory\n   - Works with current `preserve_effective_batch=True`",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 256 to 128 and scaled accum_steps from 2 to 4 (invariant effective_batch_size=512)"
+  }
+]

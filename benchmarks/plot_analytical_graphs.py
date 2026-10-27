@@ -260,9 +260,34 @@ def plot_fig5_frontier_map(results: dict, out_pdf_dir: Path, out_png_dir: Path) 
     _save(fig, "fig5_frontier_map", out_pdf_dir, out_png_dir)
 
 
+def plot_fig6_env_comparison(local: dict, eks: dict, out_pdf_dir: Path, out_png_dir: Path) -> None:
+    """Median MTTR [min-max] per scenario: local reference run vs. EKS replication."""
+    erows = {r["id"]: r for r in eks["aggregates"]}
+    rows = [(r, erows[r["id"]]) for r in local["aggregates"] if r["mttr_s"] and erows.get(r["id"], {}).get("mttr_s")]
+    y = np.arange(len(rows))
+    fig, ax = plt.subplots(figsize=(7.2, 0.3 * len(rows) + 1.0))
+    for offset, idx, name, color, marker in ((-0.15, 0, "Local (Apple Silicon)", SERIES[0], "o"),
+                                             (0.15, 1, "EKS (c6i.xlarge, us-east-1)", SERIES[1], "s")):
+        med = np.array([pair[idx]["mttr_s"]["median"] for pair in rows])
+        lo = np.array([pair[idx]["mttr_s"]["min"] for pair in rows])
+        hi = np.array([pair[idx]["mttr_s"]["max"] for pair in rows])
+        ax.errorbar(med, y + offset, xerr=[med - lo, hi - med], fmt=marker, ms=5, color=color,
+                    ecolor=color, elinewidth=1.0, capsize=2, label=name)
+    ax.set_yticks(y)
+    ax.set_yticklabels([SCENARIO_LABELS.get(pair[0]["id"], pair[0]["id"]) for pair in rows])
+    ax.invert_yaxis()
+    ax.set_xlim(left=0)
+    ax.set_xlabel("MTTR / time to termination, seconds (median, min–max over 5 runs)")
+    ax.grid(True, axis="x")
+    ax.legend(loc="lower right", frameon=False)
+    fig.tight_layout()
+    _save(fig, "fig6_env_comparison", out_pdf_dir, out_png_dir)
+
+
 def generate_all_figures(results_path: Path | None = None,
                          out_pdf_dir: Path = Path("paper/figures"),
-                         out_png_dir: Path = Path("benchmarks/figures")) -> None:
+                         out_png_dir: Path = Path("benchmarks/figures"),
+                         compare_path: Path | None = None) -> None:
     results_path = results_path or latest_results()
     results = json.loads(Path(results_path).read_text())
     print(f"🎨 Rendering figures from {results_path}")
@@ -270,7 +295,15 @@ def generate_all_figures(results_path: Path | None = None,
     plot_fig2_agent_waterfall(results, out_pdf_dir, out_png_dir)
     plot_fig4_mttr_breakdown(results, out_pdf_dir, out_png_dir)
     plot_fig5_frontier_map(results, out_pdf_dir, out_png_dir)
+    if compare_path is not None:
+        plot_fig6_env_comparison(results, json.loads(Path(compare_path).read_text()), out_pdf_dir, out_png_dir)
 
 
 if __name__ == "__main__":
-    generate_all_figures(Path(sys.argv[1]) if len(sys.argv) > 1 else None)
+    import argparse
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("results", nargs="?", type=Path, default=None)
+    ap.add_argument("--compare", type=Path, default=None, help="EKS results JSON to compare against")
+    a = ap.parse_args()
+    generate_all_figures(a.results, compare_path=a.compare)

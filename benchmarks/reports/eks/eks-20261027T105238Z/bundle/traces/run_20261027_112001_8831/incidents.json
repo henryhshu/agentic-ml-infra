@@ -1,0 +1,44 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=512"
+    ],
+    "diagnosis": "# **UNIFIED DIAGNOSIS: Memory Pressure During Training**\n\n## **Primary Issue**\nBatch size of 512 is incompatible with available system memory in CPU-only execution mode. This creates an immediate allocation failure that will persist across training iterations.\n\n## **Root Cause Analysis**\n- **Configuration Mismatch:** Batch size (512) far exceeds CPU RAM capacity for tensor operations\n- **Execution Mode:** CPU-only mode (`use_gpu=False`) forces all tensor computations to system RAM, eliminating GPU memory availability\n- **Data Loading Inefficiency:** `num_workers=0` prevents parallel data prefetching, serializing I/O and blocking memory release\n\n## **Immediate Actions (Priority Order)**\n\n| Action | Impact | Effort |\n|--------|--------|--------|\n| **Reduce `batch_size` to 32\u201364** | Directly resolves memory",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 512 to 256 and scaled accum_steps from 1 to 2 (invariant effective_batch_size=512)"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+    ],
+    "diagnosis": "# \ud83d\udd34 Unified Diagnosis: Memory Pressure During Training\n\n## **Root Cause**\n**Configuration-Runtime Mismatch with Insufficient Memory Allocation**\n\nA critical disconnect exists between the declared CPU-only configuration (`use_gpu=False`, `device='cpu'`) and actual runtime behavior. The batch size of 256 combined with gradient accumulation (effective batch: 512) exceeds available CPU memory, triggering OOM failures.\n\n---\n\n## **Problem Hierarchy**\n\n1. **Primary Issue:** Batch size (256) is oversized for CPU-only training\n2. **Secondary Issue:** Gradient accumulation doubles effective batch size (512) without corresponding memory adjustment\n3. **Tertiary Issue:** Possible GPU allocation attempt despite `use_gpu=False` flag, suggesting configuration parsing or runtime inconsistency\n\n---\n\n## **Immediate Actions** \u26a1\n\n| Priority",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 256 to 128 and scaled accum_steps from 2 to 4 (invariant effective_batch_size=512)"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "gradient_explosion"
+    ],
+    "raw_anomalies": [
+      "Gradient explosion detected: grad_norm=999.9 exceeds stability threshold"
+    ],
+    "diagnosis": "# \ud83d\udea8 UNIFIED DIAGNOSIS: GRADIENT EXPLOSION\n\n## **Critical Issue**\nTraining has encountered severe gradient explosion (grad_norm=999.9), far exceeding stability thresholds and causing numerical instability during backpropagation.\n\n---\n\n## **Root Cause Analysis**\n\n**Primary Factor:**\n- Learning rate of **0.1 is too aggressive** for current model architecture and configuration\n\n**Contributing Factors:**\n1. **Momentum setting (0.9)** amplifies gradient updates excessively\n2. **Disabled gradient clipping** (`max_grad_norm=None`) allows unbounded gradient propagation\n3. **Large accumulation steps (4)** compound gradient magnitudes\n4. **CPU-based computation** increases numerical precision sensitivity\n\n**Secondary Factor:**\n- Fault injection simulating compound instability accelerates manifestation\n\n---\n\n## **Immediate Actions Required**",
+    "auto_remediated": true,
+    "action_taken": "enable_gradient_clipping",
+    "remediation_status": "success",
+    "remediation_details": "Enabled gradient clipping with max_norm=1.0"
+  }
+]

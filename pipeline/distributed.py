@@ -76,6 +76,10 @@ def _connect(master_addr: str, port: int, is_master: bool, deadline_s: float = 3
 class WorkerLostError(RuntimeError):
     """A DDP collective failed on rank 0 and at least one worker process is gone."""
 
+    def __init__(self, message: str, lost: list[dict[str, Any]]):
+        super().__init__(message)
+        self.lost = lost
+
 
 class DistContext:
     def __init__(self, rank: int, world_size: int, master_addr: str, port: int):
@@ -176,7 +180,8 @@ class DistContext:
         return WorkerLostError(
             f"Distributed data-parallel training failed on rank 0 ({type(exc).__name__}: {first_line}). "
             f"Worker liveness after the failure: {alive}/{self.world_size - 1} worker processes heartbeating; "
-            f"lost {detail}."
+            f"lost {detail}.",
+            lost,
         )
 
     def await_workers(self, timeout_s: float = 300.0) -> dict[str, Any]:

@@ -97,7 +97,8 @@ def resource_split(series: list[tuple[float, float, float]], traces: dict[str, d
         if t["mode"] != "agentic":
             continue
         for e in t["timeline"]:
-            (attempt if e["type"] == "attempt" else handle).append((e["start"], e["end"]))
+            if e["type"] in ("attempt", "handle"):
+                (attempt if e["type"] == "attempt" else handle).append((e["start"], e["end"]))
 
     def within(ivals):
         return [c for (tm, c, _) in series if any(s <= tm <= e for s, e in ivals)]

@@ -117,11 +117,17 @@ class TrainingStage:
         except _TrainingAnomalyError:
             raise
         except Exception as exc:
+            t_failed = time.time()
             ctx.close_attempt()
             closed = True
             if ctx.rank == 0:
                 lost = ctx.worker_lost_error(exc)
                 if lost is not None:
+                    # measured: collective error on rank 0 -> liveness check confirmed the lost ranks
+                    self.tracker.timeline.append({
+                        "type": "worker_lost", "stage": self.STAGE_NAME, "start": t_failed, "end": time.time(),
+                        "duration_s": time.time() - t_failed, "lost": lost.lost,
+                    })
                     self.tracker.log_event(self.STAGE_NAME, "worker_lost", str(lost))
                     raise lost from exc
             raise

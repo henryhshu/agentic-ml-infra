@@ -129,11 +129,14 @@ def worker(args: argparse.Namespace) -> int:
             proc = subprocess.Popen([sys.executable, "-m", "pipeline.distributed"],
                                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
             assert proc.stdout is not None
+            connected = None
             for line in proc.stdout:
+                if connected is None and line.startswith(f"[rank {rank}] connected"):
+                    connected = time.time()  # store client up, heartbeat thread started
                 sys.stdout.write(line)
                 log.write(line)
             rc = proc.wait()
-            exits.append({"started": started, "exited": time.time(), "exit_code": rc})
+            exits.append({"started": started, "connected": connected, "exited": time.time(), "exit_code": rc})
             if rc == 0:
                 break
             msg = f"[eks_entrypoint] rank {rank} worker exited with {rc}; restarting\n"

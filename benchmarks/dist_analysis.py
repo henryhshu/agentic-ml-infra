@@ -34,7 +34,8 @@ def _windows(traces: dict[str, dict]) -> tuple[list, list]:
         if t["mode"] != "agentic":
             continue
         for e in t["timeline"]:
-            (attempt if e["type"] == "attempt" else handle).append((e["start"], e["end"]))
+            if e["type"] in ("attempt", "handle"):
+                (attempt if e["type"] == "attempt" else handle).append((e["start"], e["end"]))
     return attempt, handle
 
 
@@ -64,8 +65,9 @@ def worker_loss(results: dict, traces_root: Path, rank_metrics: dict[int, dict])
     kills = sorted(
         (e["exited"], r, e) for r, cm in rank_metrics.items() for e in cm.get("process_exits", []) if e["exit_code"] != 0
     )
+    # kill -> replacement process connected to the coordination store
     restarts = {
-        (r, e["exited"]): nxt["started"]
+        (r, e["exited"]): nxt.get("connected") or nxt["started"]
         for r, cm in rank_metrics.items()
         for e, nxt in zip(cm.get("process_exits", []), cm.get("process_exits", [])[1:])
     }
@@ -80,15 +82,19 @@ def worker_loss(results: dict, traces_root: Path, rank_metrics: dict[int, dict])
             timing = json.loads((d / "timing.json").read_text())
             actions = json.loads((d / "action_log.json").read_text()) if (d / "action_log.json").exists() else []
             attempts = [e for e in timing["timeline"] if e["type"] == "attempt" and e["stage"] == "training"]
+            lost_events = [e for e in timing["timeline"] if e["type"] == "worker_lost"]
             failures = []
             for a in attempts:
                 if a["status"] != "failed":
                     continue
                 k = next(((t, r) for (t, r, _) in kills if a["start"] <= t <= a["end"]), None)
+                wl = next((e for e in lost_events if a["start"] <= e["start"] <= a["end"]), None)
                 failures.append({
                     "attempt": a["attempt"],
                     "attempt_s": a["duration_s"],
                     "killed_rank": k[1] if k else None,
+                    "kill_to_collective_error_s": (wl["start"] - k[0]) if k and wl else None,
+                    "liveness_check_s": wl["duration_s"] if wl else None,
                     "kill_to_detect_s": (a["end"] - k[0]) if k else None,
                     "worker_restart_s": (restarts.get((k[1], k[0])) - k[0]) if k and restarts.get((k[1], k[0])) else None,
                     "error": (a.get("error") or "")[:300],
@@ -138,7 +144,9 @@ def analyze(run_dir: Path) -> Path:
         })
 
     def clean_overhead():
-        row = next(r for r in res["aggregates"] if r["id"] == "clean_run")
+        row = next((r for r in res["aggregates"] if r["id"] == "clean_run"), None)
+        if row is None:
+            return None
         b, a = row["baseline_duration_s"]["median"], row["agentic_duration_s"]["median"]
         return {"baseline_s": b, "agentic_s": a, "overhead_pct": 100 * (a - b) / b,
                 "monitor_llm_s": statistics.median(r["agentic"]["timing"]["monitor_llm_s"]
@@ -206,11 +214,13 @@ def render_markdown(a: dict) -> str:
     m, nm = a["matches_expected"]
     L += ["", f"Levels 1–3 healed: {h}/{n}. Runs matching the expected outcome: {m}/{nm}.", "",
           "## Worker loss (`spot_worker_churn`)", "",
-          "| Repeat | Mode | Status | Attempts | Killed rank | Kill→detected on rank 0 s | Worker restart s | restart_workers wait s | Actions |",
-          "|---|---|---|---|---|---|---|---|---|"]
+          "| Repeat | Mode | Status | Attempts | Killed rank | Kill→collective error s | Liveness check s | Kill→attempt failed s | Kill→replacement connected s | restart_workers wait s | Actions |",
+          "|---|---|---|---|---|---|---|---|---|---|---|"]
     for w in a["worker_loss"]:
         f0 = w["failures"][0] if w["failures"] else {}
         L.append(f"| {w['repeat']} | {w['mode']} | {w['status']} | {w['attempts']} | {f0.get('killed_rank', '–')} | "
+                 + ", ".join(_f(f["kill_to_collective_error_s"], "{:.3f}") for f in w["failures"]) + " | "
+                 + ", ".join(_f(f["liveness_check_s"], "{:.2f}") for f in w["failures"]) + " | "
                  + ", ".join(_f(f["kill_to_detect_s"], "{:.2f}") for f in w["failures"]) + " | "
                  + ", ".join(_f(f["worker_restart_s"], "{:.2f}") for f in w["failures"]) + " | "
                  + ", ".join(f"{x:.1f}" for x in w["restart_workers_wait_s"]) + f" | {' → '.join(w['actions']) or '–'} |")
@@ -224,7 +234,9 @@ def render_markdown(a: dict) -> str:
         L.append(f"| `{k}` | {v['n']} | {v['median']:.2f} | {v['p90']:.2f} | {v['max']:.2f} |")
     co, st, tk = a["clean_overhead"], a["step_time_s"], a["tokens_total"]
     L += ["", "## Training and monitoring overhead", "",
-          f"- DDP step time (clean baseline, global batch over {a['world_size']} ranks): median {_m(st, fmt='{:.3f}')} s, p90 {_m(st, 'p90', '{:.3f}')} s",
-          f"- Fault-free run: baseline {co['baseline_s']:.1f} s, agentic {co['agentic_s']:.1f} s (+{co['overhead_pct']:.0f}%); Claude time inside attempts median {co['monitor_llm_s']:.1f} s",
-          f"- Claude usage: {tk['calls']} calls, {tk['input']:,} input / {tk['output']:,} output tokens"]
+          f"- DDP step time (clean baseline, global batch over {a['world_size']} ranks): median {_m(st, fmt='{:.3f}')} s, p90 {_m(st, 'p90', '{:.3f}')} s"]
+    if co:
+        L.append(f"- Fault-free run: baseline {co['baseline_s']:.1f} s, agentic {co['agentic_s']:.1f} s (+{co['overhead_pct']:.0f}%); "
+                 f"Claude time inside attempts median {co['monitor_llm_s']:.1f} s")
+    L += [f"- Claude usage: {tk['calls']} calls, {tk['input']:,} input / {tk['output']:,} output tokens"]
     return "\n".join(L) + "\n"

@@ -1,0 +1,16 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "worker_shortage"
+    ],
+    "raw_anomalies": [
+      "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:27297). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new process id)."
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## Primary Issue\n**Worker Shortage in Distributed Training Pipeline**\n\n### Root Cause Analysis\nThe training stage is failing due to cascading worker failures in a fault-tolerant distributed setup:\n\n1. **Immediate Cause:** Rank 3 worker process crashed, breaking TCP synchronization on rank 0\n2. **Structural Weakness:** Only 2 of 3 required workers remain active (67% capacity)\n3. **Contributing Factors:**\n   - CPU-only training with tight resource constraints\n   - Spot instance churn simulation amplifying natural failures\n   - Insufficient redundancy margin for fault tolerance\n\n### Impact Chain\n- Worker process exit \u2192 TCP connection failure \u2192 Rank synchronization broken \u2192 Data pipeline bottleneck \u2192 Training pipeline stalled\n\n---\n\n## Recommended Actions (Priority Order)\n\n| Priority | Action | Rationale |\n|----------|-----",
+    "auto_remediated": true,
+    "action_taken": "restart_workers",
+    "remediation_status": "success",
+    "remediation_details": "Waited 0.5s for 3 worker ranks to heartbeat (ready=True); cleared injected worker-crash flag."
+  }
+]

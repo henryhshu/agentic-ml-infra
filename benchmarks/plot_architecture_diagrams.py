@@ -1,7 +1,8 @@
 """AutoPARK Architectural Diagrams Generator (Clean, Non-Overlapping, Publication-Quality).
 
 Generates the macro architecture diagram used in the paper. Every label describes behavior
-implemented in this repository (single-process pipeline, synchronous incident handling).
+implemented in this repository (multi-node DDP training with a rank-0 coordinator, synchronous
+incident handling).
 """
 from __future__ import annotations
 
@@ -121,7 +122,7 @@ def plot_fig_arch_overview(
     # Connecting arrow down to cluster
     ax.annotate("", xy=(0.180, 0.770), xytext=(0.180, 0.875),
                 arrowprops=dict(arrowstyle="-|>", color=PALETTE["exec_border"], lw=1.5))
-    ax.text(0.188, 0.825, "Deploys Workload", fontsize=5.6, fontweight="bold", color=PALETTE["exec_header"], va="center")
+    ax.text(0.172, 0.825, "Kubernetes Indexed Job (EKS)", fontsize=5.6, fontweight="bold", color=PALETTE["exec_header"], va="center", ha="right")
 
     # -------------------------------------------------------------------------
     # 2. HIGHWAY GUTTER (y: 0.770 to 0.865): ASYNC TELEMETRY ARROW
@@ -140,24 +141,24 @@ def plot_fig_arch_overview(
     bot_y = 0.015
     bot_h = 0.740
 
-    # === COLUMN A: EXECUTION PLANE (single process) ===
+    # === COLUMN A: EXECUTION PLANE (DDP, one rank per node) ===
     col_a_x = 0.015
     col_a_w = 0.355
     draw_card(ax, col_a_x, bot_y, col_a_w, bot_h, PALETTE["exec_bg"], PALETTE["exec_border"], border_width=1.2, zorder=1)
     
     # Col A Banner
     draw_card(ax, col_a_x + 0.008, bot_y + bot_h - 0.038, col_a_w - 0.016, 0.030, PALETTE["exec_banner"], PALETTE["exec_border"], border_width=0.8, zorder=2)
-    ax.text(col_a_x + col_a_w/2, bot_y + bot_h - 0.023, "EXECUTION PLANE (SINGLE PROCESS)",
+    ax.text(col_a_x + col_a_w/2, bot_y + bot_h - 0.023, "EXECUTION PLANE (DDP, ONE RANK PER NODE)",
             fontsize=7.2, fontweight="bold", color=PALETTE["exec_header"], ha="center", va="center", zorder=3)
 
     a_cards = [
-        ("PyTorch Training Stage",
-         "Single-process loop (CPU / MPS / CUDA)",
-         "• Gradient accumulation with boundary gating\n• Per-step telemetry (loss, grad norm, RSS) to JSON\n• Injected faults raise typed anomaly exceptions",
+        ("Rank 0 Pod (node 1): Coordinator",
+         "pipeline runner + agents + TCPStore",
+         "• Publishes each training attempt's config to all ranks\n• Trains as DDP rank 0; runs data stages and evaluation\n• Tracks worker heartbeats (every 0.5 s)",
          0.495, 0.190),
-        ("Data Stages",
-         "CIFAR-10 Parquet shards read via PyArrow",
-         "• Schema and sample-decode validation\n• DataLoaders rebuilt when batch size changes",
+        ("Worker Ranks 1-3 (nodes 2-4)",
+         "python -m pipeline.distributed",
+         "• Join a fresh gloo process group per attempt\n• All-reduce gradients every step (global batch split)\n• Killed process restarted in pod; rejoins next attempt",
          0.310, 0.165),
         ("Stage Runner with Bounded Retries",
          "PipelineRunner._run_stage_with_retry",
@@ -174,7 +175,7 @@ def plot_fig_arch_overview(
     draw_card(ax, col_a_x + 0.008, bot_y + 0.012, col_a_w - 0.016, 0.080, "#EFF6FF", "#93C5FD", border_width=0.8, zorder=2)
     ax.text(col_a_x + col_a_w/2, bot_y + 0.060, "SYNCHRONOUS INCIDENT PATH",
             fontsize=5.7, fontweight="bold", color="#1E40AF", ha="center", va="center", zorder=3)
-    ax.text(col_a_x + col_a_w/2, bot_y + 0.034, "Training pauses while agents handle an incident.",
+    ax.text(col_a_x + col_a_w/2, bot_y + 0.034, "All ranks idle while agents handle an incident.",
             fontsize=5.1, color="#3B82F6", ha="center", va="center", zorder=3)
 
     # === COLUMN B: SHARED-RAM COMMUNICATION BRIDGE ===
@@ -189,10 +190,10 @@ def plot_fig_arch_overview(
 
     # Card 1: PipelineConfig
     draw_card(ax, col_b_x + 0.008, 0.425, col_b_w - 0.016, 0.270, PALETTE["bridge_card"], PALETTE["bridge_border"], border_width=1.1, zorder=2)
-    ax.text(col_b_x + col_b_w/2, 0.665, "IN-PROCESS", fontsize=7.2, fontweight="bold", color=PALETTE["bridge_header"], ha="center", va="center", zorder=3)
+    ax.text(col_b_x + col_b_w/2, 0.665, "RANK-0 STATE", fontsize=7.2, fontweight="bold", color=PALETTE["bridge_header"], ha="center", va="center", zorder=3)
     ax.text(col_b_x + col_b_w/2, 0.638, "PipelineConfig", fontsize=6.8, fontfamily="monospace", fontweight="bold", color="#047857", ha="center", va="center", zorder=3)
     ax.text(col_b_x + col_b_w/2, 0.578, "State Vector $\\mathbf{\\Theta}_{\\text{runtime}}$:\n⟨B, $\\eta$, accum, clip⟩", fontsize=5.8, color=PALETTE["text_dark"], ha="center", va="center", zorder=3)
-    ax.text(col_b_x + col_b_w/2, 0.485, "• Mutated in place by Remediator\n• Read at the next stage attempt", fontsize=5.3, color=PALETTE["text_muted"], ha="center", va="center", zorder=3)
+    ax.text(col_b_x + col_b_w/2, 0.485, "• Mutated in place by Remediator\n• Sent to all ranks at next attempt", fontsize=5.3, color=PALETTE["text_muted"], ha="center", va="center", zorder=3)
 
     # Card 2: Reversion Store
     draw_card(ax, col_b_x + 0.008, 0.125, col_b_w - 0.016, 0.280, "#ECFDF5", "#A7F3D0", border_width=0.9, zorder=2)
@@ -203,8 +204,8 @@ def plot_fig_arch_overview(
 
     # Col B Bottom Badge
     draw_card(ax, col_b_x + 0.008, bot_y + 0.012, col_b_w - 0.016, 0.080, "#D1FAE5", "#6EE7B7", border_width=0.8, zorder=2)
-    ax.text(col_b_x + col_b_w/2, bot_y + 0.060, "IN-PROCESS STATE", fontsize=5.7, fontweight="bold", color="#065F46", ha="center", va="center", zorder=3)
-    ax.text(col_b_x + col_b_w/2, bot_y + 0.034, "No container restart", fontsize=5.1, color="#047857", ha="center", va="center", zorder=3)
+    ax.text(col_b_x + col_b_w/2, bot_y + 0.060, "RANK-0 STATE", fontsize=5.7, fontweight="bold", color="#065F46", ha="center", va="center", zorder=3)
+    ax.text(col_b_x + col_b_w/2, bot_y + 0.034, "No pod restart", fontsize=5.1, color="#047857", ha="center", va="center", zorder=3)
 
     # Gutter 1 (x: 0.370 to 0.395): Worker query to Shared-RAM
     ax.annotate("", xy=(col_b_x, 0.540), xytext=(col_a_x + col_a_w, 0.540),
@@ -222,8 +223,8 @@ def plot_fig_arch_overview(
 
     c_cards = [
         ("1. Local Detectors",
-         "• Typed stage exceptions (NaN, OOM, grad norm, preemption)\n• Per-epoch checks: accuracy floor, plateau, grad norm",
-         PALETTE["alert_bg"], PALETTE["alert_border"], 0.565, 0.125),
+         "• Typed stage exceptions (NaN, OOM, grad norm)\n• Failed collective + heartbeat liveness (worker loss)\n• Per-epoch checks: accuracy floor, plateau, grad norm",
+         PALETTE["alert_bg"], PALETTE["alert_border"], 0.555, 0.140),
         ("2. Multi-Agent Supervisory Fleet",
          "• Supervisor routes to TrainingWatch, ClusterHealth, DataQuality\n• Claude Haiku 4.5 per incident, plus one call per epoch",
          PALETTE["cog_card"], PALETTE["cog_border"], 0.415, 0.125),
@@ -231,8 +232,8 @@ def plot_fig_arch_overview(
          "• Claude's reply must name an approved action\n• Per-stage retry budget (max_retries = 3)",
          PALETTE["safety_bg"], PALETTE["safety_border"], 0.265, 0.125),
         ("4. Remediation Actions",
-         "• LR x0.1, batch /2 (accum x2), enable clipping, retry stage",
-         PALETTE["bridge_bg"], PALETTE["bridge_border"], 0.135, 0.105),
+         "• LR x0.1, batch /2 (accum x2), enable clipping,\n  restart workers (wait for all heartbeats), retry stage",
+         PALETTE["bridge_bg"], PALETTE["bridge_border"], 0.130, 0.115),
     ]
     for title, bullets, bg, bd, cy, ch in c_cards:
         draw_card(ax, col_c_x + 0.008, cy, col_c_w - 0.016, ch, bg, bd, border_width=0.9, zorder=2)

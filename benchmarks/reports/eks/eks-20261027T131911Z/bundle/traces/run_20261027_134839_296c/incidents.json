@@ -1,0 +1,44 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=512"
+    ],
+    "diagnosis": "# Unified Diagnosis: Memory Pressure Anomaly\n\n## Root Cause\n**Configuration-Resource Mismatch with Fault Injection Artifact**\n\nThe training failure stems from a contradiction between declared and actual resource allocation:\n- **Declared**: `use_gpu=False`, `device='cpu'`\n- **Actual Behavior**: CUDA Out of Memory error observed (GPU-specific failure on CPU-configured setup)\n\nThis indicates either a fault injection simulation artifact or a genuine mismatch where the training process is attempting GPU allocation despite CPU-only configuration.\n\n## Critical Issue\nThe batch size of **512 exceeds available memory capacity** (CPU or GPU) and causes allocation failure at the resource limit during the first training epoch.\n\n## Recommended Actions (Priority Order)\n\n1. **Immediate**: Reduce `batch_size` to **32\u201364** and compensate with `accum_steps=8",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 512 to 256 and scaled accum_steps from 1 to 2 (invariant effective_batch_size=512)"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+    ],
+    "diagnosis": "# UNIFIED DIAGNOSIS: Memory Pressure During Training\n\n## Root Cause\n**Batch size (256) exceeds available CPU memory** under current data loading configuration. The combination of:\n- Large batch_size=256 with no parallel I/O (num_workers=0)\n- CPU-only training (use_gpu=False) on 2 Ray workers\n- Gradient accumulation (accum_steps=2) loading full batches sequentially\n\nresults in memory exhaustion during the second training attempt.\n\n## Critical Issue\nAll data is loaded into memory synchronously without asynchronous prefetching, forcing the system to hold the entire batch in RAM before processing.\n\n## Recommended Actions (Priority Order)\n\n| Action | Expected Impact | Effort |\n|--------|-----------------|--------|\n| **Reduce batch_size \u2192 64\u2013128** | Immediate 50\u201375% memory reduction | Critical",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 256 to 128 and scaled accum_steps from 2 to 4 (invariant effective_batch_size=512)"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "gradient_explosion"
+    ],
+    "raw_anomalies": [
+      "Gradient explosion detected: grad_norm=999.9 exceeds stability threshold"
+    ],
+    "diagnosis": "# Unified Diagnosis: Gradient Explosion During Training\n\n## Root Cause Analysis\nGradient explosion is caused by **three compounding factors**:\n\n1. **Aggressive Learning Rate (0.1)** \u2013 Too high for model dynamics\n2. **High Momentum (0.9)** \u2013 Amplifies gradient updates without decay\n3. **Missing Gradient Clipping** \u2013 `max_grad_norm=None` allows unbounded gradient accumulation across 4 steps\n\nThe combination creates uncontrolled gradient flow, evidenced by `grad_norm=999.9`.\n\n---\n\n## Immediate Actions (Priority Order)\n\n| Action | Rationale | Expected Impact |\n|--------|-----------|-----------------|\n| **Enable Gradient Clipping** | Set `max_grad_norm=1.0` | Hard ceiling on gradient magnitude |\n| **Reduce Learning Rate** | Lower from",
+    "auto_remediated": true,
+    "action_taken": "enable_gradient_clipping",
+    "remediation_status": "success",
+    "remediation_details": "Enabled gradient clipping with max_norm=1.0"
+  }
+]

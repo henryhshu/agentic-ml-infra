@@ -1,0 +1,30 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "nan_loss_detected"
+    ],
+    "raw_anomalies": [
+      "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=5.0"
+    ],
+    "diagnosis": "# Unified Diagnosis: NaN Loss Detection\n\n## **Critical Issue**\nTraining has failed at the first step due to **loss divergence to NaN**, caused by an excessively high learning rate (5.0) with SGD+momentum optimizer.\n\n## **Root Cause**\n- **Learning Rate:** 5.0 is 50-500x higher than typical SGD ranges (0.01\u20130.1)\n- **Effect:** Causes immediate gradient explosion and weight divergence at step 1\n- **Symptom:** NaN/Inf loss values prevent any meaningful training\n\n## **Immediate Actions Required**\n\n| Priority | Action | Details |\n|----------|--------|---------|\n| **P0** | Reduce Learning Rate | Set to 0.01\u20130.1 range for SGD+momentum |\n| **P1** | Enable Gradient Clipping | Add `",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 5.0 to 0.5"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "nan_loss_detected"
+    ],
+    "raw_anomalies": [
+      "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=0.5"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## **Critical Issue: NaN Loss Detected**\n\n### Root Cause\n**Excessively high learning rate (0.5)** is causing immediate loss divergence and NaN values at the first training step. This learning rate is incompatible with the current model/optimizer combination and results in explosive gradient growth.\n\n### Immediate Actions Required\n\n1. **Reduce learning rate** to `0.01\u20130.05` range (consensus across all diagnostics)\n2. **Enable gradient clipping** with `max_grad_norm=1.0` to stabilize training and prevent divergence\n3. **Verify input data normalization** to ensure feature scaling is appropriate for the model architecture\n\n### Implementation Priority\n- **P0 (Critical):** Adjust learning rate immediately before retry\n- **P1 (High):** Add gradient clipping to prevent future divergence",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 0.5 to 0.05"
+  }
+]

@@ -15,16 +15,17 @@ Traditional machine learning infrastructure relies on **passive observability** 
 
 1. **Active Actuation ("Agents with Hands")**: Rather than merely reporting errors, AutoPARK agents hold extensible actuation tools that reach across runtime memory, dataset partitions, cluster health, and codebase definitions.
 2. **Agent / Execution Separation**: Deterministic detectors run inside the pipeline; Claude (cloud-hosted) is called only to diagnose incidents and choose an allow-listed action, plus one short analysis per epoch.
-3. **In-Process Remediation**: The Remediator mutates the live `PipelineConfig` and the failed stage re-runs in the same process (no container restart; the stage itself restarts from its beginning).
-4. **Measured, Not Claimed**: Every MTTR number below is derived from wall-clock instrumentation of stage attempts, Claude calls, and remediations (`timing.json`). All benchmark faults are injected in software.
+3. **Live Remediation Across Ranks**: The Remediator mutates rank 0's live `PipelineConfig`; the failed stage re-runs and every DDP rank receives the new config in the next attempt (no pod restart; the stage itself restarts from its beginning).
+4. **Multi-Node Training**: the training stage runs as PyTorch DDP (gloo), one rank per node, with a fresh process group per attempt and heartbeat-based detection of lost workers (`pipeline/distributed.py`).
+5. **Measured, Not Claimed**: Every MTTR number below is derived from wall-clock instrumentation of stage attempts, Claude calls, and remediations (`timing.json`).
 
 ```text
-Measured on a 7-level software fault-injection testbench (5 repeats per scenario):
-  Levels 1–3  configuration faults        → healed 28/30 runs, median MTTR 7.9–23.6 s
+Measured on a 4-node EKS cluster (PyTorch DDP, one rank per node), 7-level testbench, 5 repeats per scenario:
+  Levels 1–3  configuration faults + real worker loss → healed 30/30 runs, median MTTR 6.4–19.3 s
   Level 4     triple cascade               → exhausted 5/5 (needs 5 attempts; budget allows 4)
   Levels 5–6  label noise / shape defect   → escalated 10/10
   Level 7     bimodal LR trap              → exhausted 5/5 (as designed)
-  No fault    clean run                    → passed 5/5, +23% wall time from per-epoch LLM monitoring
+  No fault    clean run                    → passed 5/5, +50% wall time from per-epoch LLM monitoring
 ```
 
 ---
@@ -132,7 +133,7 @@ When `--agentic` is enabled, `PipelineRunner` initializes a specialized agent fl
 |---|---|---|
 | **SupervisorAgent** | [`agents/supervisor.py`](agents/supervisor.py) | Coordinates the sub-agent fleet, routes stage events, calls Claude on AWS for unified root-cause synthesis, enforces `SAFE_REMEDIATIONS` bounds, and records incidents in `incidents.json`. |
 | **TrainingWatchAgent** | [`agents/training_watch.py`](agents/training_watch.py) | Watches per-epoch metrics (loss, accuracy, gradient norms). Intercepts NaN/Inf loss, gradient explosions (>100.0), vanishing gradients (<1e-7), loss plateaus, and catastrophic underperformance (accuracy ≤ 15% random chance floor). |
-| **ClusterHealthAgent** | [`agents/cluster_health.py`](agents/cluster_health.py) | Monitors KubeRay and AWS EKS cluster health, worker availability, memory pressure, and AWS Spot instance interruptions. |
+| **ClusterHealthAgent** | [`agents/cluster_health.py`](agents/cluster_health.py) | Reads measured DDP rank liveness (worker heartbeats) and host memory; diagnoses worker loss and cluster memory pressure. |
 | **DataQualityAgent** | [`agents/data_quality.py`](agents/data_quality.py) | Validates Apache Arrow / Parquet dataset partitions, schema conformance, sample decodability, and class distribution integrity. |
 | **RemediatorAgent** | [`agents/remediator.py`](agents/remediator.py) | Executes approved knob mutations directly on live `PipelineConfig` in shared RAM: `reduce_learning_rate`, `reduce_batch_size` (with invariant effective batch Accumulation Guard), `enable_gradient_clipping`, `restart_workers`, `convert_batchnorm_to_groupnorm`, `synthesize_code_patch`. Audit logs every action to `action_log.json`. |
 
@@ -140,46 +141,47 @@ When `--agentic` is enabled, `PipelineRunner` initializes a specialized agent fl
 
 ## 🧪 The 7-Level Fault Injection Testbench & Measured Results
 
-All faults are **injected in software** by `pipeline/training.py` (see `benchmarks/scenarios.py`): injected OOM, NaN, gradient-explosion, preemption, and shape errors are exceptions raised while a configuration condition holds (e.g. simulated OOM while `batch_size >= 256`). Label noise (Level 5) is real data corruption. `restart_workers` clears the simulated-preemption flag; it does not restart any physical worker.
+Faults are defined in `benchmarks/scenarios.py` and fired by `pipeline/training.py`. Injected OOM, NaN, gradient-explosion and shape errors are exceptions raised on every rank while a configuration condition holds (e.g. simulated OOM while `batch_size >= 256`). Worker loss (`spot_worker_churn`) is a real `SIGKILL` of rank 3's process at epoch 1, step 3 of every attempt until `restart_workers` runs; the surviving ranks' collectives fail and rank 0's heartbeat check identifies the lost rank. Label noise (Level 5) is real data corruption.
 
-### Measured results (5 repeats/scenario, single Apple Silicon machine, CPU)
+### Measured results: 4-node Amazon EKS cluster, PyTorch DDP
 
-Workload: TinyCNN (57k params), CIFAR-10 5,000-image subset, 3 epochs, `max_retries=3`, Claude Haiku 4.5 via Claude Platform on AWS. Source: [`benchmarks/reports/benchmark_results_2026-10-27T10-12-25.325632_00-00.json`](benchmarks/reports/benchmark_results_2026-10-27T10-12-25.325632_00-00.json); per-run traces in [`benchmarks/reports/traces/`](benchmarks/reports/traces/). MTTR = $T_{\text{det}} + T_{\text{reason}} + T_{\text{act}} + T_{\text{recover}} + T_{\text{other}}$ (definitions in [`benchmarks/harness.py`](benchmarks/harness.py)); for unrecovered runs it is time to termination.
+Cluster: EKS 1.34, `us-east-1d`, four on-demand `c6i.xlarge` nodes, one DDP rank per node (gloo over the VPC network). Workload: TinyCNN (57k params), CIFAR-10 5,000-image subset, 3 epochs, global batch 128 (32 per rank), `max_retries=3`, Claude Haiku 4.5 via Claude Platform on AWS. Source: [`benchmarks/reports/eks/eks-20261027T131911Z/`](benchmarks/reports/eks/eks-20261027T131911Z/) (`bundle/results.json`, per-run traces, per-rank cgroup metrics, pod logs, [`analysis.md`](benchmarks/reports/eks/eks-20261027T131911Z/analysis.md)). MTTR = $T_{\text{det}} + T_{\text{reason}} + T_{\text{act}} + T_{\text{recover}} + T_{\text{other}}$ (definitions in [`benchmarks/harness.py`](benchmarks/harness.py)); for unrecovered runs it is time to termination.
 
 | Level | Scenario | Agentic outcome | $T_{\text{det}}$ s | $T_{\text{reason}}$ s | MTTR median [min–max] s | Baseline | Agentic wall s |
 |---|---|---|---|---|---|---|---|
-| 1 | `nan_divergence` | healed 5/5 | 0.13 | 14.8 | 15.1 [14.3–15.8] | failed 5/5 (2.0 s) | 39.1 |
-| 1 | `batch_oom` | healed 5/5 | 0.01 | 15.7 | 15.9 [14.9–17.1] | failed 5/5 (1.8 s) | 40.1 |
-| 2 | `compound_oom_and_explosion` | healed 5/5 | 0.14 | 23.4 | 23.6 [22.0–23.7] | failed 5/5 (1.7 s) | 47.0 |
-| 2 | `cascaded_lr_and_memory` | healed 3/5, exhausted 2/5 | 0.15 | 23.3 | 23.5 [22.2–31.0] | failed 5/5 (1.7 s) | 45.6 |
-| 3 | `delayed_stochastic_explosion` | healed 5/5 | 0.19 | 8.0 | 8.3 [7.6–8.5] | failed 5/5 (2.6 s) | 31.7 |
-| 3 | `spot_worker_churn` | healed 5/5 | 0.00 | 7.8 | 7.9 [7.0–9.4] | failed 5/5 (1.7 s) | 32.1 |
-| 4 | `triple_cascade_oom_lr_grad` | exhausted 5/5 | 0.28 | 29.2 | 29.5 [29.0–31.9] | failed 5/5 (1.7 s) | 31.2 |
-| 5 | `catastrophic_label_noise` | escalated 5/5 | 35.91 | 30.0 | 64.6 [64.2–78.2] | silent success 5/5 (19.5 s, acc 0.10–0.15) | 66.4 |
-| 6 | `architecture_tensor_mismatch` | escalated 5/5 | 0.02 | 29.2 | 29.3 [28.0–29.7] | failed 5/5 (1.8 s) | 30.9 |
-| 7 | `thrashing_bimodal_trap` | exhausted 5/5 | 0.26 | 31.2 | 31.5 [30.6–36.8] | failed 5/5 (1.9 s) | 33.1 |
-| – | `clean_run` | passed 5/5 | – | – | – | success 5/5 (19.8 s) | 24.3 |
+| 1 | `nan_divergence` | healed 5/5 | 0.24 | 12.2 | 12.5 [12.0–14.0] | failed 5/5 (3.1 s) | 29.8 |
+| 1 | `batch_oom` | healed 5/5 | 0.21 | 12.9 | 13.2 [13.0–13.7] | failed 5/5 (2.9 s) | 31.3 |
+| 2 | `compound_oom_and_explosion` | healed 5/5 | 0.35 | 18.7 | 19.2 [18.3–19.4] | failed 5/5 (2.7 s) | 36.7 |
+| 2 | `cascaded_lr_and_memory` | healed 5/5 | 0.35 | 18.8 | 19.3 [18.3–19.9] | failed 5/5 (2.8 s) | 37.1 |
+| 3 | `delayed_stochastic_explosion` | healed 5/5 | 0.18 | 6.1 | 6.4 [6.2–6.9] | failed 5/5 (3.1 s) | 24.4 |
+| 3 | `spot_worker_churn` (real worker kill) | healed 5/5 | 2.95 | 7.0 | 11.3 [11.1–11.7] | failed 5/5 (14.0 s) | 28.9 |
+| 4 | `triple_cascade_oom_lr_grad` | exhausted 5/5 | 0.49 | 24.6 | 25.1 [24.5–25.6] | failed 5/5 (2.9 s) | 29.2 |
+| 5 | `catastrophic_label_noise` | escalated 5/5 | 17.82 | 25.5 | 43.2 [42.9–44.0] | silent success 5/5 (12.1 s, acc 0.10–0.16) | 47.3 |
+| 6 | `architecture_tensor_mismatch` | escalated 5/5 | 3.17 | 25.6 | 28.5 [27.1–29.2] | failed 5/5 (6.0 s) | 32.4 |
+| 7 | `thrashing_bimodal_trap` | exhausted 5/5 | 0.51 | 26.3 | 26.8 [26.3–27.7] | failed 5/5 (3.0 s) | 30.9 |
+| – | `clean_run` | passed 5/5 | – | – | – | success 5/5 (11.8 s) | 17.7 |
 
-Key observations: Claude reasoning is >96% of MTTR for every exception-type fault; actuation is sub-millisecond. Level 4 fails because its repair needs four remediations (five attempts) but the budget allows four attempts. Escalation does not yet halt the retry loop, which is why Level 5 takes 64.6 s to terminate (first escalation at ~21 s). There is no rule-based remediation baseline yet.
+Key observations:
+- **Worker loss**: the surviving ranks' all-reduce fails immediately (`Connection closed by peer`); rank 0's liveness check takes 2.0–2.5 s; the in-pod restart loop brings a replacement process up 1.6–2.4 s after the kill; Claude chose `restart_workers` in 5/5 runs. The replacement is started by the pod's restart loop, not by the agent.
+- **LLM reasoning dominates MTTR**: 62% for worker loss, 90–98% for every other exception-type fault; actuation is sub-millisecond for config changes.
+- **The cluster idles while agents reason**: incident handling is 51% of agentic wall time, during which all four ranks use ~0 CPU cores.
+- Level 4 fails because its repair needs four remediations (five attempts) but the budget allows four. Escalation does not yet halt the retry loop (Level 5 retrains for ~26 s after the first escalation). There is no rule-based remediation baseline yet.
 
-### Replication on Amazon EKS
+Earlier single-process runs (one laptop, one EKS pod) remain in `benchmarks/reports/` for reference but are not used in the paper.
 
-The full suite was re-run as a Kubernetes Job on EKS (`us-east-1`, Kubernetes 1.34, one on-demand `c6i.xlarge`, same commit, pinned dependencies, 5 repeats). Full analysis: [`benchmarks/reports/eks/eks-20261027T105238Z/analysis.md`](benchmarks/reports/eks/eks-20261027T105238Z/analysis.md).
+### Reproduce on EKS
 
-- **Outcomes replicate**: identical outcome counts in 10/11 scenarios; Levels 1–3 healed 29/30 (local 28/30).
-- **MTTR 16–22% lower on EKS** for every exception-type scenario, driven by in-region Claude latency (median call 1.17 s vs 1.45 s), even though training was slower (0.105 vs 0.096 s/step).
-- **Cluster analytics**: image pull 2.0 s, bootstrap 43.6 s, suite 41.8 min; container used a median 1.62 cores while training and 0.00 cores while waiting on Claude; process RSS peak 3.96 GiB (cgroup peak 5.4 GiB incl. page cache, limit 6 GiB); no CPU throttling.
-- Fault-free monitoring overhead: +13% on EKS vs +23% locally.
-
-Reproduce (requires `eksctl`, `kubectl`, AWS CLI, and `.env` with the Claude Platform on AWS workspace key):
+Requires `eksctl`, `kubectl`, the AWS CLI, and `.env` with the Claude Platform on AWS workspace key:
 
 ```bash
-eksctl create cluster -f eks/cluster.yaml          # ~20 min; 1 on-demand c6i.xlarge, no NAT gateway
-eks/launch.sh                                      # uploads `git archive HEAD`, creates secret, applies Job
-python -m benchmarks.eks_listener --run-tag <RUN_TAG> --job <JOB>   # waits, fetches, analyzes
-python -m benchmarks.plot_analytical_graphs <local_results.json> --compare benchmarks/reports/eks/<RUN_TAG>/bundle/results.json
+eksctl create cluster -f eks/cluster.yaml          # 4 on-demand c6i.xlarge nodes (node group dist-cpu), no NAT gateway
+WORLD_SIZE=4 eks/launch.sh                         # uploads `git archive HEAD`, creates secret, applies Indexed Job + headless Service
+python -m benchmarks.eks_listener --run-tag <RUN_TAG> --job <JOB>   # waits, fetches rank-0 bundle + per-rank metrics, analyzes
+python -m benchmarks.plot_analytical_graphs --run-dir benchmarks/reports/eks/<RUN_TAG>
 eksctl delete cluster -f eks/cluster.yaml --wait   # stop all charges
 ```
+
+---
 
 ## 🔄 Reversion & Rollback Manifest: Full Auditability & Rapid Rollback
 

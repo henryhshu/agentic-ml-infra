@@ -1,0 +1,2237 @@
+{
+  "run_tag": "eks-20261027T131911Z",
+  "code_sha": "b5138f3b4f4c1db141e7d450c3dd58664e84d700",
+  "environment": {
+    "platform": "Linux-6.12.111-136.204.amzn2023.x86_64-x86_64-with-glibc2.41",
+    "machine": "x86_64",
+    "python": "3.11.15",
+    "torch": "2.11.0+cpu",
+    "device": "cpu",
+    "model": "tiny",
+    "epochs": 3,
+    "subset": 5000,
+    "max_retries": 3,
+    "repeats": 5,
+    "llm_model": "claude-haiku-4-5-20251001",
+    "world_size": 4,
+    "dist_backend": "gloo",
+    "torch_threads": 2,
+    "cpu_model": "Intel(R) Xeon(R) Platinum 8375C CPU @ 2.90GHz",
+    "os_cpu_count": 4,
+    "sched_affinity": 4,
+    "cgroup_cpu_max": "max 100000",
+    "cgroup_memory_max": "6442450944",
+    "memory_peak_bytes": "4669489152",
+    "node_name": "ip-192-168-33-211.ec2.internal",
+    "pod_name": "autopark-dist-eks-20261027t131911z-0-x8f88",
+    "pod_namespace": "autopark",
+    "code_sha": "b5138f3b4f4c1db141e7d450c3dd58664e84d700",
+    "bootstrap_started_at": 1793107156.9457633
+  },
+  "world_size": 4,
+  "benchmark_s": 2062.988472700119,
+  "ranks": [
+    {
+      "rank": 0,
+      "node": "ip-192-168-33-211.ec2.internal",
+      "instance_type": "c6i.xlarge",
+      "zone": "us-east-1d",
+      "capacity_type": "ON_DEMAND",
+      "pending_to_scheduled_s": 0.0,
+      "scheduled_to_container_start_s": 0.0,
+      "bootstrap_s": 40.360753536224365,
+      "process_restarts": null,
+      "exit_code": 0,
+      "resources": {
+        "samples": 1032,
+        "cores_used": {
+          "n": 1031,
+          "median": 0.30572282993822586,
+          "p90": 1.3989120478903225,
+          "mean": 0.534242103350706,
+          "min": 0.003989921626961424,
+          "max": 1.7292326531795001
+        },
+        "cores_during_agentic_attempts": {
+          "n": 357,
+          "median": 0.9936366506873039,
+          "p90": 1.5009954707536306,
+          "mean": 0.9534553294016973,
+          "min": 0.007171521980625887,
+          "max": 1.7186934643114955
+        },
+        "cores_during_incident_handling": {
+          "n": 446,
+          "median": 0.010614520805375166,
+          "p90": 0.03770241660303672,
+          "mean": 0.034414222294058605,
+          "min": 0.003989921626961424,
+          "max": 0.756250103214833
+        },
+        "memory_mib": {
+          "n": 1031,
+          "median": 4175.05859375,
+          "p90": 4370.4140625,
+          "mean": 3904.152249030068,
+          "min": 1798.72265625,
+          "max": 4452.67578125
+        },
+        "memory_peak_mib": 4453.171875,
+        "cpu_throttled_s": 0.0,
+        "torch_threads": 2,
+        "node": "ip-192-168-33-211.ec2.internal"
+      }
+    },
+    {
+      "rank": 1,
+      "node": "ip-192-168-60-250.ec2.internal",
+      "instance_type": "c6i.xlarge",
+      "zone": "us-east-1d",
+      "capacity_type": "ON_DEMAND",
+      "pending_to_scheduled_s": 0.0,
+      "scheduled_to_container_start_s": 1.0,
+      "bootstrap_s": 40.09819507598877,
+      "process_restarts": 0,
+      "exit_code": 0,
+      "resources": {
+        "samples": 1032,
+        "cores_used": {
+          "n": 1031,
+          "median": 0.001947734609048588,
+          "p90": 1.2515280077405457,
+          "mean": 0.2926705513251765,
+          "min": 0.0008968861332259314,
+          "max": 1.769899907349098
+        },
+        "cores_during_agentic_attempts": {
+          "n": 364,
+          "median": 0.6602276806744991,
+          "p90": 1.4769740747971043,
+          "mean": 0.6368758343760736,
+          "min": 0.0010188608095064527,
+          "max": 1.769588788330967
+        },
+        "cores_during_incident_handling": {
+          "n": 443,
+          "median": 0.0014262838965853977,
+          "p90": 0.023193611526508544,
+          "mean": 0.019883158480291128,
+          "min": 0.0008968861332259314,
+          "max": 0.7315237907045016
+        },
+        "memory_mib": {
+          "n": 1031,
+          "median": 2383.28515625,
+          "p90": 2385.55078125,
+          "mean": 2379.8790843234724,
+          "min": 1782.2734375,
+          "max": 2386.28125
+        },
+        "memory_peak_mib": 2386.51171875,
+        "cpu_throttled_s": 0.0,
+        "torch_threads": 2,
+        "node": "ip-192-168-60-250.ec2.internal"
+      }
+    },
+    {
+      "rank": 2,
+      "node": "ip-192-168-33-100.ec2.internal",
+      "instance_type": "c6i.xlarge",
+      "zone": "us-east-1d",
+      "capacity_type": "ON_DEMAND",
+      "pending_to_scheduled_s": 0.0,
+      "scheduled_to_container_start_s": 0.0,
+      "bootstrap_s": 39.66752219200134,
+      "process_restarts": 0,
+      "exit_code": 0,
+      "resources": {
+        "samples": 1032,
+        "cores_used": {
+          "n": 1031,
+          "median": 0.0014283043630465102,
+          "p90": 1.0958352849208117,
+          "mean": 0.2623364589748471,
+          "min": 0.0005969189507144852,
+          "max": 1.64018160163285
+        },
+        "cores_during_agentic_attempts": {
+          "n": 349,
+          "median": 0.6343754155846169,
+          "p90": 1.3522095913557302,
+          "mean": 0.590899919589368,
+          "min": 0.000693905202941588,
+          "max": 1.609971332015824
+        },
+        "cores_during_incident_handling": {
+          "n": 448,
+          "median": 0.0010241057589853815,
+          "p90": 0.021382561623081216,
+          "mean": 0.01957511372091327,
+          "min": 0.000645416366625962,
+          "max": 0.6587607562888111
+        },
+        "memory_mib": {
+          "n": 1031,
+          "median": 2379.5078125,
+          "p90": 2381.61328125,
+          "mean": 2375.7618324139185,
+          "min": 1782.19140625,
+          "max": 2382.3359375
+        },
+        "memory_peak_mib": 2382.68359375,
+        "cpu_throttled_s": 0.0,
+        "torch_threads": 2,
+        "node": "ip-192-168-33-100.ec2.internal"
+      }
+    },
+    {
+      "rank": 3,
+      "node": "ip-192-168-41-244.ec2.internal",
+      "instance_type": "c6i.xlarge",
+      "zone": "us-east-1d",
+      "capacity_type": "ON_DEMAND",
+      "pending_to_scheduled_s": 0.0,
+      "scheduled_to_container_start_s": 1.0,
+      "bootstrap_s": 41.545001745224,
+      "process_restarts": 25,
+      "exit_code": 0,
+      "resources": {
+        "samples": 1031,
+        "cores_used": {
+          "n": 1030,
+          "median": 0.002023686634288034,
+          "p90": 1.2920443066418448,
+          "mean": 0.34087361591638676,
+          "min": 0.0005949289371019631,
+          "max": 1.796021473246849
+        },
+        "cores_during_agentic_attempts": {
+          "n": 358,
+          "median": 0.7571670303369233,
+          "p90": 1.5217382401387465,
+          "mean": 0.6877191403259384,
+          "min": 0.0006299248320154134,
+          "max": 1.7671532946760642
+        },
+        "cores_during_incident_handling": {
+          "n": 444,
+          "median": 0.0013068153207476205,
+          "p90": 0.02501905774163535,
+          "mean": 0.020715987480864652,
+          "min": 0.0005949289371019631,
+          "max": 0.6258103945508046
+        },
+        "memory_mib": {
+          "n": 1030,
+          "median": 2353.203125,
+          "p90": 2365.296875,
+          "mean": 2328.75234375,
+          "min": 1713.9375,
+          "max": 2395.1875
+        },
+        "memory_peak_mib": 2395.6484375,
+        "cpu_throttled_s": 0.0,
+        "torch_threads": 2,
+        "node": "ip-192-168-41-244.ec2.internal"
+      }
+    }
+  ],
+  "aggregates": [
+    {
+      "id": "nan_divergence",
+      "expected_outcome": "healed",
+      "n": 5,
+      "matches_expected": 5,
+      "outcomes": {
+        "healed": 5
+      },
+      "baseline_status": {
+        "success": 0,
+        "failed": 5
+      },
+      "baseline_duration_s": {
+        "median": 3.07,
+        "min": 3.01,
+        "max": 7.13,
+        "mean": 3.8646000000000003,
+        "stdev": 1.8255932734319549,
+        "n": 5
+      },
+      "baseline_accuracy": null,
+      "agentic_duration_s": {
+        "median": 29.816,
+        "min": 29.325,
+        "max": 32.181,
+        "mean": 30.218200000000003,
+        "stdev": 1.1562554648519494,
+        "n": 5
+      },
+      "agentic_accuracy": {
+        "median": 0.239,
+        "min": 0.2276,
+        "max": 0.2448,
+        "mean": 0.23684,
+        "stdev": 0.00720888340868404,
+        "n": 5
+      },
+      "mttr_s": {
+        "median": 12.522138595581055,
+        "min": 12.049583911895752,
+        "max": 13.963083267211914,
+        "mean": 12.754752349853515,
+        "stdev": 0.7756178850487846,
+        "n": 5
+      },
+      "t_det": {
+        "median": 0.2386915683746338,
+        "min": 0.22736239433288574,
+        "max": 0.24663186073303223,
+        "mean": 0.23804001808166503,
+        "stdev": 0.006895746278491291,
+        "n": 5
+      },
+      "t_reason": {
+        "median": 12.15748906135559,
+        "min": 11.683901071548462,
+        "max": 13.597447395324707,
+        "mean": 12.385543537139892,
+        "stdev": 0.7739840337090267,
+        "n": 5
+      },
+      "t_act": {
+        "median": 1.8358230590820312e-05,
+        "min": 1.621246337890625e-05,
+        "max": 1.9073486328125e-05,
+        "mean": 1.7881393432617188e-05,
+        "stdev": 1.1680077279964342e-06,
+        "n": 5
+      },
+      "t_handle_other": {
+        "median": 0.000934600830078125,
+        "min": 0.0008554458618164062,
+        "max": 0.0009582042694091797,
+        "mean": 0.0009113311767578125,
+        "stdev": 4.5654076405014545e-05,
+        "n": 5
+      },
+      "t_recover": {
+        "median": 0.12656211853027344,
+        "min": 0.12569546699523926,
+        "max": 0.1363983154296875,
+        "mean": 0.13020334243774415,
+        "stdev": 0.0056077408546048,
+        "n": 5
+      },
+      "residual": {
+        "median": 3.600120544433594e-05,
+        "min": 3.1948089599609375e-05,
+        "max": 4.1484832763671875e-05,
+        "mean": 3.62396240234375e-05,
+        "stdev": 3.4508978905988045e-06,
+        "n": 5
+      },
+      "t_det_llm": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "mean": 0.0,
+        "stdev": 0.0,
+        "n": 5
+      },
+      "llm_calls": {
+        "median": 13.0,
+        "min": 13.0,
+        "max": 13.0,
+        "mean": 13.0,
+        "stdev": 0.0,
+        "n": 5
+      },
+      "input_tokens": {
+        "median": 4354.0,
+        "min": 4302.0,
+        "max": 4368.0,
+        "mean": 4341.8,
+        "stdev": 27.22498852157701,
+        "n": 5
+      },
+      "output_tokens": {
+        "median": 1020.0,
+        "min": 994.0,
+        "max": 1059.0,
+        "mean": 1023.2,
+        "stdev": 26.621419947102748,
+        "n": 5
+      },
+      "actions_per_run": [
+        [
+          "reduce_learning_rate",
+          "reduce_learning_rate"
+        ],
+        [
+          "reduce_learning_rate",
+          "reduce_learning_rate"
+        ],
+        [
+          "reduce_learning_rate",
+          "reduce_learning_rate"
+        ],
+        [
+          "reduce_learning_rate",
+          "reduce_learning_rate"
+        ],
+        [
+          "reduce_learning_rate",
+          "reduce_learning_rate"
+        ]
+      ]
+    },
+    {
+      "id": "batch_oom",
+      "expected_outcome": "healed",
+      "n": 5,
+      "matches_expected": 5,
+      "outcomes": {
+        "healed": 5
+      },
+      "baseline_status": {
+        "success": 0,
+        "failed": 5
+      },
+      "baseline_duration_s": {
+        "median": 2.888,
+        "min": 2.699,
+        "max": 3.015,
+        "mean": 2.8528,
+        "stdev": 0.13855937355516593,
+        "n": 5
+      },
+      "baseline_accuracy": null,
+      "agentic_duration_s": {
+        "median": 31.324,
+        "min": 30.69,
+        "max": 32.027,
+        "mean": 31.2772,
+        "stdev": 0.5534579478153691,
+        "n": 5
+      },
+      "agentic_accuracy": {
+        "median": 0.2174,
+        "min": 0.186,
+        "max": 0.2218,
+        "mean": 0.20944,
+        "stdev": 0.014641994399671105,
+        "n": 5
+      },
+      "mttr_s": {
+        "median": 13.215487718582153,
+        "min": 13.012086868286133,
+        "max": 13.67121934890747,
+        "mean": 13.2430335521698,
+        "stdev": 0.2690066722016478,
+        "n": 5
+      },
+      "t_det": {
+        "median": 0.2076725959777832,
+        "min": 0.16662859916687012,
+        "max": 0.22245335578918457,
+        "mean": 0.19988546371459961,
+        "stdev": 0.02359342994205444,
+        "n": 5
+      },
+      "t_reason": {
+        "median": 12.898635387420654,
+        "min": 12.66520071029663,
+        "max": 13.293642520904541,
+        "mean": 12.89649052619934,
+        "stdev": 0.2512647990251493,
+        "n": 5
+      },
+      "t_act": {
+        "median": 1.8358230590820312e-05,
+        "min": 1.6689300537109375e-05,
+        "max": 2.0742416381835938e-05,
+        "mean": 1.86920166015625e-05,
+        "stdev": 1.674031227258869e-06,
+        "n": 5
+      },
+      "t_handle_other": {
+        "median": 0.0009002685546875,
+        "min": 0.0008530616760253906,
+        "max": 0.0009138584136962891,
+        "mean": 0.0008861064910888672,
+        "stdev": 2.8158940014053607e-05,
+        "n": 5
+      },
+      "t_recover": {
+        "median": 0.147430419921875,
+        "min": 0.13048648834228516,
+        "max": 0.1542208194732666,
+        "mean": 0.14571871757507324,
+        "stdev": 0.008971420240152104,
+        "n": 5
+      },
+      "residual": {
+        "median": 3.3855438232421875e-05,
+        "min": 3.2901763916015625e-05,
+        "max": 3.528594970703125e-05,
+        "mean": 3.404617309570313e-05,
+        "stdev": 1.0847390333249403e-06,
+        "n": 5
+      },
+      "t_det_llm": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "mean": 0.0,
+        "stdev": 0.0,
+        "n": 5
+      },
+      "llm_calls": {
+        "median": 13.0,
+        "min": 13.0,
+        "max": 13.0,
+        "mean": 13.0,
+        "stdev": 0.0,
+        "n": 5
+      },
+      "input_tokens": {
+        "median": 4295.0,
+        "min": 4207.0,
+        "max": 4313.0,
+        "mean": 4273.2,
+        "stdev": 45.92602747897972,
+        "n": 5
+      },
+      "output_tokens": {
+        "median": 1033.0,
+        "min": 992.0,
+        "max": 1092.0,
+        "mean": 1041.0,
+        "stdev": 39.185456485793296,
+        "n": 5
+      },
+      "actions_per_run": [
+        [
+          "reduce_batch_size",
+          "reduce_batch_size"
+        ],
+        [
+          "reduce_batch_size",
+          "reduce_batch_size"
+        ],
+        [
+          "reduce_batch_size",
+          "reduce_batch_size"
+        ],
+        [
+          "reduce_batch_size",
+          "reduce_batch_size"
+        ],
+        [
+          "reduce_batch_size",
+          "reduce_batch_size"
+        ]
+      ]
+    },
+    {
+      "id": "compound_oom_and_explosion",
+      "expected_outcome": "healed",
+      "n": 5,
+      "matches_expected": 5,
+      "outcomes": {
+        "healed": 5
+      },
+      "baseline_status": {
+        "success": 0,
+        "failed": 5
+      },
+      "baseline_duration_s": {
+        "median": 2.725,
+        "min": 2.682,
+        "max": 3.002,
+        "mean": 2.7984,
+        "stdev": 0.14382732702793294,
+        "n": 5
+      },
+      "baseline_accuracy": null,
+      "agentic_duration_s": {
+        "median": 36.7,
+        "min": 36.263,
+        "max": 37.258,
+        "mean": 36.7802,
+        "stdev": 0.38985279273079537,
+        "n": 5
+      },
+      "agentic_accuracy": {
+        "median": 0.211,
+        "min": 0.1922,
+        "max": 0.2258,
+        "mean": 0.20939999999999998,
+        "stdev": 0.012694093114515897,
+        "n": 5
+      },
+      "mttr_s": {
+        "median": 19.170464277267456,
+        "min": 18.347280502319336,
+        "max": 19.37878155708313,
+        "mean": 18.95457181930542,
+        "stdev": 0.4573374918422815,
+        "n": 5
+      },
+      "t_det": {
+        "median": 0.34577369689941406,
+        "min": 0.3117818832397461,
+        "max": 0.35112905502319336,
+        "mean": 0.33562536239624025,
+        "stdev": 0.018161467658631632,
+        "n": 5
+      },
+      "t_reason": {
+        "median": 18.678919792175293,
+        "min": 17.89766812324524,
+        "max": 18.90849494934082,
+        "mean": 18.47453808784485,
+        "stdev": 0.44399846586206476,
+        "n": 5
+      },
+      "t_act": {
+        "median": 1.9311904907226562e-05,
+        "min": 1.8596649169921875e-05,
+        "max": 2.0503997802734375e-05,
+        "mean": 1.9502639770507812e-05,
+        "stdev": 7.614478789649635e-07,
+        "n": 5
+      },
+      "t_handle_other": {
+        "median": 0.0013318061828613281,
+        "min": 0.0012621879577636719,
+        "max": 0.00139617919921875,
+        "mean": 0.0013275623321533203,
+        "stdev": 4.826501338463034e-05,
+        "n": 5
+      },
+      "t_recover": {
+        "median": 0.14123892784118652,
+        "min": 0.1347484588623047,
+        "max": 0.1542816162109375,
+        "mean": 0.1430044174194336,
+        "stdev": 0.008242417344097658,
+        "n": 5
+      },
+      "residual": {
+        "median": 5.650520324707031e-05,
+        "min": 5.459785461425781e-05,
+        "max": 5.9604644775390625e-05,
+        "mean": 5.688667297363281e-05,
+        "stdev": 2.189040933826071e-06,
+        "n": 5
+      },
+      "t_det_llm": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "mean": 0.0,
+        "stdev": 0.0,
+        "n": 5
+      },
+      "llm_calls": {
+        "median": 18.0,
+        "min": 18.0,
+        "max": 18.0,
+        "mean": 18.0,
+        "stdev": 0.0,
+        "n": 5
+      },
+      "input_tokens": {
+        "median": 6354.0,
+        "min": 6289.0,
+        "max": 6370.0,
+        "mean": 6341.8,
+        "stdev": 31.252199922565453,
+        "n": 5
+      },
+      "output_tokens": {
+        "median": 1527.0,
+        "min": 1434.0,
+        "max": 1569.0,
+        "mean": 1514.0,
+        "stdev": 49.663870167356066,
+        "n": 5
+      },
+      "actions_per_run": [
+        [
+          "reduce_batch_size",
+          "reduce_batch_size",
+          "enable_gradient_clipping"
+        ],
+        [
+          "reduce_batch_size",
+          "reduce_batch_size",
+          "enable_gradient_clipping"
+        ],
+        [
+          "reduce_batch_size",
+          "reduce_batch_size",
+          "enable_gradient_clipping"
+        ],
+        [
+          "reduce_batch_size",
+          "reduce_batch_size",
+          "enable_gradient_clipping"
+        ],
+        [
+          "reduce_batch_size",
+          "reduce_batch_size",
+          "enable_gradient_clipping"
+        ]
+      ]
+    },
+    {
+      "id": "cascaded_lr_and_memory",
+      "expected_outcome": "healed",
+      "n": 5,
+      "matches_expected": 5,
+      "outcomes": {
+        "healed": 5
+      },
+      "baseline_status": {
+        "success": 0,
+        "failed": 5
+      },
+      "baseline_duration_s": {
+        "median": 2.821,
+        "min": 2.713,
+        "max": 2.873,
+        "mean": 2.7982,
+        "stdev": 0.06943126097083366,
+        "n": 5
+      },
+      "baseline_accuracy": null,
+      "agentic_duration_s": {
+        "median": 37.089,
+        "min": 36.378,
+        "max": 37.918,
+        "mean": 37.0398,
+        "stdev": 0.667748979782072,
+        "n": 5
+      },
+      "agentic_accuracy": {
+        "median": 0.2204,
+        "min": 0.2148,
+        "max": 0.2218,
+        "mean": 0.21888000000000002,
+        "stdev": 0.003164174457895776,
+        "n": 5
+      },
+      "mttr_s": {
+        "median": 19.259288787841797,
+        "min": 18.25303363800049,
+        "max": 19.856287002563477,
+        "mean": 19.140898990631104,
+        "stdev": 0.5927849225017231,
+        "n": 5
+      },
+      "t_det": {
+        "median": 0.3515000343322754,
+        "min": 0.32013463973999023,
+        "max": 0.39632749557495117,
+        "mean": 0.360636043548584,
+        "stdev": 0.031121477921986735,
+        "n": 5
+      },
+      "t_reason": {
+        "median": 18.78813624382019,
+        "min": 17.750866889953613,
+        "max": 19.325125694274902,
+        "mean": 18.630554676055908,
+        "stdev": 0.5902093565335673,
+        "n": 5
+      },
+      "t_act": {
+        "median": 2.4080276489257812e-05,
+        "min": 2.193450927734375e-05,
+        "max": 2.5987625122070312e-05,
+        "mean": 2.3698806762695314e-05,
+        "stdev": 1.674031227258869e-06,
+        "n": 5
+      },
+      "t_handle_other": {
+        "median": 0.001329660415649414,
+        "min": 0.0012476444244384766,
+        "max": 0.0014312267303466797,
+        "mean": 0.0013252735137939454,
+        "stdev": 7.111602995042306e-05,
+        "n": 5
+      },
+      "t_recover": {
+        "median": 0.14969611167907715,
+        "min": 0.1423029899597168,
+        "max": 0.1502552032470703,
+        "mean": 0.14830536842346193,
+        "stdev": 0.003376107490522638,
+        "n": 5
+      },
+      "residual": {
+        "median": 5.435943603515625e-05,
+        "min": 5.1021575927734375e-05,
+        "max": 5.698204040527344e-05,
+        "mean": 5.3930282592773435e-05,
+        "stdev": 2.3566081606200344e-06,
+        "n": 5
+      },
+      "t_det_llm": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "mean": 0.0,
+        "stdev": 0.0,
+        "n": 5
+      },
+      "llm_calls": {
+        "median": 18.0,
+        "min": 18.0,
+        "max": 18.0,
+        "mean": 18.0,
+        "stdev": 0.0,
+        "n": 5
+      },
+      "input_tokens": {
+        "median": 6385.0,
+        "min": 6329.0,
+        "max": 6413.0,
+        "mean": 6378.2,
+        "stdev": 30.51556979641704,
+        "n": 5
+      },
+      "output_tokens": {
+        "median": 1460.0,
+        "min": 1416.0,
+        "max": 1504.0,
+        "mean": 1459.6,
+        "stdev": 31.24579971772206,
+        "n": 5
+      },
+      "actions_per_run": [
+        [
+          "reduce_batch_size",
+          "reduce_learning_rate",
+          "reduce_learning_rate"
+        ],
+        [
+          "reduce_batch_size",
+          "reduce_learning_rate",
+          "reduce_learning_rate"
+        ],
+        [
+          "reduce_batch_size",
+          "reduce_learning_rate",
+          "reduce_learning_rate"
+        ],
+        [
+          "reduce_batch_size",
+          "reduce_learning_rate",
+          "reduce_learning_rate"
+        ],
+        [
+          "reduce_batch_size",
+          "reduce_learning_rate",
+          "reduce_learning_rate"
+        ]
+      ]
+    },
+    {
+      "id": "delayed_stochastic_explosion",
+      "expected_outcome": "healed",
+      "n": 5,
+      "matches_expected": 5,
+      "outcomes": {
+        "healed": 5
+      },
+      "baseline_status": {
+        "success": 0,
+        "failed": 5
+      },
+      "baseline_duration_s": {
+        "median": 3.144,
+        "min": 3.05,
+        "max": 3.371,
+        "mean": 3.1652,
+        "stdev": 0.13246395736199343,
+        "n": 5
+      },
+      "baseline_accuracy": null,
+      "agentic_duration_s": {
+        "median": 24.401,
+        "min": 24.01,
+        "max": 24.68,
+        "mean": 24.3948,
+        "stdev": 0.2580323623113961,
+        "n": 5
+      },
+      "agentic_accuracy": {
+        "median": 0.2722,
+        "min": 0.2496,
+        "max": 0.2748,
+        "mean": 0.26612,
+        "stdev": 0.010709435092478039,
+        "n": 5
+      },
+      "mttr_s": {
+        "median": 6.446002960205078,
+        "min": 6.169313430786133,
+        "max": 6.906009197235107,
+        "mean": 6.432283020019531,
+        "stdev": 0.2969997962281789,
+        "n": 5
+      },
+      "t_det": {
+        "median": 0.18408870697021484,
+        "min": 0.14761066436767578,
+        "max": 0.19721174240112305,
+        "mean": 0.17826566696166993,
+        "stdev": 0.019681980279085538,
+        "n": 5
+      },
+      "t_reason": {
+        "median": 6.101426124572754,
+        "min": 5.825439691543579,
+        "max": 6.577604293823242,
+        "mean": 6.107969617843628,
+        "stdev": 0.2938508026404156,
+        "n": 5
+      },
+      "t_act": {
+        "median": 2.384185791015625e-06,
+        "min": 2.1457672119140625e-06,
+        "max": 3.337860107421875e-06,
+        "mean": 2.47955322265625e-06,
+        "stdev": 4.943952883083277e-07,
+        "n": 5
+      },
+      "t_handle_other": {
+        "median": 0.0004360675811767578,
+        "min": 0.000415802001953125,
+        "max": 0.00046706199645996094,
+        "mean": 0.00043849945068359376,
+        "stdev": 1.930115836389302e-05,
+        "n": 5
+      },
+      "t_recover": {
+        "median": 0.14387750625610352,
+        "min": 0.14110898971557617,
+        "max": 0.1529085636138916,
+        "mean": 0.14558677673339843,
+        "stdev": 0.00446901228775322,
+        "n": 5
+      },
+      "residual": {
+        "median": 2.0742416381835938e-05,
+        "min": 1.71661376953125e-05,
+        "max": 2.2172927856445312e-05,
+        "mean": 1.9979476928710937e-05,
+        "stdev": 2.2199829763383443e-06,
+        "n": 5
+      },
+      "t_det_llm": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "mean": 0.0,
+        "stdev": 0.0,
+        "n": 5
+      },
+      "llm_calls": {
+        "median": 8.0,
+        "min": 8.0,
+        "max": 8.0,
+        "mean": 8.0,
+        "stdev": 0.0,
+        "n": 5
+      },
+      "input_tokens": {
+        "median": 2363.0,
+        "min": 2350.0,
+        "max": 2366.0,
+        "mean": 2361.6,
+        "stdev": 6.6558245169174945,
+        "n": 5
+      },
+      "output_tokens": {
+        "median": 618.0,
+        "min": 607.0,
+        "max": 642.0,
+        "mean": 622.8,
+        "stdev": 15.449919093639293,
+        "n": 5
+      },
+      "actions_per_run": [
+        [
+          "enable_gradient_clipping"
+        ],
+        [
+          "enable_gradient_clipping"
+        ],
+        [
+          "enable_gradient_clipping"
+        ],
+        [
+          "enable_gradient_clipping"
+        ],
+        [
+          "enable_gradient_clipping"
+        ]
+      ]
+    },
+    {
+      "id": "spot_worker_churn",
+      "expected_outcome": "healed",
+      "n": 5,
+      "matches_expected": 5,
+      "outcomes": {
+        "healed": 5
+      },
+      "baseline_status": {
+        "success": 0,
+        "failed": 5
+      },
+      "baseline_duration_s": {
+        "median": 14.028,
+        "min": 13.452,
+        "max": 15.315,
+        "mean": 14.2246,
+        "stdev": 0.8074864085543483,
+        "n": 5
+      },
+      "baseline_accuracy": null,
+      "agentic_duration_s": {
+        "median": 28.884,
+        "min": 28.708,
+        "max": 29.376,
+        "mean": 29.023199999999996,
+        "stdev": 0.3096598133436116,
+        "n": 5
+      },
+      "agentic_accuracy": {
+        "median": 0.2652,
+        "min": 0.2412,
+        "max": 0.2758,
+        "mean": 0.26036000000000004,
+        "stdev": 0.014541939347968684,
+        "n": 5
+      },
+      "mttr_s": {
+        "median": 11.25239086151123,
+        "min": 11.058961153030396,
+        "max": 11.706568002700806,
+        "mean": 11.310998821258545,
+        "stdev": 0.2386752495193841,
+        "n": 5
+      },
+      "t_det": {
+        "median": 2.9491193294525146,
+        "min": 2.853513717651367,
+        "max": 3.2560877799987793,
+        "mean": 3.0029664039611816,
+        "stdev": 0.15316858149639326,
+        "n": 5
+      },
+      "t_reason": {
+        "median": 7.022716760635376,
+        "min": 6.6304261684417725,
+        "max": 7.303333282470703,
+        "mean": 6.973944091796875,
+        "stdev": 0.27908481372358307,
+        "n": 5
+      },
+      "t_act": {
+        "median": 0.501110315322876,
+        "min": 0.5010285377502441,
+        "max": 0.5011956691741943,
+        "mean": 0.5011163234710694,
+        "stdev": 6.484840721032229e-05,
+        "n": 5
+      },
+      "t_handle_other": {
+        "median": 0.0004923343658447266,
+        "min": 0.0004608631134033203,
+        "max": 0.0005269050598144531,
+        "mean": 0.0004944324493408204,
+        "stdev": 2.7053628374510242e-05,
+        "n": 5
+      },
+      "t_recover": {
+        "median": 0.854053258895874,
+        "min": 0.7380368709564209,
+        "max": 0.8830211162567139,
+        "mean": 0.8324545860290528,
+        "stdev": 0.05641192813837854,
+        "n": 5
+      },
+      "residual": {
+        "median": 1.811981201171875e-05,
+        "min": 1.5497207641601562e-05,
+        "max": 4.124641418457031e-05,
+        "mean": 2.2983551025390626e-05,
+        "stdev": 1.0572190620018483e-05,
+        "n": 5
+      },
+      "t_det_llm": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "mean": 0.0,
+        "stdev": 0.0,
+        "n": 5
+      },
+      "llm_calls": {
+        "median": 8.0,
+        "min": 8.0,
+        "max": 8.0,
+        "mean": 8.0,
+        "stdev": 0.0,
+        "n": 5
+      },
+      "input_tokens": {
+        "median": 2622.0,
+        "min": 2600.0,
+        "max": 2627.0,
+        "mean": 2615.4,
+        "stdev": 12.05404496424333,
+        "n": 5
+      },
+      "output_tokens": {
+        "median": 616.0,
+        "min": 565.0,
+        "max": 629.0,
+        "mean": 606.8,
+        "stdev": 24.752777621915484,
+        "n": 5
+      },
+      "actions_per_run": [
+        [
+          "restart_workers"
+        ],
+        [
+          "restart_workers"
+        ],
+        [
+          "restart_workers"
+        ],
+        [
+          "restart_workers"
+        ],
+        [
+          "restart_workers"
+        ]
+      ]
+    },
+    {
+      "id": "triple_cascade_oom_lr_grad",
+      "expected_outcome": "healed",
+      "n": 5,
+      "matches_expected": 0,
+      "outcomes": {
+        "exhausted": 5
+      },
+      "baseline_status": {
+        "success": 0,
+        "failed": 5
+      },
+      "baseline_duration_s": {
+        "median": 2.863,
+        "min": 2.741,
+        "max": 2.994,
+        "mean": 2.854,
+        "stdev": 0.096137921758274,
+        "n": 5
+      },
+      "baseline_accuracy": null,
+      "agentic_duration_s": {
+        "median": 29.17,
+        "min": 28.277,
+        "max": 29.424,
+        "mean": 29.044,
+        "stdev": 0.44296444552582254,
+        "n": 5
+      },
+      "agentic_accuracy": null,
+      "mttr_s": {
+        "median": 25.13584613800049,
+        "min": 24.457846641540527,
+        "max": 25.59382128715515,
+        "mean": 25.108948993682862,
+        "stdev": 0.43309846102121313,
+        "n": 5
+      },
+      "t_det": {
+        "median": 0.4909977912902832,
+        "min": 0.48865270614624023,
+        "max": 0.5058543682098389,
+        "mean": 0.49462008476257324,
+        "stdev": 0.007150939007298828,
+        "n": 5
+      },
+      "t_reason": {
+        "median": 24.628150701522827,
+        "min": 23.958407402038574,
+        "max": 25.100970029830933,
+        "mean": 24.612463426589965,
+        "stdev": 0.43536545583032443,
+        "n": 5
+      },
+      "t_act": {
+        "median": 2.5272369384765625e-05,
+        "min": 2.3365020751953125e-05,
+        "max": 2.86102294921875e-05,
+        "mean": 2.574920654296875e-05,
+        "stdev": 1.944244674479972e-06,
+        "n": 5
+      },
+      "t_handle_other": {
+        "median": 0.0017704963684082031,
+        "min": 0.0017361640930175781,
+        "max": 0.0017859935760498047,
+        "mean": 0.0017634391784667968,
+        "stdev": 1.9371124410468586e-05,
+        "n": 5
+      },
+      "t_recover": {
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "mean": 0.0,
+        "stdev": 0.0,
+        "n": 5
+      },
+      "residual": {
+        "median": 7.367134094238281e-05,
+        "min": 7.033348083496094e-05,
+        "max": 8.535385131835938e-05,
+        "mean": 7.62939453125e-05,
+        "stdev": 6.127403867672156e-06,
+        "n": 5
+      },
+      "t_det_llm": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "mean": 0.0,
+        "stdev": 0.0,
+        "n": 5
+      },
+      "llm_calls": {
+        "median": 20.0,
+        "min": 20.0,
+        "max": 20.0,
+        "mean": 20.0,
+        "stdev": 0.0,
+        "n": 5
+      },
+      "input_tokens": {
+        "median": 8120.0,
+        "min": 8071.0,
+        "max": 8179.0,
+        "mean": 8121.0,
+        "stdev": 39.37638886439436,
+        "n": 5
+      },
+      "output_tokens": {
+        "median": 1753.0,
+        "min": 1706.0,
+        "max": 1812.0,
+        "mean": 1755.0,
+        "stdev": 38.451267859460756,
+        "n": 5
+      },
+      "actions_per_run": [
+        [
+          "reduce_batch_size",
+          "reduce_learning_rate",
+          "reduce_learning_rate",
+          "enable_gradient_clipping"
+        ],
+        [
+          "reduce_batch_size",
+          "reduce_learning_rate",
+          "reduce_learning_rate",
+          "enable_gradient_clipping"
+        ],
+        [
+          "reduce_batch_size",
+          "reduce_learning_rate",
+          "reduce_learning_rate",
+          "enable_gradient_clipping"
+        ],
+        [
+          "reduce_batch_size",
+          "reduce_learning_rate",
+          "reduce_learning_rate",
+          "enable_gradient_clipping"
+        ],
+        [
+          "reduce_batch_size",
+          "reduce_learning_rate",
+          "reduce_learning_rate",
+          "enable_gradient_clipping"
+        ]
+      ]
+    },
+    {
+      "id": "catastrophic_label_noise",
+      "expected_outcome": "escalated",
+      "n": 5,
+      "matches_expected": 5,
+      "outcomes": {
+        "escalated": 5
+      },
+      "baseline_status": {
+        "success": 5,
+        "failed": 0
+      },
+      "baseline_duration_s": {
+        "median": 12.079,
+        "min": 11.465,
+        "max": 12.415,
+        "mean": 12.0694,
+        "stdev": 0.37527096876790245,
+        "n": 5
+      },
+      "baseline_accuracy": {
+        "median": 0.101,
+        "min": 0.0992,
+        "max": 0.1564,
+        "mean": 0.11144000000000001,
+        "stdev": 0.02515368760241727,
+        "n": 5
+      },
+      "agentic_duration_s": {
+        "median": 47.332,
+        "min": 46.676,
+        "max": 48.113,
+        "mean": 47.351,
+        "stdev": 0.5120405257399059,
+        "n": 5
+      },
+      "agentic_accuracy": null,
+      "mttr_s": {
+        "median": 43.24488544464111,
+        "min": 42.86056184768677,
+        "max": 44.00171947479248,
+        "mean": 43.36841130256653,
+        "stdev": 0.42909149740878866,
+        "n": 5
+      },
+      "t_det": {
+        "median": 17.819963932037354,
+        "min": 17.688956260681152,
+        "max": 18.16713857650757,
+        "mean": 17.864061212539674,
+        "stdev": 0.18158273794593616,
+        "n": 5
+      },
+      "t_reason": {
+        "median": 25.50055170059204,
+        "min": 24.69187569618225,
+        "max": 26.133840560913086,
+        "mean": 25.502651357650755,
+        "stdev": 0.5315453642721424,
+        "n": 5
+      },
+      "t_act": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "mean": 0.0,
+        "stdev": 0.0,
+        "n": 5
+      },
+      "t_handle_other": {
+        "median": 0.0014793872833251953,
+        "min": 0.0014696121215820312,
+        "max": 0.002216815948486328,
+        "mean": 0.0016280174255371093,
+        "stdev": 0.00032932452906241246,
+        "n": 5
+      },
+      "t_recover": {
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "mean": 0.0,
+        "stdev": 0.0,
+        "n": 5
+      },
+      "residual": {
+        "median": 7.176399230957031e-05,
+        "min": 6.699562072753906e-05,
+        "max": 7.343292236328125e-05,
+        "mean": 7.071495056152344e-05,
+        "stdev": 2.6041159478975577e-06,
+        "n": 5
+      },
+      "t_det_llm": {
+        "median": 5.999804973602295,
+        "min": 5.764573812484741,
+        "max": 6.440477609634399,
+        "mean": 6.0337437152862545,
+        "stdev": 0.24799132564257537,
+        "n": 5
+      },
+      "llm_calls": {
+        "median": 21.0,
+        "min": 21.0,
+        "max": 21.0,
+        "mean": 21.0,
+        "stdev": 0.0,
+        "n": 5
+      },
+      "input_tokens": {
+        "median": 6726.0,
+        "min": 6706.0,
+        "max": 6800.0,
+        "mean": 6747.0,
+        "stdev": 39.92492955535426,
+        "n": 5
+      },
+      "output_tokens": {
+        "median": 2164.0,
+        "min": 2111.0,
+        "max": 2249.0,
+        "mean": 2174.4,
+        "stdev": 63.17673622465789,
+        "n": 5
+      },
+      "actions_per_run": [
+        [],
+        [],
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "id": "architecture_tensor_mismatch",
+      "expected_outcome": "escalated",
+      "n": 5,
+      "matches_expected": 5,
+      "outcomes": {
+        "escalated": 5
+      },
+      "baseline_status": {
+        "success": 0,
+        "failed": 5
+      },
+      "baseline_duration_s": {
+        "median": 6.028,
+        "min": 5.113,
+        "max": 6.04,
+        "mean": 5.7620000000000005,
+        "stdev": 0.4098762008216625,
+        "n": 5
+      },
+      "baseline_accuracy": null,
+      "agentic_duration_s": {
+        "median": 32.431,
+        "min": 31.177,
+        "max": 33.1,
+        "mean": 32.426,
+        "stdev": 0.7860763321713741,
+        "n": 5
+      },
+      "agentic_accuracy": null,
+      "mttr_s": {
+        "median": 28.516428232192993,
+        "min": 27.089054584503174,
+        "max": 29.24758243560791,
+        "mean": 28.498317623138426,
+        "stdev": 0.8753367400329223,
+        "n": 5
+      },
+      "t_det": {
+        "median": 3.1693508625030518,
+        "min": 2.6620981693267822,
+        "max": 3.3795547485351562,
+        "mean": 3.0569900989532472,
+        "stdev": 0.2794828336733373,
+        "n": 5
+      },
+      "t_reason": {
+        "median": 25.617695331573486,
+        "min": 24.4253830909729,
+        "max": 26.042762756347656,
+        "mean": 25.439703512191773,
+        "stdev": 0.6410546165697042,
+        "n": 5
+      },
+      "t_act": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "mean": 0.0,
+        "stdev": 0.0,
+        "n": 5
+      },
+      "t_handle_other": {
+        "median": 0.0014643669128417969,
+        "min": 0.0013790130615234375,
+        "max": 0.0019309520721435547,
+        "mean": 0.0015454292297363281,
+        "stdev": 0.00021967907802687846,
+        "n": 5
+      },
+      "t_recover": {
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "mean": 0.0,
+        "stdev": 0.0,
+        "n": 5
+      },
+      "residual": {
+        "median": 7.939338684082031e-05,
+        "min": 7.2479248046875e-05,
+        "max": 8.702278137207031e-05,
+        "mean": 7.8582763671875e-05,
+        "stdev": 5.653587748096986e-06,
+        "n": 5
+      },
+      "t_det_llm": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "mean": 0.0,
+        "stdev": 0.0,
+        "n": 5
+      },
+      "llm_calls": {
+        "median": 16.0,
+        "min": 16.0,
+        "max": 16.0,
+        "mean": 16.0,
+        "stdev": 0.0,
+        "n": 5
+      },
+      "input_tokens": {
+        "median": 6615.0,
+        "min": 6591.0,
+        "max": 6644.0,
+        "mean": 6614.2,
+        "stdev": 21.323695739716417,
+        "n": 5
+      },
+      "output_tokens": {
+        "median": 1803.0,
+        "min": 1779.0,
+        "max": 1832.0,
+        "mean": 1802.2,
+        "stdev": 21.323695739716417,
+        "n": 5
+      },
+      "actions_per_run": [
+        [],
+        [],
+        [],
+        [],
+        []
+      ]
+    },
+    {
+      "id": "thrashing_bimodal_trap",
+      "expected_outcome": "exhausted",
+      "n": 5,
+      "matches_expected": 5,
+      "outcomes": {
+        "exhausted": 5
+      },
+      "baseline_status": {
+        "success": 0,
+        "failed": 5
+      },
+      "baseline_duration_s": {
+        "median": 3.031,
+        "min": 2.955,
+        "max": 3.1,
+        "mean": 3.0238,
+        "stdev": 0.05718129064650429,
+        "n": 5
+      },
+      "baseline_accuracy": null,
+      "agentic_duration_s": {
+        "median": 30.947,
+        "min": 30.253,
+        "max": 31.847,
+        "mean": 30.955399999999997,
+        "stdev": 0.5772896153578382,
+        "n": 5
+      },
+      "agentic_accuracy": null,
+      "mttr_s": {
+        "median": 26.804885864257812,
+        "min": 26.33871078491211,
+        "max": 27.684996843338013,
+        "mean": 26.936398410797118,
+        "stdev": 0.49423754637554596,
+        "n": 5
+      },
+      "t_det": {
+        "median": 0.5131974220275879,
+        "min": 0.48667073249816895,
+        "max": 0.5548965930938721,
+        "mean": 0.5168666362762451,
+        "stdev": 0.024809507704354406,
+        "n": 5
+      },
+      "t_reason": {
+        "median": 26.29464626312256,
+        "min": 25.815460920333862,
+        "max": 27.169843673706055,
+        "mean": 26.417540645599367,
+        "stdev": 0.4920605132858266,
+        "n": 5
+      },
+      "t_act": {
+        "median": 4.38690185546875e-05,
+        "min": 3.743171691894531e-05,
+        "max": 5.14984130859375e-05,
+        "mean": 4.31060791015625e-05,
+        "stdev": 5.9207547163736065e-06,
+        "n": 5
+      },
+      "t_handle_other": {
+        "median": 0.0018625259399414062,
+        "min": 0.0017404556274414062,
+        "max": 0.00197601318359375,
+        "mean": 0.0018743515014648438,
+        "stdev": 9.703278827882813e-05,
+        "n": 5
+      },
+      "t_recover": {
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "mean": 0.0,
+        "stdev": 0.0,
+        "n": 5
+      },
+      "residual": {
+        "median": 7.224082946777344e-05,
+        "min": 6.794929504394531e-05,
+        "max": 8.082389831542969e-05,
+        "mean": 7.367134094238281e-05,
+        "stdev": 5.127385417844431e-06,
+        "n": 5
+      },
+      "t_det_llm": {
+        "median": 0,
+        "min": 0,
+        "max": 0,
+        "mean": 0.0,
+        "stdev": 0.0,
+        "n": 5
+      },
+      "llm_calls": {
+        "median": 20.0,
+        "min": 20.0,
+        "max": 20.0,
+        "mean": 20.0,
+        "stdev": 0.0,
+        "n": 5
+      },
+      "input_tokens": {
+        "median": 8486.0,
+        "min": 8400.0,
+        "max": 8537.0,
+        "mean": 8482.2,
+        "stdev": 52.70388979952049,
+        "n": 5
+      },
+      "output_tokens": {
+        "median": 1861.0,
+        "min": 1787.0,
+        "max": 1932.0,
+        "mean": 1867.6,
+        "stdev": 57.57429982205602,
+        "n": 5
+      },
+      "actions_per_run": [
+        [
+          "reduce_learning_rate",
+          "reduce_learning_rate",
+          "reduce_learning_rate",
+          "reduce_learning_rate"
+        ],
+        [
+          "reduce_learning_rate",
+          "reduce_learning_rate",
+          "reduce_learning_rate",
+          "reduce_learning_rate"
+        ],
+        [
+          "reduce_learning_rate",
+          "reduce_learning_rate",
+          "reduce_learning_rate",
+          "reduce_learning_rate"
+        ],
+        [
+          "reduce_learning_rate",
+          "reduce_learning_rate",
+          "enable_gradient_clipping",
+          "reduce_learning_rate"
+        ],
+        [
+          "enable_gradient_clipping",
+          "reduce_learning_rate",
+          "reduce_learning_rate",
+          "reduce_learning_rate"
+        ]
+      ]
+    },
+    {
+      "id": "clean_run",
+      "expected_outcome": "passed",
+      "n": 5,
+      "matches_expected": 5,
+      "outcomes": {
+        "passed": 5
+      },
+      "baseline_status": {
+        "success": 5,
+        "failed": 0
+      },
+      "baseline_duration_s": {
+        "median": 11.789,
+        "min": 11.12,
+        "max": 12.545,
+        "mean": 11.8352,
+        "stdev": 0.5082427569577359,
+        "n": 5
+      },
+      "baseline_accuracy": {
+        "median": 0.2704,
+        "min": 0.2446,
+        "max": 0.2884,
+        "mean": 0.26856,
+        "stdev": 0.01595205315938985,
+        "n": 5
+      },
+      "agentic_duration_s": {
+        "median": 17.703,
+        "min": 17.607,
+        "max": 18.281,
+        "mean": 17.8376,
+        "stdev": 0.28226547787499623,
+        "n": 5
+      },
+      "agentic_accuracy": {
+        "median": 0.2718,
+        "min": 0.2552,
+        "max": 0.2934,
+        "mean": 0.27408,
+        "stdev": 0.01498839551119465,
+        "n": 5
+      },
+      "mttr_s": null,
+      "t_det": null,
+      "t_reason": null,
+      "t_act": null,
+      "t_handle_other": null,
+      "t_recover": null,
+      "residual": null,
+      "t_det_llm": null,
+      "llm_calls": {
+        "median": 3.0,
+        "min": 3.0,
+        "max": 3.0,
+        "mean": 3.0,
+        "stdev": 0.0,
+        "n": 5
+      },
+      "input_tokens": {
+        "median": 316.0,
+        "min": 316.0,
+        "max": 316.0,
+        "mean": 316.0,
+        "stdev": 0.0,
+        "n": 5
+      },
+      "output_tokens": {
+        "median": 168.0,
+        "min": 164.0,
+        "max": 189.0,
+        "mean": 173.2,
+        "stdev": 10.2810505299799,
+        "n": 5
+      },
+      "actions_per_run": [
+        [],
+        [],
+        [],
+        [],
+        []
+      ]
+    }
+  ],
+  "levels_1_3_healed": [
+    30,
+    30
+  ],
+  "matches_expected": [
+    50,
+    55
+  ],
+  "worker_loss": [
+    {
+      "repeat": 0,
+      "mode": "baseline",
+      "status": "failed",
+      "outcome": null,
+      "attempts": 4,
+      "failures": [
+        {
+          "attempt": 0,
+          "attempt_s": 2.5083041191101074,
+          "killed_rank": 3,
+          "kill_to_collective_error_s": 0.03090190887451172,
+          "liveness_check_s": 2.2537484169006348,
+          "kill_to_detect_s": 2.285768747329712,
+          "worker_restart_s": 1.8940422534942627,
+          "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:7894). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proce"
+        },
+        {
+          "attempt": 1,
+          "attempt_s": 3.2099056243896484,
+          "killed_rank": 3,
+          "kill_to_collective_error_s": 0.0308535099029541,
+          "liveness_check_s": 2.2536706924438477,
+          "kill_to_detect_s": 2.2857773303985596,
+          "worker_restart_s": 1.8815114498138428,
+          "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:50396). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proc"
+        },
+        {
+          "attempt": 2,
+          "attempt_s": 3.211344003677368,
+          "killed_rank": 3,
+          "kill_to_collective_error_s": 0.030867576599121094,
+          "liveness_check_s": 2.253682851791382,
+          "kill_to_detect_s": 2.2856948375701904,
+          "worker_restart_s": 1.859483003616333,
+          "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:6875). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proce"
+        },
+        {
+          "attempt": 3,
+          "attempt_s": 3.263052225112915,
+          "killed_rank": 3,
+          "kill_to_collective_error_s": 0.03077554702758789,
+          "liveness_check_s": 2.253624677658081,
+          "kill_to_detect_s": 2.2854809761047363,
+          "worker_restart_s": 1.853757619857788,
+          "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:57541). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proc"
+        }
+      ],
+      "actions": [],
+      "restart_workers_wait_s": [],
+      "mttr_s": null
+    },
+    {
+      "repeat": 0,
+      "mode": "agentic",
+      "status": "success",
+      "outcome": "healed",
+      "attempts": 2,
+      "failures": [
+        {
+          "attempt": 0,
+          "attempt_s": 3.2560877799987793,
+          "killed_rank": 3,
+          "kill_to_collective_error_s": 0.030841827392578125,
+          "liveness_check_s": 2.253894090652466,
+          "kill_to_detect_s": 2.286504030227661,
+          "worker_restart_s": 1.815934658050537,
+          "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:2257). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proce"
+        }
+      ],
+      "actions": [
+        "restart_workers"
+      ],
+      "restart_workers_wait_s": [
+        0.5
+      ],
+      "mttr_s": 11.248231410980225
+    },
+    {
+      "repeat": 1,
+      "mode": "baseline",
+      "status": "failed",
+      "outcome": null,
+      "attempts": 4,
+      "failures": [
+        {
+          "attempt": 0,
+          "attempt_s": 2.23612642288208,
+          "killed_rank": 3,
+          "kill_to_collective_error_s": 0.030925989151000977,
+          "liveness_check_s": 2.0034255981445312,
+          "kill_to_detect_s": 2.0354766845703125,
+          "worker_restart_s": 1.581230640411377,
+          "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:4764). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proce"
+        },
+        {
+          "attempt": 1,
+          "attempt_s": 2.8956778049468994,
+          "killed_rank": 3,
+          "kill_to_collective_error_s": 0.030939817428588867,
+          "liveness_check_s": 2.003526449203491,
+          "kill_to_detect_s": 2.036015272140503,
+          "worker_restart_s": 1.6010503768920898,
+          "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:58071). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proc"
+        },
+        {
+          "attempt": 2,
+          "attempt_s": 2.915137767791748,
+          "killed_rank": 3,
+          "kill_to_collective_error_s": 0.030973434448242188,
+          "liveness_check_s": 2.003628730773926,
+          "kill_to_detect_s": 2.0361878871917725,
+          "worker_restart_s": 1.5893821716308594,
+          "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:25738). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proc"
+        },
+        {
+          "attempt": 3,
+          "attempt_s": 2.9023382663726807,
+          "killed_rank": 3,
+          "kill_to_collective_error_s": 0.030977487564086914,
+          "liveness_check_s": 2.0035884380340576,
+          "kill_to_detect_s": 2.0361273288726807,
+          "worker_restart_s": 1.5718116760253906,
+          "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:47835). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proc"
+        }
+      ],
+      "actions": [],
+      "restart_workers_wait_s": [],
+      "mttr_s": null
+    },
+    {
+      "repeat": 1,
+      "mode": "agentic",
+      "status": "success",
+      "outcome": "healed",
+      "attempts": 2,
+      "failures": [
+        {
+          "attempt": 0,
+          "attempt_s": 2.853513717651367,
+          "killed_rank": 3,
+          "kill_to_collective_error_s": 0.031024694442749023,
+          "liveness_check_s": 2.003288984298706,
+          "kill_to_detect_s": 2.0360448360443115,
+          "worker_restart_s": 1.580913782119751,
+          "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:49802). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proc"
+        }
+      ],
+      "actions": [
+        "restart_workers"
+      ],
+      "restart_workers_wait_s": [
+        0.5
+      ],
+      "mttr_s": 11.25239086151123
+    },
+    {
+      "repeat": 2,
+      "mode": "baseline",
+      "status": "failed",
+      "outcome": null,
+      "attempts": 4,
+      "failures": [
+        {
+          "attempt": 0,
+          "attempt_s": 2.2517495155334473,
+          "killed_rank": 3,
+          "kill_to_collective_error_s": 0.030902862548828125,
+          "liveness_check_s": 2.003387928009033,
+          "kill_to_detect_s": 2.03588604927063,
+          "worker_restart_s": 1.6776669025421143,
+          "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:43139). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proc"
+        },
+        {
+          "attempt": 1,
+          "attempt_s": 2.9075496196746826,
+          "killed_rank": 3,
+          "kill_to_collective_error_s": 0.030889034271240234,
+          "liveness_check_s": 2.003314256668091,
+          "kill_to_detect_s": 2.0360612869262695,
+          "worker_restart_s": 1.645226240158081,
+          "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:20710). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proc"
+        },
+        {
+          "attempt": 2,
+          "attempt_s": 2.882197141647339,
+          "killed_rank": 3,
+          "kill_to_collective_error_s": 0.030997276306152344,
+          "liveness_check_s": 2.003269910812378,
+          "kill_to_detect_s": 2.035823345184326,
+          "worker_restart_s": 1.6121938228607178,
+          "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:63696). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proc"
+        },
+        {
+          "attempt": 3,
+          "attempt_s": 2.939659357070923,
+          "killed_rank": 3,
+          "kill_to_collective_error_s": 0.030920743942260742,
+          "liveness_check_s": 2.0037150382995605,
+          "kill_to_detect_s": 2.03617000579834,
+          "worker_restart_s": 1.6575665473937988,
+          "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:60573). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proc"
+        }
+      ],
+      "actions": [],
+      "restart_workers_wait_s": [],
+      "mttr_s": null
+    },
+    {
+      "repeat": 2,
+      "mode": "agentic",
+      "status": "success",
+      "outcome": "healed",
+      "attempts": 2,
+      "failures": [
+        {
+          "attempt": 0,
+          "attempt_s": 2.9374642372131348,
+          "killed_rank": 3,
+          "kill_to_collective_error_s": 0.031005144119262695,
+          "liveness_check_s": 2.003217935562134,
+          "kill_to_detect_s": 2.0359654426574707,
+          "worker_restart_s": 1.7010283470153809,
+          "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:48298). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proc"
+        }
+      ],
+      "actions": [
+        "restart_workers"
+      ],
+      "restart_workers_wait_s": [
+        0.5
+      ],
+      "mttr_s": 11.288842678070068
+    },
+    {
+      "repeat": 3,
+      "mode": "baseline",
+      "status": "failed",
+      "outcome": null,
+      "attempts": 4,
+      "failures": [
+        {
+          "attempt": 0,
+          "attempt_s": 2.266535758972168,
+          "killed_rank": 3,
+          "kill_to_collective_error_s": 0.030783891677856445,
+          "liveness_check_s": 2.0034070014953613,
+          "kill_to_detect_s": 2.035338878631592,
+          "worker_restart_s": 1.7697441577911377,
+          "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:1177). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proce"
+        },
+        {
+          "attempt": 1,
+          "attempt_s": 2.9362916946411133,
+          "killed_rank": 3,
+          "kill_to_collective_error_s": 0.03101372718811035,
+          "liveness_check_s": 2.0037882328033447,
+          "kill_to_detect_s": 2.036287307739258,
+          "worker_restart_s": 1.6662087440490723,
+          "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:45737). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proc"
+        },
+        {
+          "attempt": 2,
+          "attempt_s": 2.8996453285217285,
+          "killed_rank": 3,
+          "kill_to_collective_error_s": 0.03074932098388672,
+          "liveness_check_s": 2.003405809402466,
+          "kill_to_detect_s": 2.035747766494751,
+          "worker_restart_s": 1.6625771522521973,
+          "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:45278). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proc"
+        },
+        {
+          "attempt": 3,
+          "attempt_s": 2.9076478481292725,
+          "killed_rank": 3,
+          "kill_to_collective_error_s": 0.030948877334594727,
+          "liveness_check_s": 2.003408908843994,
+          "kill_to_detect_s": 2.0357964038848877,
+          "worker_restart_s": 1.692962646484375,
+          "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:53980). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proc"
+        }
+      ],
+      "actions": [],
+      "restart_workers_wait_s": [],
+      "mttr_s": null
+    },
+    {
+      "repeat": 3,
+      "mode": "agentic",
+      "status": "success",
+      "outcome": "healed",
+      "attempts": 2,
+      "failures": [
+        {
+          "attempt": 0,
+          "attempt_s": 2.9491193294525146,
+          "killed_rank": 3,
+          "kill_to_collective_error_s": 0.030775070190429688,
+          "liveness_check_s": 2.003300905227661,
+          "kill_to_detect_s": 2.0358290672302246,
+          "worker_restart_s": 1.7451879978179932,
+          "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:27297). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proc"
+        }
+      ],
+      "actions": [
+        "restart_workers"
+      ],
+      "restart_workers_wait_s": [
+        0.5
+      ],
+      "mttr_s": 11.058961153030396
+    },
+    {
+      "repeat": 4,
+      "mode": "baseline",
+      "status": "failed",
+      "outcome": null,
+      "attempts": 4,
+      "failures": [
+        {
+          "attempt": 0,
+          "attempt_s": 2.524634599685669,
+          "killed_rank": 3,
+          "kill_to_collective_error_s": 0.03080272674560547,
+          "liveness_check_s": 2.2538902759552,
+          "kill_to_detect_s": 2.2858145236968994,
+          "worker_restart_s": 1.7950446605682373,
+          "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:46792). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proc"
+        },
+        {
+          "attempt": 1,
+          "attempt_s": 3.1778385639190674,
+          "killed_rank": 3,
+          "kill_to_collective_error_s": 0.03082132339477539,
+          "liveness_check_s": 2.253856658935547,
+          "kill_to_detect_s": 2.286198139190674,
+          "worker_restart_s": 1.829580545425415,
+          "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:4238). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proce"
+        },
+        {
+          "attempt": 2,
+          "attempt_s": 3.4973413944244385,
+          "killed_rank": 3,
+          "kill_to_collective_error_s": 0.030909299850463867,
+          "liveness_check_s": 2.503999948501587,
+          "kill_to_detect_s": 2.536437749862671,
+          "worker_restart_s": 2.0838065147399902,
+          "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:1157). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proce"
+        },
+        {
+          "attempt": 3,
+          "attempt_s": 3.686248540878296,
+          "killed_rank": 3,
+          "kill_to_collective_error_s": 0.03087306022644043,
+          "liveness_check_s": 2.5040547847747803,
+          "kill_to_detect_s": 2.5364198684692383,
+          "worker_restart_s": 2.351214647293091,
+          "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:61148). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: no heartbeat for 2.5 s."
+        }
+      ],
+      "actions": [],
+      "restart_workers_wait_s": [],
+      "mttr_s": null
+    },
+    {
+      "repeat": 4,
+      "mode": "agentic",
+      "status": "success",
+      "outcome": "healed",
+      "attempts": 2,
+      "failures": [
+        {
+          "attempt": 0,
+          "attempt_s": 3.0186469554901123,
+          "killed_rank": 3,
+          "kill_to_collective_error_s": 0.030941009521484375,
+          "liveness_check_s": 2.0032436847686768,
+          "kill_to_detect_s": 2.0358567237854004,
+          "worker_restart_s": 1.75691819190979,
+          "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:59610). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proc"
+        }
+      ],
+      "actions": [
+        "restart_workers"
+      ],
+      "restart_workers_wait_s": [
+        0.5
+      ],
+      "mttr_s": 11.706568002700806
+    }
+  ],
+  "llm_latency": {
+    "all": {
+      "n": 790,
+      "median": 1.187894582748413,
+      "p90": 2.18147611618042,
+      "mean": 1.3108882418161707,
+      "min": 0.3954339027404785,
+      "max": 2.771599531173706
+    },
+    "by_caller": {
+      "analyze_epoch": {
+        "n": 130,
+        "median": 1.1456156969070435,
+        "p90": 1.3283498525619508,
+        "mean": 1.1414977972324079,
+        "min": 0.8170485496520996,
+        "max": 1.5023722648620605
+      },
+      "diagnose": {
+        "n": 420,
+        "median": 1.1690832376480103,
+        "p90": 1.7125844478607177,
+        "mean": 1.2699640024276007,
+        "min": 0.7741875648498535,
+        "max": 2.367950916290283
+      },
+      "handle_anomaly": {
+        "n": 140,
+        "median": 2.1815056800842285,
+        "p90": 2.42075355052948,
+        "mean": 2.1832680702209473,
+        "min": 1.7084684371948242,
+        "max": 2.771599531173706
+      },
+      "recommend_action": {
+        "n": 100,
+        "median": 0.4714183807373047,
+        "p90": 0.5448916673660279,
+        "mean": 0.48164586544036864,
+        "min": 0.3954339027404785,
+        "max": 0.7406511306762695
+      }
+    }
+  },
+  "step_time_s": {
+    "n": 585,
+    "median": 0.04146432876586914,
+    "p90": 0.04841318130493164,
+    "mean": 0.04093546826615293,
+    "min": 0.00961756706237793,
+    "max": 0.055974721908569336
+  },
+  "clean_overhead": {
+    "baseline_s": 11.789,
+    "agentic_s": 17.703,
+    "overhead_pct": 50.165408431588766,
+    "monitor_llm_s": 3.2834928035736084
+  },
+  "tokens_total": {
+    "input": 282962,
+    "output": 70199,
+    "calls": 790
+  }
+}

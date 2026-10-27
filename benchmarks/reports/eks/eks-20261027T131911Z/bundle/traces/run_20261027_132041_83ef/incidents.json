@@ -1,0 +1,30 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=512"
+    ],
+    "diagnosis": "# **UNIFIED DIAGNOSIS: Memory Pressure During Training**\n\n## **Critical Issue**\nBatch size of **512 exceeds available memory** on the current CPU-only training setup, causing out-of-memory (OOM) allocation failures despite GPU availability on the platform.\n\n## **Root Cause Analysis**\n- **Configuration Mismatch:** Batch size (512) is incompatible with CPU memory constraints and Ray worker resource limits\n- **Underutilized Resources:** GPU is available but not enabled (`use_gpu=False` or `device='cpu'`)\n- **No Memory-to-Compute Alignment:** Current setup fails to match batch size to available device memory\n\n## **Recommended Actions** (Priority Order)\n\n1. **Immediate:** Reduce batch size to **64\u2013128** to fit CPU memory constraints\n2. **Primary Fix:** Enable GPU training:\n   - Set `use",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 512 to 256 and scaled accum_steps from 1 to 2 (invariant effective_batch_size=512)"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+    ],
+    "diagnosis": "# **Unified ML Training Diagnosis**\n\n## **Critical Issue: Memory Pressure (CPU-Bound OOM)**\n\n**Severity:** High | **Stage:** Training | **Status:** Active\n\n---\n\n## **Root Cause**\nBatch size of **256 is incompatible with CPU-only training** (`use_gpu=False`). This exceeds available CPU memory capacity, triggering out-of-memory errors on training attempt 2.\n\n---\n\n## **Immediate Resolution Path** *(Recommended Priority Order)*\n\n### **Option 1: Reduce Batch Size + Gradient Accumulation** \u2713 *Fastest*\n- Reduce `batch_size` \u2192 **32\u201364**\n- Set `accum_steps` \u2192 **4\u20138**\n- **Effect:** Maintains effective batch size (~256\u2013512) while respecting CPU memory constraints\n- **Timeline:**",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 256 to 128 and scaled accum_steps from 2 to 4 (invariant effective_batch_size=512)"
+  }
+]

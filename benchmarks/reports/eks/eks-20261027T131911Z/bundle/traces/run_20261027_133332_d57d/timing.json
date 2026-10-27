@@ -1,0 +1,72 @@
+{
+  "timeline": [
+    {
+      "type": "attempt",
+      "stage": "data_validation",
+      "attempt": 0,
+      "start": 1793108012.2611747,
+      "end": 1793108014.5220866,
+      "duration_s": 2.2609119415283203,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "data_loading",
+      "attempt": 0,
+      "start": 1793108015.2737293,
+      "end": 1793108015.6457753,
+      "duration_s": 0.37204599380493164,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 0,
+      "start": 1793108016.3973503,
+      "end": 1793108026.4258075,
+      "duration_s": 10.028457164764404,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "evaluation",
+      "attempt": 0,
+      "start": 1793108027.179015,
+      "end": 1793108029.4602926,
+      "duration_s": 2.281277656555176,
+      "status": "success"
+    }
+  ],
+  "llm_calls": [
+    {
+      "agent": "training_watch",
+      "caller": "analyze_epoch",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793108018.7134488,
+      "end": 1793108019.7486486,
+      "duration_s": 1.0351998805999756,
+      "input_tokens": 107,
+      "output_tokens": 65
+    },
+    {
+      "agent": "training_watch",
+      "caller": "analyze_epoch",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793108021.899448,
+      "end": 1793108022.9810715,
+      "duration_s": 1.0816235542297363,
+      "input_tokens": 107,
+      "output_tokens": 62
+    },
+    {
+      "agent": "training_watch",
+      "caller": "analyze_epoch",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793108025.4094791,
+      "end": 1793108026.3921049,
+      "duration_s": 0.9826257228851318,
+      "input_tokens": 102,
+      "output_tokens": 37
+    }
+  ]
+}

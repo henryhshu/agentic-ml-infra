@@ -1,0 +1,513 @@
+{
+  "run_tag": "eks-20261027T131911Z",
+  "job": {
+    "name": "autopark-dist-eks-20261027t131911z",
+    "status": {
+      "completedIndexes": "0-3",
+      "completionTime": "2026-10-27T13:54:24Z",
+      "conditions": [
+        {
+          "lastProbeTime": "2026-10-27T13:54:24Z",
+          "lastTransitionTime": "2026-10-27T13:54:24Z",
+          "message": "Reached expected number of succeeded pods",
+          "reason": "CompletionsReached",
+          "status": "True",
+          "type": "SuccessCriteriaMet"
+        },
+        {
+          "lastProbeTime": "2026-10-27T13:54:24Z",
+          "lastTransitionTime": "2026-10-27T13:54:24Z",
+          "message": "Reached expected number of succeeded pods",
+          "reason": "CompletionsReached",
+          "status": "True",
+          "type": "Complete"
+        }
+      ],
+      "ready": 0,
+      "startTime": "2026-10-27T13:19:16Z",
+      "succeeded": 4,
+      "terminating": 0,
+      "uncountedTerminatedPods": {}
+    }
+  },
+  "pod": {
+    "name": "autopark-dist-eks-20261027t131911z-0-x8f88",
+    "node": "ip-192-168-33-211.ec2.internal",
+    "created": "2026-10-27T13:19:16Z",
+    "scheduled": "2026-10-27T13:19:16Z",
+    "initialized": "2026-10-27T13:19:16Z",
+    "ready": "2026-10-27T13:54:22Z",
+    "container_started": "2026-10-27T13:19:16Z",
+    "container_finished": "2026-10-27T13:54:22Z",
+    "exit_code": 0,
+    "termination_reason": "Completed",
+    "restart_count": 0,
+    "image": "public.ecr.aws/docker/library/python:3.11.15-slim",
+    "image_id": "public.ecr.aws/docker/library/python@sha256:90744cff8f32887f075c47d747a173ff333e9e98801667af93c357fa9f5e28ff",
+    "qos_class": "Burstable",
+    "resources": {
+      "limits": {
+        "memory": "6Gi"
+      },
+      "requests": {
+        "cpu": "3",
+        "memory": "5Gi"
+      }
+    }
+  },
+  "node": {
+    "name": "ip-192-168-33-211.ec2.internal",
+    "instance_type": "c6i.xlarge",
+    "zone": "us-east-1d",
+    "capacity_type": "ON_DEMAND",
+    "nodegroup": "dist-cpu",
+    "kubelet_version": "v1.34.12-eks-39aca56",
+    "os_image": "Amazon Linux 2023.12.20261021",
+    "kernel": "6.12.111-136.204.amzn2023.x86_64",
+    "container_runtime": "containerd://2.3.5+unknown",
+    "architecture": "amd64",
+    "capacity": {
+      "cpu": "4",
+      "ephemeral-storage": "41865196Ki",
+      "hugepages-1Gi": "0",
+      "hugepages-2Mi": "0",
+      "memory": "7964656Ki",
+      "pods": "58"
+    },
+    "allocatable": {
+      "cpu": "3920m",
+      "ephemeral-storage": "37509222746",
+      "hugepages-1Gi": "0",
+      "hugepages-2Mi": "0",
+      "memory": "6947824Ki",
+      "pods": "58"
+    }
+  },
+  "ranks": [
+    {
+      "rank": 0,
+      "pod": {
+        "name": "autopark-dist-eks-20261027t131911z-0-x8f88",
+        "node": "ip-192-168-33-211.ec2.internal",
+        "created": "2026-10-27T13:19:16Z",
+        "scheduled": "2026-10-27T13:19:16Z",
+        "initialized": "2026-10-27T13:19:16Z",
+        "ready": "2026-10-27T13:54:22Z",
+        "container_started": "2026-10-27T13:19:16Z",
+        "container_finished": "2026-10-27T13:54:22Z",
+        "exit_code": 0,
+        "termination_reason": "Completed",
+        "restart_count": 0,
+        "image": "public.ecr.aws/docker/library/python:3.11.15-slim",
+        "image_id": "public.ecr.aws/docker/library/python@sha256:90744cff8f32887f075c47d747a173ff333e9e98801667af93c357fa9f5e28ff",
+        "qos_class": "Burstable",
+        "resources": {
+          "limits": {
+            "memory": "6Gi"
+          },
+          "requests": {
+            "cpu": "3",
+            "memory": "5Gi"
+          }
+        }
+      },
+      "node": {
+        "name": "ip-192-168-33-211.ec2.internal",
+        "instance_type": "c6i.xlarge",
+        "zone": "us-east-1d",
+        "capacity_type": "ON_DEMAND",
+        "nodegroup": "dist-cpu",
+        "kubelet_version": "v1.34.12-eks-39aca56",
+        "os_image": "Amazon Linux 2023.12.20261021",
+        "kernel": "6.12.111-136.204.amzn2023.x86_64",
+        "container_runtime": "containerd://2.3.5+unknown",
+        "architecture": "amd64",
+        "capacity": {
+          "cpu": "4",
+          "ephemeral-storage": "41865196Ki",
+          "hugepages-1Gi": "0",
+          "hugepages-2Mi": "0",
+          "memory": "7964656Ki",
+          "pods": "58"
+        },
+        "allocatable": {
+          "cpu": "3920m",
+          "ephemeral-storage": "37509222746",
+          "hugepages-1Gi": "0",
+          "hugepages-2Mi": "0",
+          "memory": "6947824Ki",
+          "pods": "58"
+        }
+      }
+    },
+    {
+      "rank": 1,
+      "pod": {
+        "name": "autopark-dist-eks-20261027t131911z-1-w569p",
+        "node": "ip-192-168-60-250.ec2.internal",
+        "created": "2026-10-27T13:19:16Z",
+        "scheduled": "2026-10-27T13:19:16Z",
+        "initialized": "2026-10-27T13:19:16Z",
+        "ready": "2026-10-27T13:54:22Z",
+        "container_started": "2026-10-27T13:19:17Z",
+        "container_finished": "2026-10-27T13:54:21Z",
+        "exit_code": 0,
+        "termination_reason": "Completed",
+        "restart_count": 0,
+        "image": "public.ecr.aws/docker/library/python:3.11.15-slim",
+        "image_id": "public.ecr.aws/docker/library/python@sha256:90744cff8f32887f075c47d747a173ff333e9e98801667af93c357fa9f5e28ff",
+        "qos_class": "Burstable",
+        "resources": {
+          "limits": {
+            "memory": "6Gi"
+          },
+          "requests": {
+            "cpu": "3",
+            "memory": "5Gi"
+          }
+        }
+      },
+      "node": {
+        "name": "ip-192-168-60-250.ec2.internal",
+        "instance_type": "c6i.xlarge",
+        "zone": "us-east-1d",
+        "capacity_type": "ON_DEMAND",
+        "nodegroup": "dist-cpu",
+        "kubelet_version": "v1.34.12-eks-39aca56",
+        "os_image": "Amazon Linux 2023.12.20261021",
+        "kernel": "6.12.111-136.204.amzn2023.x86_64",
+        "container_runtime": "containerd://2.3.5+unknown",
+        "architecture": "amd64",
+        "capacity": {
+          "cpu": "4",
+          "ephemeral-storage": "41865196Ki",
+          "hugepages-1Gi": "0",
+          "hugepages-2Mi": "0",
+          "memory": "7964660Ki",
+          "pods": "58"
+        },
+        "allocatable": {
+          "cpu": "3920m",
+          "ephemeral-storage": "37509222746",
+          "hugepages-1Gi": "0",
+          "hugepages-2Mi": "0",
+          "memory": "6947828Ki",
+          "pods": "58"
+        }
+      }
+    },
+    {
+      "rank": 2,
+      "pod": {
+        "name": "autopark-dist-eks-20261027t131911z-2-gbmmk",
+        "node": "ip-192-168-33-100.ec2.internal",
+        "created": "2026-10-27T13:19:16Z",
+        "scheduled": "2026-10-27T13:19:16Z",
+        "initialized": "2026-10-27T13:19:16Z",
+        "ready": "2026-10-27T13:54:21Z",
+        "container_started": "2026-10-27T13:19:16Z",
+        "container_finished": "2026-10-27T13:54:21Z",
+        "exit_code": 0,
+        "termination_reason": "Completed",
+        "restart_count": 0,
+        "image": "public.ecr.aws/docker/library/python:3.11.15-slim",
+        "image_id": "public.ecr.aws/docker/library/python@sha256:90744cff8f32887f075c47d747a173ff333e9e98801667af93c357fa9f5e28ff",
+        "qos_class": "Burstable",
+        "resources": {
+          "limits": {
+            "memory": "6Gi"
+          },
+          "requests": {
+            "cpu": "3",
+            "memory": "5Gi"
+          }
+        }
+      },
+      "node": {
+        "name": "ip-192-168-33-100.ec2.internal",
+        "instance_type": "c6i.xlarge",
+        "zone": "us-east-1d",
+        "capacity_type": "ON_DEMAND",
+        "nodegroup": "dist-cpu",
+        "kubelet_version": "v1.34.12-eks-39aca56",
+        "os_image": "Amazon Linux 2023.12.20261021",
+        "kernel": "6.12.111-136.204.amzn2023.x86_64",
+        "container_runtime": "containerd://2.3.5+unknown",
+        "architecture": "amd64",
+        "capacity": {
+          "cpu": "4",
+          "ephemeral-storage": "41865196Ki",
+          "hugepages-1Gi": "0",
+          "hugepages-2Mi": "0",
+          "memory": "7964656Ki",
+          "pods": "58"
+        },
+        "allocatable": {
+          "cpu": "3920m",
+          "ephemeral-storage": "37509222746",
+          "hugepages-1Gi": "0",
+          "hugepages-2Mi": "0",
+          "memory": "6947824Ki",
+          "pods": "58"
+        }
+      }
+    },
+    {
+      "rank": 3,
+      "pod": {
+        "name": "autopark-dist-eks-20261027t131911z-3-ntjl6",
+        "node": "ip-192-168-41-244.ec2.internal",
+        "created": "2026-10-27T13:19:16Z",
+        "scheduled": "2026-10-27T13:19:16Z",
+        "initialized": "2026-10-27T13:19:16Z",
+        "ready": "2026-10-27T13:54:22Z",
+        "container_started": "2026-10-27T13:19:17Z",
+        "container_finished": "2026-10-27T13:54:22Z",
+        "exit_code": 0,
+        "termination_reason": "Completed",
+        "restart_count": 0,
+        "image": "public.ecr.aws/docker/library/python:3.11.15-slim",
+        "image_id": "public.ecr.aws/docker/library/python@sha256:90744cff8f32887f075c47d747a173ff333e9e98801667af93c357fa9f5e28ff",
+        "qos_class": "Burstable",
+        "resources": {
+          "limits": {
+            "memory": "6Gi"
+          },
+          "requests": {
+            "cpu": "3",
+            "memory": "5Gi"
+          }
+        }
+      },
+      "node": {
+        "name": "ip-192-168-41-244.ec2.internal",
+        "instance_type": "c6i.xlarge",
+        "zone": "us-east-1d",
+        "capacity_type": "ON_DEMAND",
+        "nodegroup": "dist-cpu",
+        "kubelet_version": "v1.34.12-eks-39aca56",
+        "os_image": "Amazon Linux 2023.12.20261021",
+        "kernel": "6.12.111-136.204.amzn2023.x86_64",
+        "container_runtime": "containerd://2.3.5+unknown",
+        "architecture": "amd64",
+        "capacity": {
+          "cpu": "4",
+          "ephemeral-storage": "41865196Ki",
+          "hugepages-1Gi": "0",
+          "hugepages-2Mi": "0",
+          "memory": "7964656Ki",
+          "pods": "58"
+        },
+        "allocatable": {
+          "cpu": "3920m",
+          "ephemeral-storage": "37509222746",
+          "hugepages-1Gi": "0",
+          "hugepages-2Mi": "0",
+          "memory": "6947824Ki",
+          "pods": "58"
+        }
+      }
+    }
+  ],
+  "events": [
+    {
+      "object": "Pod/autopark-dist-eks-20261027t131911z-0-x8f88",
+      "reason": "Scheduled",
+      "message": "Successfully assigned autopark/autopark-dist-eks-20261027t131911z-0-x8f88 to ip-192-168-33-211.ec2.internal",
+      "type": "Normal",
+      "first": "2026-10-27T13:19:16Z",
+      "last": "2026-10-27T13:19:16Z",
+      "count": 1
+    },
+    {
+      "object": "Pod/autopark-dist-eks-20261027t131911z-0-x8f88",
+      "reason": "Pulled",
+      "message": "Container image \"public.ecr.aws/docker/library/python:3.11.15-slim\" already present on machine",
+      "type": "Normal",
+      "first": "2026-10-27T13:19:16Z",
+      "last": "2026-10-27T13:19:16Z",
+      "count": 1
+    },
+    {
+      "object": "Pod/autopark-dist-eks-20261027t131911z-0-x8f88",
+      "reason": "Created",
+      "message": "Created container: rank",
+      "type": "Normal",
+      "first": "2026-10-27T13:19:16Z",
+      "last": "2026-10-27T13:19:16Z",
+      "count": 1
+    },
+    {
+      "object": "Pod/autopark-dist-eks-20261027t131911z-0-x8f88",
+      "reason": "Started",
+      "message": "Started container rank",
+      "type": "Normal",
+      "first": "2026-10-27T13:19:16Z",
+      "last": "2026-10-27T13:19:16Z",
+      "count": 1
+    },
+    {
+      "object": "Pod/autopark-dist-eks-20261027t131911z-1-w569p",
+      "reason": "Scheduled",
+      "message": "Successfully assigned autopark/autopark-dist-eks-20261027t131911z-1-w569p to ip-192-168-60-250.ec2.internal",
+      "type": "Normal",
+      "first": "2026-10-27T13:19:16Z",
+      "last": "2026-10-27T13:19:16Z",
+      "count": 1
+    },
+    {
+      "object": "Pod/autopark-dist-eks-20261027t131911z-1-w569p",
+      "reason": "Pulled",
+      "message": "Container image \"public.ecr.aws/docker/library/python:3.11.15-slim\" already present on machine",
+      "type": "Normal",
+      "first": "2026-10-27T13:19:16Z",
+      "last": "2026-10-27T13:19:16Z",
+      "count": 1
+    },
+    {
+      "object": "Pod/autopark-dist-eks-20261027t131911z-2-gbmmk",
+      "reason": "Scheduled",
+      "message": "Successfully assigned autopark/autopark-dist-eks-20261027t131911z-2-gbmmk to ip-192-168-33-100.ec2.internal",
+      "type": "Normal",
+      "first": "2026-10-27T13:19:16Z",
+      "last": "2026-10-27T13:19:16Z",
+      "count": 1
+    },
+    {
+      "object": "Pod/autopark-dist-eks-20261027t131911z-2-gbmmk",
+      "reason": "Pulled",
+      "message": "Container image \"public.ecr.aws/docker/library/python:3.11.15-slim\" already present on machine",
+      "type": "Normal",
+      "first": "2026-10-27T13:19:16Z",
+      "last": "2026-10-27T13:19:16Z",
+      "count": 1
+    },
+    {
+      "object": "Pod/autopark-dist-eks-20261027t131911z-2-gbmmk",
+      "reason": "Created",
+      "message": "Created container: rank",
+      "type": "Normal",
+      "first": "2026-10-27T13:19:16Z",
+      "last": "2026-10-27T13:19:16Z",
+      "count": 1
+    },
+    {
+      "object": "Pod/autopark-dist-eks-20261027t131911z-2-gbmmk",
+      "reason": "Started",
+      "message": "Started container rank",
+      "type": "Normal",
+      "first": "2026-10-27T13:19:16Z",
+      "last": "2026-10-27T13:19:16Z",
+      "count": 1
+    },
+    {
+      "object": "Pod/autopark-dist-eks-20261027t131911z-3-ntjl6",
+      "reason": "Scheduled",
+      "message": "Successfully assigned autopark/autopark-dist-eks-20261027t131911z-3-ntjl6 to ip-192-168-41-244.ec2.internal",
+      "type": "Normal",
+      "first": "2026-10-27T13:19:16Z",
+      "last": "2026-10-27T13:19:16Z",
+      "count": 1
+    },
+    {
+      "object": "Pod/autopark-dist-eks-20261027t131911z-3-ntjl6",
+      "reason": "Pulled",
+      "message": "Container image \"public.ecr.aws/docker/library/python:3.11.15-slim\" already present on machine",
+      "type": "Normal",
+      "first": "2026-10-27T13:19:16Z",
+      "last": "2026-10-27T13:19:16Z",
+      "count": 1
+    },
+    {
+      "object": "Pod/autopark-dist-eks-20261027t131911z-3-ntjl6",
+      "reason": "Created",
+      "message": "Created container: rank",
+      "type": "Normal",
+      "first": "2026-10-27T13:19:16Z",
+      "last": "2026-10-27T13:19:16Z",
+      "count": 1
+    },
+    {
+      "object": "Job/autopark-dist-eks-20261027t131911z",
+      "reason": "SuccessfulCreate",
+      "message": "Created pod: autopark-dist-eks-20261027t131911z-0-x8f88",
+      "type": "Normal",
+      "first": "2026-10-27T13:19:16Z",
+      "last": "2026-10-27T13:19:16Z",
+      "count": 1
+    },
+    {
+      "object": "Job/autopark-dist-eks-20261027t131911z",
+      "reason": "SuccessfulCreate",
+      "message": "Created pod: autopark-dist-eks-20261027t131911z-1-w569p",
+      "type": "Normal",
+      "first": "2026-10-27T13:19:16Z",
+      "last": "2026-10-27T13:19:16Z",
+      "count": 1
+    },
+    {
+      "object": "Job/autopark-dist-eks-20261027t131911z",
+      "reason": "SuccessfulCreate",
+      "message": "Created pod: autopark-dist-eks-20261027t131911z-2-gbmmk",
+      "type": "Normal",
+      "first": "2026-10-27T13:19:16Z",
+      "last": "2026-10-27T13:19:16Z",
+      "count": 1
+    },
+    {
+      "object": "Job/autopark-dist-eks-20261027t131911z",
+      "reason": "SuccessfulCreate",
+      "message": "Created pod: autopark-dist-eks-20261027t131911z-3-ntjl6",
+      "type": "Normal",
+      "first": "2026-10-27T13:19:16Z",
+      "last": "2026-10-27T13:19:16Z",
+      "count": 1
+    },
+    {
+      "object": "Pod/autopark-dist-eks-20261027t131911z-1-w569p",
+      "reason": "Created",
+      "message": "Created container: rank",
+      "type": "Normal",
+      "first": "2026-10-27T13:19:17Z",
+      "last": "2026-10-27T13:19:17Z",
+      "count": 1
+    },
+    {
+      "object": "Pod/autopark-dist-eks-20261027t131911z-1-w569p",
+      "reason": "Started",
+      "message": "Started container rank",
+      "type": "Normal",
+      "first": "2026-10-27T13:19:17Z",
+      "last": "2026-10-27T13:19:17Z",
+      "count": 1
+    },
+    {
+      "object": "Pod/autopark-dist-eks-20261027t131911z-3-ntjl6",
+      "reason": "Started",
+      "message": "Started container rank",
+      "type": "Normal",
+      "first": "2026-10-27T13:19:17Z",
+      "last": "2026-10-27T13:19:17Z",
+      "count": 1
+    },
+    {
+      "object": "Job/autopark-dist-eks-20261027t131911z",
+      "reason": "Completed",
+      "message": "Job completed",
+      "type": "Normal",
+      "first": "2026-10-27T13:54:24Z",
+      "last": "2026-10-27T13:54:24Z",
+      "count": 1
+    }
+  ],
+  "marker": {
+    "exit_code": 0,
+    "finished_at": 1793109260.2952678,
+    "duration_s": 2062.988472700119,
+    "trace_files": 430,
+    "pod": "autopark-dist-eks-20261027t131911z-0-x8f88",
+    "node": "ip-192-168-33-211.ec2.internal"
+  },
+  "marker_type": "_SUCCESS",
+  "listener_wait_s": 2126.7058959007263
+}

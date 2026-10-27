@@ -1,0 +1,58 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## Primary Issue\n**Memory Pressure During Training Initialization**\n\nCPU-only training with batch_size=256 exceeds available memory capacity on the Ray cluster (2 CPU workers).\n\n---\n\n## Root Cause Analysis\n\n| Factor | Impact |\n|--------|--------|\n| **Batch Size (256)** | Excessive for CPU memory; GPU would handle this, but `use_gpu=False` |\n| **CPU-Only Execution** | Significantly constrains available memory vs. GPU alternatives |\n| **Learning Rate (5.0)** | Secondary risk causing gradient instability, compounding convergence issues |\n| **Data Pipeline** | `num_workers=0` prevents async data loading, blocking memory optimization |\n\n---\n\n## Immediate Actions (Priority Order)\n\n1. **Reduce batch_size to 32-64** \u2192 Primary memory relief measure",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 256 to 128 and scaled accum_steps from 1 to 2 (invariant effective_batch_size=256)"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "nan_loss_detected"
+    ],
+    "raw_anomalies": [
+      "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=5.0"
+    ],
+    "diagnosis": "# **UNIFIED DIAGNOSIS: NaN Loss Detection**\n\n## **Critical Issue**\nTraining has diverged to NaN loss on the first step due to a **critically excessive learning rate of 5.0**, which causes gradient magnitudes to explode beyond numerical stability bounds. This is amplified by gradient accumulation (2 steps), creating compounding gradient magnification.\n\n## **Root Cause**\n- Learning rate (5.0) is 50-500x too high for the model architecture and dataset\n- Accumulated gradients (2 steps) further magnify weight updates\n- Fault injection scenario compounds the instability\n\n## **Immediate Actions (Required)**\n1. **Reduce learning rate**: `lr = 0.01\u20130.1` (10-50x reduction)\n2. **Enable gradient clipping**: `max_grad_norm = 1.0`\n\n## **Expected Outcome**",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 5.0 to 0.5"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "nan_loss_detected"
+    ],
+    "raw_anomalies": [
+      "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=0.5"
+    ],
+    "diagnosis": "# **UNIFIED DIAGNOSIS: NaN Loss Detection**\n\n## **Critical Issue**\nTraining has diverged immediately due to an **excessively high learning rate (0.5)**, causing numerical instability and NaN loss values on the first training step.\n\n## **Root Cause Analysis**\nThe learning rate of 0.5 is incompatible with:\n- Model architecture and dataset characteristics\n- Small batch size (128) on CPU\n- Absence of gradient clipping safeguards\n- Results in loss explosion \u2192 gradient overflow \u2192 NaN propagation\n\n## **Immediate Actions Required**\n\n| Action | Specification |\n|--------|---------------|\n| **Learning Rate** | Reduce from 0.5 \u2192 **0.01\u20130.05** (or 0.001\u20130.01 per conservative estimate) |\n| **Gradient Clipping** | Enable `max_grad_norm",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 0.5 to 0.05"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "gradient_explosion"
+    ],
+    "raw_anomalies": [
+      "Gradient explosion detected: grad_norm=999.9 exceeds stability threshold"
+    ],
+    "diagnosis": "# **UNIFIED DIAGNOSIS: Gradient Explosion**\n\n## **Root Cause**\nUnstable gradient updates caused by a **combination of three hyperparameter misconfigurations**:\n- **Learning rate (0.05)** is 10-50x higher than recommended ranges\n- **Momentum (0.9)** amplifies gradient updates excessively\n- **Gradient accumulation (2 steps)** compounds the effect without stabilization controls\n\nThis creates a multiplicative destabilization effect, resulting in observed gradient norm of **999.9** (critical threshold breach).\n\n---\n\n## **Priority Remediation Actions**\n\n| Action | Severity | Implementation |\n|--------|----------|-----------------|\n| **Reduce learning rate** | \ud83d\udd34 CRITICAL | Set to `0.001-0.005` (10-50x reduction) |\n| **Enable gradient clipping** |",
+    "auto_remediated": true,
+    "action_taken": "enable_gradient_clipping",
+    "remediation_status": "success",
+    "remediation_details": "Enabled gradient clipping with max_norm=1.0"
+  }
+]

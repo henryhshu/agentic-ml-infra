@@ -1,0 +1,16 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "worker_shortage"
+    ],
+    "raw_anomalies": [
+      "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:48298). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new process id)."
+    ],
+    "diagnosis": "# Unified Diagnosis: Worker Shortage During Training\n\n## Summary\n**Critical Issue:** Insufficient worker redundancy (2/3 operational) triggered distributed training failure when rank 3 worker crashed due to spot instance termination during fault injection testing.\n\n## Root Cause Analysis\nThe training cluster is configured with minimal fault tolerance (`ray_workers: 2` baseline, operating at 2/3 of required capacity). When spot worker churn was injected, the loss of rank 3 caused cascading TCP connection failures in Ray's distributed training pipeline, dropping the cluster below operational thresholds.\n\n## Recommended Actions (Priority Order)\n\n1. **Increase Worker Redundancy** (Immediate)\n   - Raise `ray_workers` from 2 \u2192 **4-5** to maintain operational capacity during spot terminations\n   - This provides a 1-2 worker fault tolerance margin\n\n2. **",
+    "auto_remediated": true,
+    "action_taken": "restart_workers",
+    "remediation_status": "success",
+    "remediation_details": "Waited 0.5s for 3 worker ranks to heartbeat (ready=True); cleared injected worker-crash flag."
+  }
+]

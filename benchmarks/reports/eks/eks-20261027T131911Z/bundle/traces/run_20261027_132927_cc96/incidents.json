@@ -1,0 +1,16 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "gradient_explosion"
+    ],
+    "raw_anomalies": [
+      "Stealth gradient shock detected at step 2: grad_norm=842.1 exploded after step 1 normal loss"
+    ],
+    "diagnosis": "# Unified Diagnosis: Gradient Explosion\n\n## **Root Cause**\nGradient explosion (norm: 842.1) at step 2 stems from a **configuration mismatch**:\n- **Primary driver**: Learning rate 0.1 is excessively high for current model/data dynamics\n- **Amplifier**: Aggressive momentum (0.9) compounds gradient accumulation\n- **Missing safeguard**: Gradient clipping disabled (`max_grad_norm=None`)\n\nThe fault injection triggered numerical instability that the configuration lacked resilience to absorb.\n\n## **Immediate Actions (Priority Order)**\n1. **Enable gradient clipping**: Set `max_grad_norm=1.0`\n2. **Reduce learning rate**: Lower from 0.1 \u2192 0.01 (or 0.001 for more stability)\n3. **Restart training**",
+    "auto_remediated": true,
+    "action_taken": "enable_gradient_clipping",
+    "remediation_status": "success",
+    "remediation_details": "Enabled gradient clipping with max_norm=1.0"
+  }
+]

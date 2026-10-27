@@ -1,0 +1,58 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "Internal PyTorch Architecture Defect: mat1 and mat2 shapes cannot be multiplied (128x512 and 1024x10). Linear projection layer in model architecture has dimension mismatch."
+    ],
+    "raw_anomalies": [
+      "Internal PyTorch Architecture Defect: mat1 and mat2 shapes cannot be multiplied (128x512 and 1024x10). Linear projection layer in model architecture has dimension mismatch."
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## **Issue Classification**\n**Severity:** CRITICAL | **Category:** Architectural Configuration Error | **Stage:** Pre-training (blocks execution)\n\n---\n\n## **Root Cause**\nDimension mismatch in the model's final linear classification layer:\n- **Expected input:** 512 dimensions\n- **Actual input:** 1024 dimensions\n- **Impact:** Matrix multiplication failure (`128x512 @ 1024x10` is invalid)\n\nThis is a structural defect where the feature extraction backbone output size (1024) does not align with the classifier head input expectation (512).\n\n---\n\n## **Resolution Options**\n\n**Option A (Recommended):** Update the linear layer initialization\n```python\n# Change from:\nnn.Linear(in_features=512, out_features=10)\n# To:\nnn.Linear(in_features=1",
+    "auto_remediated": false,
+    "action_taken": null,
+    "remediation_status": "escalated",
+    "remediation_details": ""
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "Internal PyTorch Architecture Defect: mat1 and mat2 shapes cannot be multiplied (128x512 and 1024x10). Linear projection layer in model architecture has dimension mismatch."
+    ],
+    "raw_anomalies": [
+      "Internal PyTorch Architecture Defect: mat1 and mat2 shapes cannot be multiplied (128x512 and 1024x10). Linear projection layer in model architecture has dimension mismatch."
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## Critical Issue: Architecture Dimension Mismatch\n\n**Status:** \ud83d\udd34 **BLOCKING** \u2014 Training cannot proceed\n\n**Root Cause:**\nDimension incompatibility between the feature extractor and classification head:\n- Feature extraction backbone outputs: **1024 dimensions**\n- Linear classification layer expects: **512 dimensions**\n- Result: Matrix multiplication failure (128\u00d71024 cannot multiply with 512\u00d710)\n\nThis is an **architecture definition error**, not a runtime or data issue.\n\n---\n\n## Resolution (Choose One)\n\n### Option A: Reduce Feature Extractor Output \u2705 *Recommended for 'tiny' variant*\nModify the final convolutional layer to output **512 channels** instead of 1024:\n```python\n# Adjust final conv layer or pooling before linear layer\n# Ensure output shape is (",
+    "auto_remediated": false,
+    "action_taken": null,
+    "remediation_status": "escalated",
+    "remediation_details": ""
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "Internal PyTorch Architecture Defect: mat1 and mat2 shapes cannot be multiplied (128x512 and 1024x10). Linear projection layer in model architecture has dimension mismatch."
+    ],
+    "raw_anomalies": [
+      "Internal PyTorch Architecture Defect: mat1 and mat2 shapes cannot be multiplied (128x512 and 1024x10). Linear projection layer in model architecture has dimension mismatch."
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## **Critical Issue: Linear Layer Dimension Mismatch**\n\n**Severity:** BLOCKING | **Stage:** Model Initialization/Forward Pass\n\n### Root Cause\nThe model architecture contains incompatible layer dimensions. The penultimate layer outputs **512 features**, but the final Linear classification layer is configured to accept **1024 inputs**, causing a PyTorch matrix multiplication failure: `(128\u00d7512) \u00d7 (1024\u00d710)` is undefined.\n\n### Immediate Resolution (Choose One)\n\n**Option A (Recommended - Minimal Change):**\n```python\n# Change final layer from:\nLinear(1024, 10)\n# To:\nLinear(512, 10)\n```\n\n**Option B (If 1024-dim features are required):**\nAdd an intermediate projection layer before classification:\n```python\nLinear(512, 1024),",
+    "auto_remediated": false,
+    "action_taken": null,
+    "remediation_status": "escalated",
+    "remediation_details": ""
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "Internal PyTorch Architecture Defect: mat1 and mat2 shapes cannot be multiplied (128x512 and 1024x10). Linear projection layer in model architecture has dimension mismatch."
+    ],
+    "raw_anomalies": [
+      "Internal PyTorch Architecture Defect: mat1 and mat2 shapes cannot be multiplied (128x512 and 1024x10). Linear projection layer in model architecture has dimension mismatch."
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## **Issue Classification**\n\ud83d\udd34 **Critical Architecture Defect** \u2014 Training Pipeline Failure (Attempt 4)\n\n---\n\n## **Root Cause**\n**Dimension Mismatch in Linear Projection Layer**\n\nThe model architecture contains an incompatible layer connection:\n- **Penultimate Layer Output:** 512 features\n- **Final Linear Layer Input Expectation:** 1024 features\n- **Operation Failure:** Cannot perform matrix multiplication (128\u00d7512 \u00d7 1024\u00d710)\n\nThis is a **static model design error**, not a data or training configuration issue.\n\n---\n\n## **Impact**\n- \u274c Training fails immediately when forward pass reaches the final linear layer\n- \u274c All subsequent training epochs cannot proceed\n- \u274c No workaround possible without architectural correction\n\n---\n\n## **Recommended Resolution",
+    "auto_remediated": false,
+    "action_taken": null,
+    "remediation_status": "escalated",
+    "remediation_details": ""
+  }
+]

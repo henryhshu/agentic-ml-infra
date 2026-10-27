@@ -1,0 +1,63 @@
+{
+  "timeline": [
+    {
+      "type": "attempt",
+      "stage": "data_validation",
+      "attempt": 0,
+      "start": 1793109066.8145823,
+      "end": 1793109069.0285294,
+      "duration_s": 2.213947057723999,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "data_loading",
+      "attempt": 0,
+      "start": 1793109069.0285375,
+      "end": 1793109069.4261382,
+      "duration_s": 0.3976006507873535,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 0,
+      "start": 1793109069.4261463,
+      "end": 1793109069.5159688,
+      "duration_s": 0.08982253074645996,
+      "status": "failed",
+      "error": "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 1,
+      "start": 1793109069.515987,
+      "end": 1793109069.5768404,
+      "duration_s": 0.06085348129272461,
+      "status": "failed",
+      "error": "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 2,
+      "start": 1793109069.5768578,
+      "end": 1793109069.635123,
+      "duration_s": 0.05826520919799805,
+      "status": "failed",
+      "error": "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 3,
+      "start": 1793109069.6351404,
+      "end": 1793109069.693506,
+      "duration_s": 0.058365583419799805,
+      "status": "failed",
+      "error": "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+    }
+  ],
+  "llm_calls": []
+}

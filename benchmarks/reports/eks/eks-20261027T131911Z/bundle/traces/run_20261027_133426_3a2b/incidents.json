@@ -1,0 +1,30 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=512"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## Executive Summary\n**Memory Pressure during Training Stage** \u2013 Critical resource constraint requiring immediate configuration adjustment.\n\n---\n\n## Root Cause\n**Batch size of 512 exceeds available memory** on the configured device (CPU-only per `use_gpu: False`). This creates allocation failures that manifest as OOM errors. The diagnosis reveals a **device allocation mismatch**: the training configuration specifies CPU-only execution but encounters CUDA OOM symptoms, indicating either:\n- A configuration override at runtime, or\n- Memory exhaustion on the CPU device itself\n\n---\n\n## Immediate Actions (Priority Order)\n\n1. **Reduce batch size** to **64\u2013128**\n   - Aligns memory footprint with available CPU/GPU capacity\n   \n2. **Enable gradient accumulation**\n   - Set `accum_steps: 4\u20138` to maintain effective batch size",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 512 to 256 and scaled accum_steps from 1 to 2 (invariant effective_batch_size=512)"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+    ],
+    "diagnosis": "# **Unified Diagnosis: Memory Pressure During Training**\n\n## **Root Cause**\nThe training job is experiencing memory exhaustion on CPU-only execution due to a **batch size of 256 that exceeds available RAM**, compounded by disabled data prefetching (`num_workers=0`). The CUDA OOM error reported is a logging artifact\u2014the actual constraint is CPU memory on a non-GPU device.\n\n## **Critical Issues**\n1. **Oversized Batch:** 256 samples per iteration is excessive for CPU-based training without GPU memory offloading\n2. **Disabled Prefetching:** `num_workers=0` prevents concurrent data loading, forcing synchronous I/O and higher peak memory usage\n3. **Configuration Mismatch:** Gradient accumulation is enabled but insufficient to compensate for the batch size\n\n## **Recommended Actions (Priority Order)**\n\n| Action | Impact",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 256 to 128 and scaled accum_steps from 2 to 4 (invariant effective_batch_size=512)"
+  }
+]

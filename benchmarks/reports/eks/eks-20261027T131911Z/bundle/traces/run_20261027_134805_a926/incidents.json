@@ -1,0 +1,30 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=512"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## Issue\n**Memory Pressure During Training Initialization**\n\n## Root Cause\nBatch size of **512 is incompatible with available CPU memory**. The training configuration specifies `use_gpu: False`, forcing all computation onto CPU which lacks sufficient capacity for this workload size.\n\n## Impact\n- **Immediate**: Training fails at batch allocation stage\n- **Scope**: CPU device memory exhaustion\n- **Severity**: Blocks training pipeline\n\n## Resolution (Priority Order)\n\n### Option 1: Reduce Batch Size (Recommended)\n- Decrease `batch_size` from 512 \u2192 **32\u201364**\n- Maintains CPU compatibility without infrastructure changes\n- May require learning rate adjustment\n\n### Option 2: Enable GPU Acceleration\n- Set `use_gpu: True` (if GPU available)\n- Supports larger batch sizes natively\n\n### Option",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 512 to 256 and scaled accum_steps from 1 to 2 (invariant effective_batch_size=512)"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## Anomaly: Memory Pressure\n\n### Root Cause\n**CPU-mode training with oversized batch size (256) exceeds available system memory.** The configuration inconsistency (`use_gpu=False` yet encountering CUDA errors) suggests a device mismatch or fault injection artifact that masks the underlying memory constraint.\n\n### Critical Issues\n1. **Batch Size Mismatch:** 256-sample batches are incompatible with CPU-only memory budget\n2. **Data Loading Bottleneck:** `num_workers=0` serializes data loading, preventing memory-efficient parallel preprocessing\n3. **Configuration Inconsistency:** GPU-related errors in CPU mode indicate potential deployment parity risk\n\n### Recommended Actions (Priority Order)\n\n| Action | Expected Impact |\n|--------|-----------------|\n| **Reduce `batch_size` to 64\u2013128**",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 256 to 128 and scaled accum_steps from 2 to 4 (invariant effective_batch_size=512)"
+  }
+]

@@ -7,12 +7,16 @@ Renders paper/report figures exclusively from measured benchmark output:
 
 Figures:
   Fig 1: Measured training-loss traces around injected faults (4 agentic runs)
-  Fig 2: Measured incident timeline (stage attempts, Claude calls, actions) for one run
+  Fig 2: Measured incident timeline (stage attempts, Claude calls, actions) for one run;
+         for a multi-node run, the worker-loss incident with the worker kill and liveness check
+  Fig 3: Measured incident timeline of the Level 4 triple cascade
   Fig 4: Median MTTR decomposition per scenario with min-max range, vs. baseline wall time
   Fig 5: Observed outcome counts per scenario across repeats
+  Fig 6: Per-rank CPU use (cgroup samples) of a multi-node run
 
 Usage:
     python -m benchmarks.plot_analytical_graphs [results.json]
+    python -m benchmarks.plot_analytical_graphs --run-dir benchmarks/reports/eks/<run_tag>   # multi-node
 """
 from __future__ import annotations
 
@@ -51,6 +55,7 @@ FAIL_SPAN = "#f6d5d4"
 HANDLE_SPAN = "#ddd8f6"
 
 TRACES_ROOT = Path("benchmarks/reports/traces")
+RANKS: dict[str, Any] = {}  # multi-node run: {"traces": Path, "metrics": {rank: cluster_metrics}}
 SCENARIO_LABELS = {
     "nan_divergence": "L1 nan_divergence",
     "batch_oom": "L1 batch_oom",
@@ -76,6 +81,8 @@ def latest_results() -> Path:
 def load_trace(run_dir: str) -> dict[str, Any]:
     """Load measured trace files for one run (live run dir first, then the archive)."""
     candidates = [Path(run_dir), TRACES_ROOT / Path(run_dir).name]
+    if RANKS:
+        candidates.insert(0, RANKS["traces"] / Path(run_dir).name)
     for d in candidates:
         if (d / "timing.json").exists():
             def read(name: str, default: Any) -> Any:
@@ -147,8 +154,12 @@ def plot_fig1_telemetry_series(results: dict, out_pdf_dir: Path, out_png_dir: Pa
 
 
 def plot_fig2_agent_waterfall(results: dict, out_pdf_dir: Path, out_png_dir: Path,
-                              scenario_id: str = "triple_cascade_oom_lr_grad") -> None:
-    """Measured incident timeline: stage attempts, each Claude call by caller, and actions."""
+                              scenario_id: str = "triple_cascade_oom_lr_grad",
+                              name: str = "fig2_agent_waterfall") -> None:
+    """Measured incident timeline: stage attempts, each Claude call by caller, and actions.
+
+    For a multi-node run, adds the worker-process kill (from the worker rank's process exits)
+    and rank 0's liveness check after the failed collective."""
     run = pick_run(results, scenario_id)
     tr = load_trace(run["agentic"]["run_dir"])
     lanes = ["Training attempts", "Claude: analyze_epoch", "Claude: diagnose",
@@ -156,23 +167,35 @@ def plot_fig2_agent_waterfall(results: dict, out_pdf_dir: Path, out_png_dir: Pat
     caller_lane = {"analyze_epoch": 1, "diagnose": 2, "handle_anomaly": 3, "recommend_action": 4}
     train = [e for e in tr["timeline"] if e["type"] == "attempt" and e["stage"] == "training"]
     t0 = train[0]["start"]
-    fig, ax = plt.subplots(figsize=(7.2, 2.6))
+    t_end = max(e["end"] for e in tr["timeline"])
+    lost = [e for e in tr["timeline"] if e["type"] == "worker_lost"]
+    kills = [(r, x["exited"]) for r, cm in RANKS.get("metrics", {}).items()
+             for x in cm.get("process_exits", []) if x["exit_code"] != 0 and t0 <= x["exited"] <= t_end]
+    if lost or kills:
+        lanes = ["Worker process"] + lanes
+    off = 1 if (lost or kills) else 0
+    fig, ax = plt.subplots(figsize=(7.2, 2.6 + 0.3 * off))
     for e in train:
         color = SERIES[1] if e["status"] == "failed" else SERIES[2]
-        ax.broken_barh([(e["start"] - t0, max(e["duration_s"], 0.05))], (0 - 0.3, 0.6), color=color)
+        ax.broken_barh([(e["start"] - t0, max(e["duration_s"], 0.05))], (off - 0.3, 0.6), color=color)
+    for e in lost:
+        ax.broken_barh([(e["start"] - t0, e["duration_s"])], (off - 0.3, 0.6), color=SERIES[3])
+    for r, t in kills:
+        ax.plot(t - t0, 0, marker="X", ms=6, color=SERIES[1])
+        ax.annotate(f"rank {r} SIGKILL", (t - t0, 0), xytext=(4, -3), textcoords="offset points",
+                    ha="left", fontsize=6, color=MUTED)
     for c in tr["llm_calls"]:
         lane = caller_lane.get(c["caller"])
         if lane is not None and c["end"] >= t0:
-            ax.broken_barh([(c["start"] - t0, c["duration_s"])], (lane - 0.3, 0.6), color=SERIES[0])
+            ax.broken_barh([(c["start"] - t0, c["duration_s"])], (lane + off - 0.3, 0.6), color=SERIES[0])
     for a in tr["actions"]:
         if a.get("start") is not None:
-            ax.plot(a["start"] - t0, 5, marker="D", ms=5, color=SERIES[4])
-            ax.annotate(a["action"], (a["start"] - t0, 5), xytext=(0, 6), textcoords="offset points",
+            ax.plot(a["start"] - t0, 5 + off, marker="D", ms=5, color=SERIES[4])
+            ax.annotate(a["action"], (a["start"] - t0, 5 + off), xytext=(0, 6), textcoords="offset points",
                         ha="center", fontsize=6, color=MUTED)
     t = run["agentic"]["timing"]
     ax.set_yticks(range(len(lanes)))
     ax.set_yticklabels(lanes)
-    ax.invert_yaxis()
     ax.set_ylim(len(lanes) - 0.4, -0.8)
     ax.set_xlabel("Seconds since first training attempt (measured)")
     ax.grid(True, axis="x")
@@ -187,9 +210,11 @@ def plot_fig2_agent_waterfall(results: dict, out_pdf_dir: Path, out_png_dir: Pat
         plt.Rectangle((0, 0), 1, 1, color=SERIES[2], label="Successful attempt"),
         plt.Rectangle((0, 0), 1, 1, color=SERIES[0], label="Claude call"),
     ]
-    ax.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, -0.28), frameon=False, ncol=3)
+    if lost:
+        handles.append(plt.Rectangle((0, 0), 1, 1, color=SERIES[3], label="Rank-0 liveness check"))
+    ax.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, -0.28), frameon=False, ncol=len(handles))
     fig.tight_layout()
-    _save(fig, "fig2_agent_waterfall", out_pdf_dir, out_png_dir)
+    _save(fig, name, out_pdf_dir, out_png_dir)
 
 
 def plot_fig4_mttr_breakdown(results: dict, out_pdf_dir: Path, out_png_dir: Path) -> None:
@@ -219,9 +244,9 @@ def plot_fig4_mttr_breakdown(results: dict, out_pdf_dir: Path, out_png_dir: Path
     base = [r["baseline_duration_s"]["median"] for r in rows]
     ax.scatter(base, y, marker="|", s=90, color=INK, linewidths=1.6, zorder=5,
                label="Baseline wall time (median)")
-    for yi, m, r in zip(y, hi, rows):
+    for yi, m, bw, r in zip(y, hi, base, rows):
         n_inc = r["mttr_s"]["n"]
-        ax.text(m + 1.0, yi, f"{r['mttr_s']['median']:.1f}s (n={n_inc})", va="center", fontsize=6.5, color=MUTED)
+        ax.text(max(m, bw) + 1.0, yi, f"{r['mttr_s']['median']:.1f}s (n={n_inc})", va="center", fontsize=6.5, color=MUTED)
     ax.set_yticks(y)
     ax.set_yticklabels(labels)
     ax.invert_yaxis()
@@ -260,43 +285,83 @@ def plot_fig5_frontier_map(results: dict, out_pdf_dir: Path, out_png_dir: Path) 
     _save(fig, "fig5_frontier_map", out_pdf_dir, out_png_dir)
 
 
-def plot_fig6_env_comparison(local: dict, eks: dict, out_pdf_dir: Path, out_png_dir: Path) -> None:
-    """Median MTTR [min-max] per scenario: local reference run vs. EKS replication."""
-    erows = {r["id"]: r for r in eks["aggregates"]}
-    rows = [(r, erows[r["id"]]) for r in local["aggregates"] if r["mttr_s"] and erows.get(r["id"], {}).get("mttr_s")]
-    y = np.arange(len(rows))
-    fig, ax = plt.subplots(figsize=(7.2, 0.3 * len(rows) + 1.0))
-    for offset, idx, name, color, marker in ((-0.15, 0, "Local (Apple Silicon)", SERIES[0], "o"),
-                                             (0.15, 1, "EKS (c6i.xlarge, us-east-1)", SERIES[1], "s")):
-        med = np.array([pair[idx]["mttr_s"]["median"] for pair in rows])
-        lo = np.array([pair[idx]["mttr_s"]["min"] for pair in rows])
-        hi = np.array([pair[idx]["mttr_s"]["max"] for pair in rows])
-        ax.errorbar(med, y + offset, xerr=[med - lo, hi - med], fmt=marker, ms=5, color=color,
-                    ecolor=color, elinewidth=1.0, capsize=2, label=name)
-    ax.set_yticks(y)
-    ax.set_yticklabels([SCENARIO_LABELS.get(pair[0]["id"], pair[0]["id"]) for pair in rows])
-    ax.invert_yaxis()
-    ax.set_xlim(left=0)
-    ax.set_xlabel("MTTR / time to termination, seconds (median, min–max over 5 runs)")
-    ax.grid(True, axis="x")
-    ax.legend(loc="lower right", frameon=False)
+def plot_fig6_rank_utilization(results: dict, out_pdf_dir: Path, out_png_dir: Path,
+                               scenario_id: str = "spot_worker_churn") -> None:
+    """Per-rank CPU cores (cgroup v2, 2 s samples): one worker-loss incident, and whole-run medians."""
+    metrics = RANKS["metrics"]
+
+    def series(cm):
+        s_ = cm["resource_samples"]
+        return [((a["t"] + b["t"]) / 2, (b["cpu_usage_usec"] - a["cpu_usage_usec"]) / 1e6 / (b["t"] - a["t"]))
+                for a, b in zip(s_, s_[1:]) if b["t"] > a["t"]]
+
+    run = pick_run(results, scenario_id)
+    tr = load_trace(run["agentic"]["run_dir"])
+    t0 = min(e["start"] for e in tr["timeline"]) - 4
+    t1 = max(e["end"] for e in tr["timeline"]) + 4
+    fig, (ax, bx) = plt.subplots(1, 2, figsize=(7.2, 2.4), gridspec_kw={"width_ratios": [2.2, 1]})
+    for e in tr["timeline"]:
+        if e["stage"] == "training" and e["type"] == "attempt" and e["status"] == "failed":
+            ax.axvspan(e["start"] - t0, e["end"] - t0, color=FAIL_SPAN, lw=0)
+        elif e["type"] == "handle":
+            ax.axvspan(e["start"] - t0, e["end"] - t0, color=HANDLE_SPAN, lw=0)
+    for r in sorted(metrics):
+        pts = [(t - t0, c) for t, c in series(metrics[r]) if t0 <= t <= t1]
+        ax.plot([p[0] for p in pts], [p[1] for p in pts], color=SERIES[r % len(SERIES)], lw=1.2,
+                marker="o", ms=2, label=f"rank {r}")
+        for x in metrics[r].get("process_exits", []):
+            if x["exit_code"] != 0 and t0 + 4 <= x["exited"] <= t1 - 4:
+                ax.axvline(x["exited"] - t0, color=SERIES[r % len(SERIES)], lw=0.8, ls=":")
+    ax.set_xlabel("Seconds (agentic worker-loss run, repeat 0)")
+    ax.set_ylabel("CPU cores used")
+    ax.grid(True, axis="y")
+    ax.legend(loc="lower center", bbox_to_anchor=(0.5, 1.0), frameon=False, ncol=4, fontsize=6.5)
+
+    attempt, handle = [], []
+    for run_ in results["runs"]:
+        for e in load_trace(run_["agentic"]["run_dir"])["timeline"]:
+            if e["type"] in ("attempt", "handle"):
+                (attempt if e["type"] == "attempt" else handle).append((e["start"], e["end"]))
+    ranks = sorted(metrics)
+    for j, (ivals, label, color) in enumerate(((attempt, "stage attempts", SERIES[0]),
+                                               (handle, "incident handling", SERIES[4]))):
+        meds = []
+        for r in ranks:
+            vals = [c for t, c in series(metrics[r]) if any(s_ <= t <= e_ for s_, e_ in ivals)]
+            meds.append(float(np.median(vals)) if vals else 0.0)
+        bx.bar(np.arange(len(ranks)) + (j - 0.5) * 0.38, meds, width=0.36, color=color, label=label)
+    bx.set_xticks(range(len(ranks)))
+    bx.set_xticklabels([f"rank {r}" for r in ranks])
+    bx.set_ylabel("Median CPU cores")
+    bx.grid(True, axis="y")
+    bx.legend(loc="lower center", bbox_to_anchor=(0.5, 1.0), frameon=False, ncol=1, fontsize=6.5)
     fig.tight_layout()
-    _save(fig, "fig6_env_comparison", out_pdf_dir, out_png_dir)
+    _save(fig, "fig6_rank_utilization", out_pdf_dir, out_png_dir)
 
 
 def generate_all_figures(results_path: Path | None = None,
                          out_pdf_dir: Path = Path("paper/figures"),
                          out_png_dir: Path = Path("benchmarks/figures"),
-                         compare_path: Path | None = None) -> None:
+                         run_dir: Path | None = None) -> None:
+    if run_dir is not None:
+        # multi-node run fetched by benchmarks/eks_listener.py
+        results_path = run_dir / "bundle" / "results.json"
+        RANKS["traces"] = run_dir / "bundle" / "traces"
+        RANKS["metrics"] = {0: json.loads((run_dir / "bundle" / "cluster_metrics.json").read_text())}
+        for d in sorted((run_dir / "ranks").glob("rank*")):
+            RANKS["metrics"][int(d.name[4:])] = json.loads((d / "cluster_metrics.json").read_text())
     results_path = results_path or latest_results()
     results = json.loads(Path(results_path).read_text())
     print(f"🎨 Rendering figures from {results_path}")
     plot_fig1_telemetry_series(results, out_pdf_dir, out_png_dir)
-    plot_fig2_agent_waterfall(results, out_pdf_dir, out_png_dir)
+    if RANKS:
+        plot_fig2_agent_waterfall(results, out_pdf_dir, out_png_dir, "spot_worker_churn")
+        plot_fig2_agent_waterfall(results, out_pdf_dir, out_png_dir, name="fig3_cascade_waterfall")
+        plot_fig6_rank_utilization(results, out_pdf_dir, out_png_dir)
+    else:
+        plot_fig2_agent_waterfall(results, out_pdf_dir, out_png_dir)
     plot_fig4_mttr_breakdown(results, out_pdf_dir, out_png_dir)
     plot_fig5_frontier_map(results, out_pdf_dir, out_png_dir)
-    if compare_path is not None:
-        plot_fig6_env_comparison(results, json.loads(Path(compare_path).read_text()), out_pdf_dir, out_png_dir)
 
 
 if __name__ == "__main__":
@@ -304,6 +369,7 @@ if __name__ == "__main__":
 
     ap = argparse.ArgumentParser()
     ap.add_argument("results", nargs="?", type=Path, default=None)
-    ap.add_argument("--compare", type=Path, default=None, help="EKS results JSON to compare against")
+    ap.add_argument("--run-dir", type=Path, default=None,
+                    help="multi-node run directory fetched by benchmarks/eks_listener.py")
     a = ap.parse_args()
-    generate_all_figures(a.results, compare_path=a.compare)
+    generate_all_figures(a.results, run_dir=a.run_dir)

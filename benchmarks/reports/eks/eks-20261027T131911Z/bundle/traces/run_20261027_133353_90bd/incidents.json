@@ -1,0 +1,30 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "nan_loss_detected"
+    ],
+    "raw_anomalies": [
+      "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=5.0"
+    ],
+    "diagnosis": "# **UNIFIED DIAGNOSIS: NaN Loss Detection**\n\n## **Root Cause**\nThe training failure is caused by a **critically high learning rate of 5.0**, which is 50-500x larger than standard values (0.001-0.1). This causes explosive gradient updates that produce NaN loss on the first training step, preventing any meaningful convergence.\n\n## **Impact**\n- **Immediate**: Loss divergence to NaN, blocking training progression\n- **Cascade Risk**: Without correction, this failure will persist throughout the entire training pipeline\n- **Severity**: CRITICAL \u2014 training cannot proceed\n\n## **Recommended Actions** (Priority Order)\n\n1. **Immediate Fix**: Reduce `lr` to **0.01** (or 0.001-0.1 range depending on optimizer/batch size)\n2. **Stability Enhancement**: Enable gradient clipping with `max_grad_norm",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 5.0 to 0.5"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "nan_loss_detected"
+    ],
+    "raw_anomalies": [
+      "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=0.5"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## Critical Issue: NaN Loss Detection\n\n**Root Cause:** Learning rate of **0.5 is critically excessive** for your model configuration, causing immediate loss divergence and NaN values at the first training step.\n\n---\n\n## Consolidated Recommendations\n\n### Primary Fix (Required)\n- **Reduce learning rate** to **0.01\u20130.05** range\n  - Conservative starting point: 0.01\n  - Acceptable upper bound: 0.05\n\n### Secondary Stabilization (Strongly Recommended)\n- **Enable gradient clipping:** `max_grad_norm=1.0`\n- Prevents numerical overflow and improves convergence stability\n\n---\n\n## Action Plan\n\n1. **Immediate:** Adjust hyperparameters\n   ```\n   learning_rate: 0.01 (start conservatively)\n   gradient_clipping: max",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 0.5 to 0.05"
+  }
+]

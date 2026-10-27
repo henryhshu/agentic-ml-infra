@@ -1,0 +1,326 @@
+{
+  "timeline": [
+    {
+      "type": "attempt",
+      "stage": "data_validation",
+      "attempt": 0,
+      "start": 1793109111.304773,
+      "end": 1793109113.4949937,
+      "duration_s": 2.190220594406128,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "data_loading",
+      "attempt": 0,
+      "start": 1793109114.246628,
+      "end": 1793109114.6163864,
+      "duration_s": 0.36975836753845215,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 0,
+      "start": 1793109115.1176634,
+      "end": 1793109122.4276712,
+      "duration_s": 7.310007810592651,
+      "status": "failed",
+      "error": "Model failed to converge: test accuracy 0.1332 is at or below random guessing threshold (0.15). Suspected label corruption or representational collapse."
+    },
+    {
+      "type": "handle",
+      "stage": "training",
+      "attempt": 0,
+      "start": 1793109122.4276845,
+      "end": 1793109128.4943335,
+      "duration_s": 6.066648960113525,
+      "anomalies": [
+        "corrupt_data"
+      ],
+      "auto_remediated": false,
+      "action": null
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 1,
+      "start": 1793109128.4943352,
+      "end": 1793109132.1348412,
+      "duration_s": 3.6405060291290283,
+      "status": "failed",
+      "error": "Model failed to converge: test accuracy 0.1148 is at or below random guessing threshold (0.15). Suspected label corruption or representational collapse."
+    },
+    {
+      "type": "handle",
+      "stage": "training",
+      "attempt": 1,
+      "start": 1793109132.1348562,
+      "end": 1793109138.6402493,
+      "duration_s": 6.505393028259277,
+      "anomalies": [
+        "corrupt_data"
+      ],
+      "auto_remediated": false,
+      "action": null
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 2,
+      "start": 1793109138.6402514,
+      "end": 1793109142.1377995,
+      "duration_s": 3.4975481033325195,
+      "status": "failed",
+      "error": "Model failed to converge: test accuracy 0.1014 is at or below random guessing threshold (0.15). Suspected label corruption or representational collapse."
+    },
+    {
+      "type": "handle",
+      "stage": "training",
+      "attempt": 2,
+      "start": 1793109142.1378198,
+      "end": 1793109148.153958,
+      "duration_s": 6.016138315200806,
+      "anomalies": [
+        "corrupt_data"
+      ],
+      "auto_remediated": false,
+      "action": null
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 3,
+      "start": 1793109148.1539612,
+      "end": 1793109151.8730378,
+      "duration_s": 3.719076633453369,
+      "status": "failed",
+      "error": "Model failed to converge: test accuracy 0.1014 is at or below random guessing threshold (0.15). Suspected label corruption or representational collapse."
+    },
+    {
+      "type": "handle",
+      "stage": "training",
+      "attempt": 3,
+      "start": 1793109151.873054,
+      "end": 1793109157.9782252,
+      "duration_s": 6.105171203613281,
+      "anomalies": [
+        "corrupt_data"
+      ],
+      "auto_remediated": false,
+      "action": null
+    }
+  ],
+  "llm_calls": [
+    {
+      "agent": "training_watch",
+      "caller": "analyze_epoch",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793109117.4869041,
+      "end": 1793109118.6880295,
+      "duration_s": 1.2011253833770752,
+      "input_tokens": 107,
+      "output_tokens": 55
+    },
+    {
+      "agent": "training_watch",
+      "caller": "analyze_epoch",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793109121.105664,
+      "end": 1793109122.4243617,
+      "duration_s": 1.3186976909637451,
+      "input_tokens": 107,
+      "output_tokens": 65
+    },
+    {
+      "agent": "training_watch",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793109122.4277651,
+      "end": 1793109124.4010842,
+      "duration_s": 1.9733190536499023,
+      "input_tokens": 469,
+      "output_tokens": 141
+    },
+    {
+      "agent": "cluster_health",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793109124.4011805,
+      "end": 1793109125.3661714,
+      "duration_s": 0.9649908542633057,
+      "input_tokens": 359,
+      "output_tokens": 49
+    },
+    {
+      "agent": "data_quality",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793109125.3662412,
+      "end": 1793109126.3155262,
+      "duration_s": 0.9492850303649902,
+      "input_tokens": 355,
+      "output_tokens": 50
+    },
+    {
+      "agent": "supervisor",
+      "caller": "handle_anomaly",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793109126.315582,
+      "end": 1793109128.494275,
+      "duration_s": 2.1786930561065674,
+      "input_tokens": 313,
+      "output_tokens": 200
+    },
+    {
+      "agent": "training_watch",
+      "caller": "analyze_epoch",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793109130.9227242,
+      "end": 1793109132.1238334,
+      "duration_s": 1.2011091709136963,
+      "input_tokens": 107,
+      "output_tokens": 64
+    },
+    {
+      "agent": "training_watch",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793109132.1349504,
+      "end": 1793109134.0841064,
+      "duration_s": 1.9491560459136963,
+      "input_tokens": 494,
+      "output_tokens": 144
+    },
+    {
+      "agent": "cluster_health",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793109134.0841792,
+      "end": 1793109135.3755755,
+      "duration_s": 1.2913963794708252,
+      "input_tokens": 359,
+      "output_tokens": 71
+    },
+    {
+      "agent": "data_quality",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793109135.3756416,
+      "end": 1793109136.5839975,
+      "duration_s": 1.2083559036254883,
+      "input_tokens": 355,
+      "output_tokens": 65
+    },
+    {
+      "agent": "supervisor",
+      "caller": "handle_anomaly",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793109136.5840504,
+      "end": 1793109138.6401932,
+      "duration_s": 2.056142807006836,
+      "input_tokens": 353,
+      "output_tokens": 200
+    },
+    {
+      "agent": "training_watch",
+      "caller": "analyze_epoch",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793109140.9622712,
+      "end": 1793109142.1301532,
+      "duration_s": 1.167881965637207,
+      "input_tokens": 107,
+      "output_tokens": 66
+    },
+    {
+      "agent": "training_watch",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793109142.1379507,
+      "end": 1793109144.0766132,
+      "duration_s": 1.9386625289916992,
+      "input_tokens": 520,
+      "output_tokens": 145
+    },
+    {
+      "agent": "cluster_health",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793109144.0766966,
+      "end": 1793109145.0049229,
+      "duration_s": 0.9282262325286865,
+      "input_tokens": 359,
+      "output_tokens": 51
+    },
+    {
+      "agent": "data_quality",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793109145.005008,
+      "end": 1793109146.0361242,
+      "duration_s": 1.031116247177124,
+      "input_tokens": 355,
+      "output_tokens": 51
+    },
+    {
+      "agent": "supervisor",
+      "caller": "handle_anomaly",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793109146.0361857,
+      "end": 1793109148.1538935,
+      "duration_s": 2.1177077293395996,
+      "input_tokens": 320,
+      "output_tokens": 200
+    },
+    {
+      "agent": "training_watch",
+      "caller": "analyze_epoch",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793109150.8008952,
+      "end": 1793109151.8657901,
+      "duration_s": 1.0648949146270752,
+      "input_tokens": 107,
+      "output_tokens": 55
+    },
+    {
+      "agent": "training_watch",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793109151.8731549,
+      "end": 1793109153.7796655,
+      "duration_s": 1.906510591506958,
+      "input_tokens": 546,
+      "output_tokens": 124
+    },
+    {
+      "agent": "cluster_health",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793109153.7797337,
+      "end": 1793109155.0192144,
+      "duration_s": 1.23948073387146,
+      "input_tokens": 359,
+      "output_tokens": 68
+    },
+    {
+      "agent": "data_quality",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793109155.0192802,
+      "end": 1793109156.1808658,
+      "duration_s": 1.1615855693817139,
+      "input_tokens": 355,
+      "output_tokens": 54
+    },
+    {
+      "agent": "supervisor",
+      "caller": "handle_anomaly",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793109156.1809213,
+      "end": 1793109157.9781682,
+      "duration_s": 1.7972469329833984,
+      "input_tokens": 319,
+      "output_tokens": 200
+    }
+  ]
+}

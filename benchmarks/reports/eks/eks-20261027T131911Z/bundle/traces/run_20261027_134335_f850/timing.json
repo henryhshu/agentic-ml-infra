@@ -1,0 +1,119 @@
+{
+  "timeline": [
+    {
+      "type": "attempt",
+      "stage": "data_validation",
+      "attempt": 0,
+      "start": 1793108615.3161364,
+      "end": 1793108617.4012578,
+      "duration_s": 2.0851213932037354,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "data_loading",
+      "attempt": 0,
+      "start": 1793108617.401268,
+      "end": 1793108617.75652,
+      "duration_s": 0.3552520275115967,
+      "status": "success"
+    },
+    {
+      "type": "worker_lost",
+      "stage": "training",
+      "start": 1793108618.0185103,
+      "end": 1793108620.0219169,
+      "duration_s": 2.0034070014953613,
+      "lost": [
+        {
+          "rank": 3,
+          "reason": "process exited (restarted with a new process id)",
+          "observed_after_s": 1.75
+        }
+      ]
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 0,
+      "start": 1793108617.7565296,
+      "end": 1793108620.0230653,
+      "duration_s": 2.266535758972168,
+      "status": "failed",
+      "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:1177). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proce"
+    },
+    {
+      "type": "worker_lost",
+      "stage": "training",
+      "start": 1793108620.9540966,
+      "end": 1793108622.957884,
+      "duration_s": 2.0037882328033447,
+      "lost": [
+        {
+          "rank": 3,
+          "reason": "process exited (restarted with a new process id)",
+          "observed_after_s": 1.75
+        }
+      ]
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 1,
+      "start": 1793108620.0230784,
+      "end": 1793108622.9593701,
+      "duration_s": 2.9362916946411133,
+      "status": "failed",
+      "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:45737). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proc"
+    },
+    {
+      "type": "worker_lost",
+      "stage": "training",
+      "start": 1793108623.8540318,
+      "end": 1793108625.8574371,
+      "duration_s": 2.003405809402466,
+      "lost": [
+        {
+          "rank": 3,
+          "reason": "process exited (restarted with a new process id)",
+          "observed_after_s": 1.75
+        }
+      ]
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 2,
+      "start": 1793108622.959385,
+      "end": 1793108625.8590302,
+      "duration_s": 2.8996453285217285,
+      "status": "failed",
+      "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:45278). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proc"
+    },
+    {
+      "type": "worker_lost",
+      "stage": "training",
+      "start": 1793108626.7618442,
+      "end": 1793108628.7652526,
+      "duration_s": 2.003408908843994,
+      "lost": [
+        {
+          "rank": 3,
+          "reason": "process exited (restarted with a new process id)",
+          "observed_after_s": 1.75
+        }
+      ]
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 3,
+      "start": 1793108625.8590438,
+      "end": 1793108628.7666917,
+      "duration_s": 2.9076478481292725,
+      "status": "failed",
+      "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:53980). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proc"
+    }
+  ],
+  "llm_calls": []
+}

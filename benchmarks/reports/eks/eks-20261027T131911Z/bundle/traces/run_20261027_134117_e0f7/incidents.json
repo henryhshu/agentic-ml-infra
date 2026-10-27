@@ -1,0 +1,30 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=512"
+    ],
+    "diagnosis": "# **UNIFIED DIAGNOSIS: Memory Pressure**\n\n## **Root Cause**\nBatch size of 512 is incompatible with CPU-only execution (`use_gpu=False`). The model configuration allocates more memory than available CPU RAM, resulting in immediate out-of-memory (OOM) failure that cascades through all retry attempts.\n\n## **Critical Issue**\n- **Mismatch:** Aggressive batch size (512) on resource-constrained device (CPU)\n- **Failure Mode:** Deterministic OOM on first training iteration\n- **Impact:** All 3 retries will fail identically; training job blocked\n\n## **Recommended Actions** (in priority order)\n\n1. **Reduce batch size to 64\u2013128** \u2713 *Lowest friction*\n   - Fits within typical CPU memory constraints\n   - No hardware changes required\n\n2. **Enable gradient accum",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 512 to 256 and scaled accum_steps from 1 to 2 (invariant effective_batch_size=512)"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+    ],
+    "diagnosis": "# Unified Diagnosis: Memory Pressure During Training\n\n## Issue Summary\n**Stage:** Training  \n**Anomaly:** Memory Pressure  \n**Severity:** Critical\n\n---\n\n## Root Cause Analysis\n\nThe training job is experiencing Out-of-Memory (OOM) errors due to a **hardware-configuration mismatch**:\n\n- **Configuration:** batch_size=256 with gradient accumulation disabled\n- **Hardware:** CPU-only execution (use_gpu=False)\n- **Problem:** The batch size vastly exceeds available CPU memory capacity\n\n---\n\n## Recommended Actions (Priority Order)\n\n### **Primary Solution: Reduce Batch Size**\n```\nbatch_size: 256 \u2192 64\u2013128\naccum_steps: 1 \u2192 4 (with batch_size=64)\n```\nThis maintains the effective batch size (~256) while fitting in available memory.\n\n###",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 256 to 128 and scaled accum_steps from 2 to 4 (invariant effective_batch_size=512)"
+  }
+]

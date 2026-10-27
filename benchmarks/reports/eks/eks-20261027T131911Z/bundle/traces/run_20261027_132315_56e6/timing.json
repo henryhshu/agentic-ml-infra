@@ -1,0 +1,159 @@
+{
+  "timeline": [
+    {
+      "type": "attempt",
+      "stage": "data_validation",
+      "attempt": 0,
+      "start": 1793107395.7515428,
+      "end": 1793107398.0037417,
+      "duration_s": 2.2521989345550537,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "data_loading",
+      "attempt": 0,
+      "start": 1793107398.7554212,
+      "end": 1793107399.1340327,
+      "duration_s": 0.37861156463623047,
+      "status": "success"
+    },
+    {
+      "type": "worker_lost",
+      "stage": "training",
+      "start": 1793107400.886243,
+      "end": 1793107403.1401362,
+      "duration_s": 2.253894090652466,
+      "lost": [
+        {
+          "rank": 3,
+          "reason": "process exited (restarted with a new process id)",
+          "observed_after_s": 2.0
+        }
+      ]
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 0,
+      "start": 1793107399.8858175,
+      "end": 1793107403.1419053,
+      "duration_s": 3.2560877799987793,
+      "status": "failed",
+      "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:2257). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proce"
+    },
+    {
+      "type": "handle",
+      "stage": "training",
+      "attempt": 0,
+      "start": 1793107403.1419175,
+      "end": 1793107410.2739806,
+      "duration_s": 7.132063150405884,
+      "anomalies": [
+        "worker_shortage"
+      ],
+      "auto_remediated": true,
+      "action": "restart_workers"
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 1,
+      "start": 1793107410.273984,
+      "end": 1793107421.4889407,
+      "duration_s": 11.214956760406494,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "evaluation",
+      "attempt": 0,
+      "start": 1793107422.2419283,
+      "end": 1793107424.3313982,
+      "duration_s": 2.0894699096679688,
+      "status": "success"
+    }
+  ],
+  "llm_calls": [
+    {
+      "agent": "training_watch",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793107403.1419861,
+      "end": 1793107404.9650252,
+      "duration_s": 1.8230390548706055,
+      "input_tokens": 476,
+      "output_tokens": 145
+    },
+    {
+      "agent": "cluster_health",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793107404.9650977,
+      "end": 1793107405.8623543,
+      "duration_s": 0.89725661277771,
+      "input_tokens": 415,
+      "output_tokens": 45
+    },
+    {
+      "agent": "data_quality",
+      "caller": "diagnose",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793107405.862422,
+      "end": 1793107406.9256103,
+      "duration_s": 1.0631883144378662,
+      "input_tokens": 411,
+      "output_tokens": 62
+    },
+    {
+      "agent": "supervisor",
+      "caller": "handle_anomaly",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793107406.925662,
+      "end": 1793107409.2846818,
+      "duration_s": 2.3590197563171387,
+      "input_tokens": 325,
+      "output_tokens": 200
+    },
+    {
+      "agent": "remediator",
+      "caller": "recommend_action",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793107409.2847621,
+      "end": 1793107409.7726846,
+      "duration_s": 0.48792243003845215,
+      "input_tokens": 684,
+      "output_tokens": 6
+    },
+    {
+      "agent": "training_watch",
+      "caller": "analyze_epoch",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793107413.4805822,
+      "end": 1793107414.5091126,
+      "duration_s": 1.0285303592681885,
+      "input_tokens": 107,
+      "output_tokens": 59
+    },
+    {
+      "agent": "training_watch",
+      "caller": "analyze_epoch",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793107416.7452483,
+      "end": 1793107417.873032,
+      "duration_s": 1.1277837753295898,
+      "input_tokens": 107,
+      "output_tokens": 60
+    },
+    {
+      "agent": "training_watch",
+      "caller": "analyze_epoch",
+      "model": "claude-haiku-4-5-20251001",
+      "start": 1793107420.4657836,
+      "end": 1793107421.4552772,
+      "duration_s": 0.9894936084747314,
+      "input_tokens": 102,
+      "output_tokens": 52
+    }
+  ]
+}

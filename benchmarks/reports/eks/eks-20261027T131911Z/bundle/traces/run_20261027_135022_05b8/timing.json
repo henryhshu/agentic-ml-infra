@@ -1,0 +1,119 @@
+{
+  "timeline": [
+    {
+      "type": "attempt",
+      "stage": "data_validation",
+      "attempt": 0,
+      "start": 1793109022.6448596,
+      "end": 1793109024.7047024,
+      "duration_s": 2.059842824935913,
+      "status": "success"
+    },
+    {
+      "type": "attempt",
+      "stage": "data_loading",
+      "attempt": 0,
+      "start": 1793109024.70471,
+      "end": 1793109025.0724204,
+      "duration_s": 0.3677103519439697,
+      "status": "success"
+    },
+    {
+      "type": "worker_lost",
+      "stage": "training",
+      "start": 1793109025.3420508,
+      "end": 1793109027.5959408,
+      "duration_s": 2.2538902759552,
+      "lost": [
+        {
+          "rank": 3,
+          "reason": "process exited (restarted with a new process id)",
+          "observed_after_s": 2.0
+        }
+      ]
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 0,
+      "start": 1793109025.072428,
+      "end": 1793109027.5970626,
+      "duration_s": 2.524634599685669,
+      "status": "failed",
+      "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:46792). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proc"
+    },
+    {
+      "type": "worker_lost",
+      "stage": "training",
+      "start": 1793109028.519538,
+      "end": 1793109030.773394,
+      "duration_s": 2.253856658935547,
+      "lost": [
+        {
+          "rank": 3,
+          "reason": "process exited (restarted with a new process id)",
+          "observed_after_s": 2.0
+        }
+      ]
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 1,
+      "start": 1793109027.5970762,
+      "end": 1793109030.7749147,
+      "duration_s": 3.1778385639190674,
+      "status": "failed",
+      "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:4238). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proce"
+    },
+    {
+      "type": "worker_lost",
+      "stage": "training",
+      "start": 1793109031.7667432,
+      "end": 1793109034.2707422,
+      "duration_s": 2.503999948501587,
+      "lost": [
+        {
+          "rank": 3,
+          "reason": "process exited (restarted with a new process id)",
+          "observed_after_s": 2.25
+        }
+      ]
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 2,
+      "start": 1793109030.7749302,
+      "end": 1793109034.2722716,
+      "duration_s": 3.4973413944244385,
+      "status": "failed",
+      "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:1157). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: process exited (restarted with a new proce"
+    },
+    {
+      "type": "worker_lost",
+      "stage": "training",
+      "start": 1793109035.4529881,
+      "end": 1793109037.957043,
+      "duration_s": 2.5040547847747803,
+      "lost": [
+        {
+          "rank": 3,
+          "reason": "no heartbeat for 2.5 s",
+          "observed_after_s": 2.5
+        }
+      ]
+    },
+    {
+      "type": "attempt",
+      "stage": "training",
+      "attempt": 3,
+      "start": 1793109034.2722864,
+      "end": 1793109037.958535,
+      "duration_s": 3.686248540878296,
+      "status": "failed",
+      "error": "Distributed data-parallel training failed on rank 0 (RuntimeError: [/pytorch/third_party/gloo/gloo/transport/tcp/pair.cc:547] Connection closed by peer [192.168.44.80]:61148). Worker liveness after the failure: 2/3 worker processes heartbeating; lost rank 3: no heartbeat for 2.5 s."
+    }
+  ],
+  "llm_calls": []
+}

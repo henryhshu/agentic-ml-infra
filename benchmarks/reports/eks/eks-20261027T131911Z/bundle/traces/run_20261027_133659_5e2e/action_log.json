@@ -1,0 +1,11 @@
+[
+  {
+    "timestamp": "2026-10-27T13:37:14.221246+00:00",
+    "action": "restart_workers",
+    "status": "success",
+    "details": "Waited 0.5s for 3 worker ranks to heartbeat (ready=True); cleared injected worker-crash flag.",
+    "config_diff": {},
+    "start": 1793108233.7201245,
+    "duration_s": 0.501086950302124
+  }
+]

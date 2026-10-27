@@ -1,0 +1,30 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=512"
+    ],
+    "diagnosis": "# Unified ML Training Diagnosis\n\n## Anomaly: Memory Pressure\n\n### Root Cause\n**Batch size (512) exceeds CPU memory capacity with GPU acceleration disabled.** The training configuration is forcing all data processing and model computations onto CPU-only resources, creating an Out-of-Memory (OOM) bottleneck despite GPU availability.\n\n### Critical Issues\n1. **GPU underutilization** \u2013 GPU is available but not enabled (`use_gpu=False`)\n2. **Oversized batch allocation** \u2013 Batch size of 512 is incompatible with CPU memory constraints\n3. **Cluster resource mismatch** \u2013 Worker nodes lack sufficient CPU memory for this batch size\n\n### Recommended Actions (Priority Order)\n\n| Action | Impact | Effort |\n|--------|--------|--------|\n| Enable GPU acceleration (`use_gpu=True`) | **HIGH** \u2013 Dramatically increases available memory",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 512 to 256 and scaled accum_steps from 1 to 2 (invariant effective_batch_size=512)"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+    ],
+    "diagnosis": "# **UNIFIED DIAGNOSIS: Memory Pressure During Training**\n\n## **Primary Issue**\nBatch size of **256 exceeds available CPU memory** in CPU-only training mode (`use_gpu=False`), causing out-of-memory (OOM) errors.\n\n## **Root Cause Analysis**\n- **Immediate Cause:** Batch size configuration incompatible with CPU-bound execution\n- **Contributing Factors:**\n  - Single-process data loading (`num_workers=0`) creates bottleneck\n  - No gradient accumulation to distribute memory load\n  - Possible insufficient RAM allocation to training container\n\n## **Recommended Actions** (Priority Order)\n\n1. **Reduce batch size to 32\u201364** (primary fix)\n2. **Enable gradient accumulation:** Set `accum_steps=4` to maintain effective batch size while reducing per-step memory footprint\n3. **",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 256 to 128 and scaled accum_steps from 2 to 4 (invariant effective_batch_size=512)"
+  }
+]

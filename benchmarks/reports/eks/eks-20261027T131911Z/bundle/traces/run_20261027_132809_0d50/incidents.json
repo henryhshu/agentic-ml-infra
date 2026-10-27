@@ -1,0 +1,44 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=512"
+    ],
+    "diagnosis": "# Unified Diagnosis: Memory Pressure During Training\n\n## Summary\nThe training job is experiencing **critical memory pressure** caused by a **batch size (512) that exceeds available CPU memory capacity**. This is compounded by inefficient data loading parallelization and potential GPU/CPU resource misalignment.\n\n## Root Cause\n- **Primary:** Batch size of 512 is incompatible with CPU-only execution and current resource allocation\n- **Secondary:** `num_workers=0` prevents concurrent data loading, forcing synchronous operations that amplify memory footprint\n- **Tertiary:** Possible infrastructure mismatch (CUDA errors despite `use_gpu=False` suggests configuration inconsistency)\n\n## Recommended Actions (Priority Order)\n\n### Immediate (Low-effort, High-impact)\n1. **Reduce batch size** to 32\u201364 for CPU-only execution\n2. **Enable",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 512 to 256 and scaled accum_steps from 1 to 2 (invariant effective_batch_size=512)"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+    ],
+    "diagnosis": "# Unified Diagnosis: Memory Pressure During Training\n\n## Primary Root Cause\n**Configuration mismatch between batch size (256) and available hardware resources.** The training is configured for CPU-only execution (`use_gpu=False`) with a batch size designed for GPU memory, causing immediate memory exhaustion on the tiny model.\n\n## Secondary Contributing Factors\n1. **Data loading inefficiency**: `num_workers=0` forces single-threaded CPU data loading, compounding memory pressure\n2. **Fault injection scenario**: Cluster health constraints further reduce available memory headroom\n3. **Ineffective mitigation**: While gradient accumulation (`accum_steps=2`) is enabled, it cannot offset the fundamental batch size oversizing\n\n## Recommended Actions (Priority Order)\n\n| Priority | Action | Rationale |\n|----------|--------|-----------|\n| **P0** | Reduce `batch_size` to",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 256 to 128 and scaled accum_steps from 2 to 4 (invariant effective_batch_size=512)"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "gradient_explosion"
+    ],
+    "raw_anomalies": [
+      "Gradient explosion detected: grad_norm=999.9 exceeds stability threshold"
+    ],
+    "diagnosis": "# **Unified Diagnosis: Gradient Explosion**\n\n## **Root Cause**\nThe training pipeline exhibits **unstable gradient dynamics** driven by a compounding set of factors:\n\n1. **Aggressive Learning Rate (0.1)** \u2014 Too high for the current model scale and batch size\n2. **High Momentum (0.9)** \u2014 Amplifies gradient updates without sufficient damping\n3. **Missing Gradient Clipping** \u2014 No `max_grad_norm` constraint to bound explosion\n4. **Gradient Accumulation (4 steps)** \u2014 Unbounded accumulation without normalization\n5. **Stress Testing Environment** \u2014 Fault injection may be exacerbating instability\n\n**Current Symptom:** Gradient norm = 999.9 (well beyond stability threshold)\n\n---\n\n## **Recommended Action Plan**\n\n### **Priority 1: Immediate Stabilization",
+    "auto_remediated": true,
+    "action_taken": "enable_gradient_clipping",
+    "remediation_status": "success",
+    "remediation_details": "Enabled gradient clipping with max_norm=1.0"
+  }
+]

@@ -1,0 +1,44 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "memory_pressure"
+    ],
+    "raw_anomalies": [
+      "Simulated CUDA Out of Memory: failed to allocate memory for batch_size=256"
+    ],
+    "diagnosis": "# **UNIFIED DIAGNOSIS: Memory Pressure During Training**\n\n## **Critical Issue**\nTraining is failing due to **insufficient memory allocation** caused by a configuration conflict: `batch_size=256` with `use_gpu=False` (CPU-only mode) exceeds available memory, particularly under fault injection scenarios.\n\n## **Root Cause**\n- **Batch size (256)** is incompatible with CPU-only execution\n- **Fault injection enabled** compounds memory overhead\n- **No GPU acceleration** eliminates memory efficiency gains\n- Current configuration attempts to hold 256 samples in CPU memory simultaneously\n\n## **Immediate Actions (Priority Order)**\n\n1. **Reduce batch size** \u2192 `batch_size=32-64`\n   - Immediate memory relief without architectural changes\n   - Lowest-risk remediation\n\n2. **Enable gradient accumulation** \u2192 `accum_steps=4-8`",
+    "auto_remediated": true,
+    "action_taken": "reduce_batch_size",
+    "remediation_status": "success",
+    "remediation_details": "Reduced batch size from 256 to 128 and scaled accum_steps from 1 to 2 (invariant effective_batch_size=256)"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "nan_loss_detected"
+    ],
+    "raw_anomalies": [
+      "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=5.0"
+    ],
+    "diagnosis": "# **UNIFIED DIAGNOSIS: NaN Loss Detection**\n\n## **Critical Issue**\nTraining has encountered **loss divergence resulting in NaN values** at the onset of training.\n\n---\n\n## **Root Cause Analysis**\n\nAll subagents converge on a **single primary failure mode**:\n\n| Factor | Issue | Impact |\n|--------|-------|--------|\n| **Learning Rate** | 5.0 (extremely aggressive) | Gradient steps are oversized, causing loss to explode and diverge into NaN/Inf territory |\n| **Effective Batch Size** | 256 (128 batch \u00d7 2 accumulation steps) | Too large relative to dataset (5000 samples = ~5% per epoch), amplifying gradient variance and instability |\n| **Combined Effect** | High LR + Large Effective Batch | Numerical instability propagates immediately, preventing any convergence",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 5.0 to 0.5"
+  },
+  {
+    "stage": "training",
+    "anomalies": [
+      "nan_loss_detected"
+    ],
+    "raw_anomalies": [
+      "NaN/Inf loss detected at epoch 1, step 1: divergent loss with excessive lr=0.5"
+    ],
+    "diagnosis": "# UNIFIED DIAGNOSIS: NaN Loss Detection\n\n## Root Cause\n**Learning rate of 0.5 is critically excessive** for the model architecture, batch size, and gradient accumulation configuration (2 steps). This causes immediate loss divergence and NaN values at the first training step due to unstable weight updates and explosive gradient growth.\n\n## Contributing Factors\n- Gradient accumulation over 2 steps amplifies the destabilizing effect of the high learning rate\n- Lack of gradient clipping allowing unbounded gradient magnitudes\n- Potential data normalization issues exacerbating gradient instability\n\n## Recommended Actions (Priority Order)\n\n1. **Reduce learning rate** to `0.01\u20130.05` (10x reduction minimum)\n2. **Enable gradient clipping** with `max_grad_norm=1.0` to prevent explosive gradient growth\n3. **Verify input data normalization",
+    "auto_remediated": true,
+    "action_taken": "reduce_learning_rate",
+    "remediation_status": "success",
+    "remediation_details": "Reduced LR from 0.5 to 0.05"
+  }
+]

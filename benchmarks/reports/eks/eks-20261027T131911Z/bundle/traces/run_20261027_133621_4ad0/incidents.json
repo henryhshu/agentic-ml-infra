@@ -1,0 +1,16 @@
+[
+  {
+    "stage": "training",
+    "anomalies": [
+      "gradient_explosion"
+    ],
+    "raw_anomalies": [
+      "Stealth gradient shock detected at step 2: grad_norm=842.1 exploded after step 1 normal loss"
+    ],
+    "diagnosis": "# UNIFIED DIAGNOSIS: Gradient Explosion at Training Step 2\n\n## **Severity:** Critical\n\n---\n\n## **Root Cause Analysis**\n\nThe gradient explosion is a **convergence of three compounding factors**:\n\n1. **Aggressive Learning Rate (0.1)** \u2013 Excessive for model initialization phase\n2. **Missing Gradient Clipping (`max_grad_norm: None`)** \u2013 No safeguard against norm spikes\n3. **Enabled Fault Injection (`delayed_stochastic_explosion`)** \u2013 Artificially triggered instability\n\nThe gradient norm spiked to **842.1 at step 2**, indicating the fault injection activated immediately during early training when the model is most sensitive to perturbations.\n\n---\n\n## **Critical Issues**\n\n| Factor | Impact | Severity |\n|--------|--------|----------|\n| No gradient clipping | Allows unchecked",
+    "auto_remediated": true,
+    "action_taken": "enable_gradient_clipping",
+    "remediation_status": "success",
+    "remediation_details": "Enabled gradient clipping with max_norm=1.0"
+  }
+]

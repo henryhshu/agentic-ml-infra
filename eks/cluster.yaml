@@ -1,0 +1,57 @@
+# Minimal EKS cluster for reproducing the AutoPARK benchmark suite.
+#
+# One on-demand c6i.xlarge node (4 vCPU, 8 GiB) so the ~75 min sequential run is not
+# exposed to Spot reclamation; public subnets with no NAT gateway to keep idle cost low.
+# The benchmark pod reads code from and writes results to a single S3 prefix through
+# an IRSA role; no AWS access keys are placed in the cluster.
+#
+#   eksctl create cluster -f eks/cluster.yaml
+#   eksctl delete cluster -f eks/cluster.yaml --wait
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: autopark-eval
+  region: us-east-1
+  tags:
+    Project: autopark-eval
+    ManagedBy: eksctl
+
+vpc:
+  nat:
+    gateway: Disable
+
+iam:
+  withOIDC: true
+  serviceAccounts:
+    - metadata:
+        name: autopark-eval
+        namespace: autopark
+      attachPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: ["s3:GetObject", "s3:PutObject"]
+            Resource: "arn:aws:s3:::park-ml-experiments-515966515749-us-east-1/autopark-eval/*"
+          - Effect: Allow
+            Action: ["s3:ListBucket"]
+            Resource: "arn:aws:s3:::park-ml-experiments-515966515749-us-east-1"
+            Condition:
+              StringLike:
+                s3:prefix: ["autopark-eval/*"]
+
+managedNodeGroups:
+  - name: eval-cpu
+    instanceType: c6i.xlarge
+    spot: false
+    minSize: 1
+    maxSize: 1
+    desiredCapacity: 1
+    volumeSize: 40
+    volumeType: gp3
+    volumeEncrypted: true
+    privateNetworking: false
+    labels:
+      role: autopark-eval
+    tags:
+      Project: autopark-eval

@@ -1,0 +1,62 @@
+# AutoPARK benchmark Job. Placeholders (${...}) are filled by eks/launch.sh.
+# The pod downloads the exact code tarball (git archive of CODE_SHA) from S3 via its IRSA
+# role, installs pinned dependencies, runs the paper suite, and uploads results to S3.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ${JOB_NAME}
+  namespace: autopark
+  labels:
+    app: autopark-eval
+    run-tag: ${RUN_TAG}
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 14400
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app: autopark-eval
+        run-tag: ${RUN_TAG}
+    spec:
+      serviceAccountName: autopark-eval
+      restartPolicy: Never
+      nodeSelector:
+        role: autopark-eval
+      containers:
+        - name: benchmark
+          image: public.ecr.aws/docker/library/python:3.11.15-slim
+          workingDir: /app
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -euo pipefail
+              export BOOTSTRAP_STARTED_AT=$(date +%s.%N)
+              pip install --no-cache-dir -q boto3==1.43.78
+              python -c "import boto3,tarfile,io; b=boto3.client('s3').get_object(Bucket='${BUCKET}',Key='${CODE_KEY}')['Body'].read(); tarfile.open(fileobj=io.BytesIO(b)).extractall('/app')"
+              pip install --no-cache-dir -q torch==2.11.0 torchvision==0.26.0 --index-url https://download.pytorch.org/whl/cpu
+              pip install --no-cache-dir -q -r eks/requirements-eval.txt
+              python benchmarks/eks_entrypoint.py --bucket ${BUCKET} --prefix ${RESULTS_PREFIX} -- ${BENCH_ARGS}
+          env:
+            - name: AWS_REGION
+              value: us-east-1
+            - name: CODE_SHA
+              value: "${CODE_SHA}"
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: NODE_NAME
+              valueFrom: {fieldRef: {fieldPath: spec.nodeName}}
+            - name: POD_NAME
+              valueFrom: {fieldRef: {fieldPath: metadata.name}}
+            - name: POD_NAMESPACE
+              valueFrom: {fieldRef: {fieldPath: metadata.namespace}}
+            - name: ANTHROPIC_AWS_API_KEY
+              valueFrom: {secretKeyRef: {name: claude-platform-aws, key: api-key}}
+            - name: ANTHROPIC_AWS_WORKSPACE_ID
+              valueFrom: {secretKeyRef: {name: claude-platform-aws, key: workspace-id}}
+          resources:
+            requests:
+              cpu: "3500m"
+              memory: "5Gi"
+            limits:
+              memory: "6Gi"

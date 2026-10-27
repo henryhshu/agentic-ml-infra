@@ -1,0 +1,12 @@
+# Pinned to the versions used for the local reference run (benchmarks/reports/
+# benchmark_results_2026-10-27T10-12-25.325632_00-00.json). torch/torchvision are
+# installed separately from the PyTorch CPU wheel index (see eks/eval-job.yaml).
+anthropic[aws]==1.0.0
+boto3==1.43.78
+huggingface_hub==1.14.0
+numpy==2.4.4
+pillow==12.2.0
+psutil==7.2.2
+pyarrow==24.0.0
+python-dotenv==1.2.2
+ray==2.55.1

@@ -352,7 +352,12 @@ AutoPARK runs identically on a local developer laptop and on AWS EKS:
 | **Storage Backend** | Local disk cache (`data/`) | Amazon S3 Parquet Shards via Arrow S3FS |
 | **Cognitive Agent LLM** | `AnthropicAWS` via `.env` | `AnthropicAWS` with EKS IRSA credentials |
 
-### ⚡ Cluster Lifecycle: Spin-Down & Spin-Up (Zero Ongoing AWS Costs)
+### ⚡ Cluster Lifecycle
+
+For the current four-node benchmark cluster, use the [recovery guide](docs/aws-recovery.md)
+and `bash eks/recover.sh plan`. It covers cluster recreation, locally archived
+results, optional image rebuilds, and teardown. The older cluster commands below
+require separate cleanup of retained storage to end storage charges.
 
 When active experiments are concluded, the Amazon EKS cluster should be spun down to prevent control plane ($0.10/hr) and VPC NAT Gateway (~$0.045/hr) charges from accruing.
 

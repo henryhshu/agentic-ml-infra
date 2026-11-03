@@ -38,6 +38,7 @@ data/cifar10/*
 data/.huggingface/
 
 # ML artifacts
+.local/
 *.ckpt
 *.pt
 *.pth

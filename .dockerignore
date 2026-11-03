@@ -1,0 +1,17 @@
+.git
+.env
+.env.*
+!.env.example
+.local
+.aws
+.codex
+.agents
+**/__pycache__
+.pytest_cache
+.venv
+venv
+experiments
+paper
+*.pem
+credentials*.json
+service-account*.json

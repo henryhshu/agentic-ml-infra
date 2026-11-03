@@ -328,7 +328,7 @@ def plot_fig6_rank_utilization(results: dict, out_pdf_dir: Path, out_png_dir: Pa
         meds = []
         for r in ranks:
             vals = [c for t, c in series(metrics[r]) if any(s_ <= t <= e_ for s_, e_ in ivals)]
-            meds.append(float(np.median(vals)) if vals else 0.0)
+            meds.append(float(np.median(vals)) if vals else np.nan)
         bx.bar(np.arange(len(ranks)) + (j - 0.5) * 0.38, meds, width=0.36, color=color, label=label)
     bx.set_xticks(range(len(ranks)))
     bx.set_xticklabels([f"rank {r}" for r in ranks])
@@ -343,6 +343,8 @@ def generate_all_figures(results_path: Path | None = None,
                          out_pdf_dir: Path = Path("paper/figures"),
                          out_png_dir: Path = Path("benchmarks/figures"),
                          run_dir: Path | None = None) -> None:
+    # Do not reuse a previous invocation's cluster samples for another dataset.
+    RANKS.clear()
     if run_dir is not None:
         # multi-node run fetched by benchmarks/eks_listener.py
         results_path = run_dir / "bundle" / "results.json"
@@ -352,6 +354,8 @@ def generate_all_figures(results_path: Path | None = None,
             RANKS["metrics"][int(d.name[4:])] = json.loads((d / "cluster_metrics.json").read_text())
     results_path = results_path or latest_results()
     results = json.loads(Path(results_path).read_text())
+    if results.get("schema_version") != 2:
+        raise ValueError("Figures require schema-v2 measured results; legacy reports are unsupported.")
     print(f"🎨 Rendering figures from {results_path}")
     plot_fig1_telemetry_series(results, out_pdf_dir, out_png_dir)
     if RANKS:

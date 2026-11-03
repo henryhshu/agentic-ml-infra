@@ -169,6 +169,10 @@ Key observations:
 
 Earlier single-process runs (one laptop, one EKS pod) remain in `benchmarks/reports/` for reference but are not used in the paper.
 
+See [benchmark data provenance](benchmarks/reports/README.md) for source traces,
+figure regeneration, and the distinction between injected faults and measured
+telemetry. Legacy reports with unsupported derived metrics have been removed.
+
 ### Reproduce on EKS
 
 Requires `eksctl`, `kubectl`, the AWS CLI, and `.env` with the Claude Platform on AWS workspace key:
